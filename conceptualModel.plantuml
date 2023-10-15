@@ -1,0 +1,186 @@
+@startuml
+
+'!theme sketchy-outline
+'skinparam monochrome reverse
+'skinparam BackgroundColor yellow
+'skinparam shadowing true
+left to right direction
+title Diagrama Conceptual
+hide methods
+
+'Quinta'
+class Quinta {
+    -id 
+    -nome
+}
+
+'Parcelas'
+class Parcela {
+    -id 
+    -nome 
+    -area 
+}
+
+'Plantação'
+class Plantacao {
+    -id
+    -dataInicio
+    -dataFim
+    -area
+}
+
+'Cultura'
+class Cultura {
+    -id
+    -nome
+    -tipoCultura 
+    -objetivoCultura
+}
+
+'RegistoColheita'
+class RegistoColheita {
+    -id
+    -produto
+    -quantidade
+    -data
+    -idParcela
+}
+
+'Caderno de Campo'
+class CadernoDeCampo {
+}
+
+'Estação Meteorológica'
+class EstacaoMeteorologica {
+    -id
+    -nome
+}
+
+'RegistoMeteorologico'
+class RegistoMeteorologico {
+
+}
+
+'Sensor'
+class Sensor {
+    -id
+}
+
+'Sistema De Rega'
+class SistemaDeRega {
+
+}
+
+'Controlador'
+class Controlador{
+
+}
+
+'Plano De Rega'
+class PlanoDeRega {
+    -ordemDasParcelas
+    -periodicidadeDeRega
+    -temposDeRega
+}
+
+'Fator De Producao'
+class FatorDeProducao {
+    -id
+    -tipoProduto
+}
+
+'Produto'
+class Produto {
+    -id
+    -nomeComercial
+    -formulacao
+}
+
+'Elementos'
+class Elementos {
+    -id
+    -nome
+    -quantidade
+}
+
+'Irrigação'
+class RegistoRega {
+    -id
+    -quantidade
+    -data
+    -idParcela
+}
+
+'Previsões'
+class Previsoes {
+    -Semana
+    -quantidade
+}
+
+'Edificios'
+class Edificio {
+    -id
+    -nome
+}
+
+'Mercadoria'
+class Mercadoria {
+    -id
+    -valor
+}
+
+'Entidades'
+class GestorAgricula{}
+class Cliente{}
+class Condutor{}
+class GestorDistribuicao{}
+
+
+'Quinta'
+Quinta "1" -- "N" Parcela : contém
+Quinta "1" -- "N" Edificio : contém
+
+'Parcela'
+Parcela "1" -- "N" Plantacao : contém 
+Parcela "1" -- "1" EstacaoMeteorologica
+
+'Plantação'
+Plantacao "1..N" -- "1" Cultura : contém
+Plantacao "1" -- "N" RegistoColheita
+
+'Factor de Produção'
+FatorDeProducao "1" -- "N" Produto : composto por
+Produto "1" -- "N" Elementos : composto por
+
+'Estação Meteorológica'
+EstacaoMeteorologica "1" -- "N" Sensor : contém
+EstacaoMeteorologica "1" -- "1" RegistoMeteorologico : regista
+
+'Edificio'
+Edificio "1" -- "0,1" SistemaDeRega : é uma
+Edificio "1" -- "0,1" Estábulo : é uma
+Edificio "1" -- "0,1" GaragemMaquinas : é uma
+Edificio "1" -- "0,1" ArmazemColheita : é uma
+
+'Gestor Agricula'
+GestorAgricula "1" -- "N" RegistoColheita : analisa
+GestorAgricula "1" -- "N" RegistoRega : analisa
+GestorAgricula "1" -- "N" RegistoMeteorologico : analisa
+GestorAgricula "1" -- "1" CadernoDeCampo : analisa
+GestorAgricula "1" -- "N" FatorDeProducao : analisa
+GestorAgricula "1" -- "1..N" Previsoes : analisa
+
+'Previsoes'
+Plantacao "1" -- "1..N" Previsoes : prevê
+
+
+'Sistema De Rega'
+SistemaDeRega "1" -- "1" Parcela
+Controlador "1" -- "1" SistemaDeRega : controla
+Controlador "1" -- "N" PlanoDeRega : segue
+RegistoRega "1" -- "N" Controlador : regista
+
+'Mercadoria'
+Mercadoria "1" -- "N" RegistoColheita : registado
+
+@enduml
