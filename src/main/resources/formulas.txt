@@ -1,0 +1,2 @@
+"INSERT INTO TipoCultura VALUES ('" & INDIRECT("D" & ROW()) & "');"
+"INSERT INTO Cultura VALUES ('" & INDIRECT("A" & ROW()) & "', '" & INDIRECT("B" & ROW()) & "', '" & INDIRECT("C" & ROW()) & "', (SELECT ID FROM TipoCultura WHERE Designacao = '" & INDIRECT("D" & ROW()) & "'), '" & INDIRECT("E" & ROW()) & "', '" & INDIRECT("F" & ROW()) & "', '" & INDIRECT("G" & ROW()) & "', '" & INDIRECT("H" & ROW()) & "');"
