@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.CellType;
@@ -25,44 +26,60 @@ public class CreateSQLInserts {
         try {
 
             FileInputStream textFileInputStream = new FileInputStream("src/main/resources/formulas.txt");
-            BufferedReader textFileReader = new BufferedReader(new InputStreamReader(textFileInputStream));
-
-            List<String> resutList = new ArrayList<>();
-
             XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream("src/main/resources/Legacy_Data_v0.xlsx"));
+            BufferedReader textFileReader = new BufferedReader(new InputStreamReader(textFileInputStream));
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-            List<String> formulas = new ArrayList<>();
 
+            LinkedHashSet<String> resutList = new LinkedHashSet<>();
+
+            List<List<String>> formulas = new ArrayList<>();
+            List<String> currentSheetFormulas = new ArrayList<>();
             String line;
             while ((line = textFileReader.readLine()) != null) {
-                formulas.add(line);
+                if (line.startsWith("#")) {
+                    if (!currentSheetFormulas.isEmpty()) {
+                        formulas.add(currentSheetFormulas);
+                    }
+                    currentSheetFormulas = new ArrayList<>();
+                    continue;
+                } else {
+                    currentSheetFormulas.add(line);
+                }
+            }
+            if (!currentSheetFormulas.isEmpty()) {
+                formulas.add(currentSheetFormulas);
             }
             
             textFileReader.close();
             textFileInputStream.close();
 
-            XSSFSheet sheet = workbook.getSheetAt(0);
+            int workbookNum = workbook.getNumberOfSheets();
 
-            for (int rowIndex = 0; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
-                XSSFRow row = sheet.getRow(rowIndex);
-                if (row != null) {
-                    if (rowIndex > 0) {
-                        for (String formula : formulas) {
-                            int lastCellNum = row.getLastCellNum();
-                            if (lastCellNum == -1) {
-                                lastCellNum = 0;
-                            }
-                            int nextColumnIndex = lastCellNum;
-
-                            XSSFCell formulaCell = row.createCell(nextColumnIndex, CellType.FORMULA);
-                            formulaCell.setCellFormula(formula);
-
-                            CellValue cellValue = evaluator.evaluate(formulaCell);
-
-                            if (cellValue.getCellType() == CellType.STRING) {
-                                resutList.add(cellValue.getStringValue());
-                            } else if (cellValue.getCellType() == CellType.NUMERIC) {
-                                resutList.add(String.valueOf(cellValue.getNumberValue()));
+            for (int sheetIndex = 0; sheetIndex < workbookNum; sheetIndex++) {
+                XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                List<String> processingFormulas = formulas.get(sheetIndex);
+                int sheetLastRowNum = sheet.getLastRowNum();
+                for (int rowIndex = 0; rowIndex <= sheetLastRowNum; rowIndex++) {
+                    XSSFRow row = sheet.getRow(rowIndex);
+                    if (row != null) {
+                        if (rowIndex > 0) {
+                            for (String formula : processingFormulas) {
+                                int lastCellNum = row.getLastCellNum();
+                                if (lastCellNum == -1) {
+                                    lastCellNum = 0;
+                                }
+                                int nextColumnIndex = lastCellNum;
+            
+                                XSSFCell formulaCell = row.createCell(nextColumnIndex, CellType.FORMULA);
+                                formulaCell.setCellFormula(formula);
+            
+                                CellValue cellValue = evaluator.evaluate(formulaCell);
+            
+                                if (cellValue.getCellType() == CellType.STRING) {
+                                    resutList.add(cellValue.getStringValue());
+                                } else if (cellValue.getCellType() == CellType.NUMERIC) {
+                                    resutList.add(String.valueOf(cellValue.getNumberValue()));
+                                }
                             }
                         }
                     }
@@ -79,7 +96,7 @@ public class CreateSQLInserts {
         }
     }
 
-    public static void writeListToFile(List<String> list) {
+    public static void writeListToFile(LinkedHashSet<String> list) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/sql/Inserts.sql"))) {
             for (String item : list) {
                 writer.write(item);

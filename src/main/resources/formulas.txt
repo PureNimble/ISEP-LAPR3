@@ -1,2 +1,6 @@
-"INSERT INTO TipoCultura VALUES ('" & INDIRECT("D" & ROW()) & "');"
-"INSERT INTO Cultura VALUES ('" & INDIRECT("A" & ROW()) & "', '" & INDIRECT("B" & ROW()) & "', '" & INDIRECT("C" & ROW()) & "', (SELECT ID FROM TipoCultura WHERE Designacao = '" & INDIRECT("D" & ROW()) & "'), '" & INDIRECT("E" & ROW()) & "', '" & INDIRECT("F" & ROW()) & "', '" & INDIRECT("G" & ROW()) & "', '" & INDIRECT("H" & ROW()) & "');"
+#Formulas para a folha 1 do Excel.
+"INSERT INTO TipoCultura (Designacao) VALUES (""" & INDIRECT("D" & ROW()) & """);"
+"INSERT INTO Cultura (Especie,NomeComum,Variedade,TipoCulturaID,Sementeira,Poda,Floracao,Colheita) VALUES (""" & INDIRECT("A" & ROW()) & """, """ & INDIRECT("B" & ROW()) & """, """ & INDIRECT("C" & ROW()) & """, (SELECT ID FROM TipoCultura WHERE Designacao = """ & INDIRECT("D" & ROW()) & """), """ & INDIRECT("E" & ROW()) & """, """ & INDIRECT("F" & ROW()) & """, """ & INDIRECT("G" & ROW()) & """, """ & INDIRECT("H" & ROW()) & """);"
+#Formulas para a folha 2 do Excel.
+"INSERT INTO TipoProduto (Designacao) VALUES (""" & INDIRECT("D" & ROW()) & """);"
+"INSERT INTO FatorDeProducao (Designacao,Fabricante,Formato,TipoProdutoID) VALUES (""" & INDIRECT("A" & ROW()) & """, """ & INDIRECT("B" & ROW()) & """, """ & INDIRECT("C" & ROW()) & """, (SELECT ID FROM TipoProduto WHERE Designacao = """ & INDIRECT("D" & ROW()) & """);"
