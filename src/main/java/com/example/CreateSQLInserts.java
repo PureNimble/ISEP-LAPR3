@@ -59,18 +59,13 @@ public class CreateSQLInserts {
                 XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
                 List<String> processingFormulas = formulas.get(sheetIndex);
                 int sheetLastRowNum = sheet.getLastRowNum();
+                int lastCellNum = (sheet.getRow(0).getLastCellNum()) + 1;
                 for (int rowIndex = 0; rowIndex <= sheetLastRowNum; rowIndex++) {
                     XSSFRow row = sheet.getRow(rowIndex);
                     if (row != null) {
                         if (rowIndex > 0) {
-                            for (String formula : processingFormulas) {
-                                int lastCellNum = row.getLastCellNum();
-                                if (lastCellNum == -1) {
-                                    lastCellNum = 0;
-                                }
-                                int nextColumnIndex = lastCellNum;
-            
-                                XSSFCell formulaCell = row.createCell(nextColumnIndex, CellType.FORMULA);
+                            for (String formula : processingFormulas) {            
+                                XSSFCell formulaCell = row.createCell(lastCellNum, CellType.FORMULA);
                                 formulaCell.setCellFormula(formula);
             
                                 CellValue cellValue = evaluator.evaluate(formulaCell);
@@ -99,8 +94,10 @@ public class CreateSQLInserts {
     public static void writeListToFile(LinkedHashSet<String> list) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/sql/Inserts.sql"))) {
             for (String item : list) {
-                writer.write(item);
-                writer.newLine();
+                //if (!item.isEmpty()) {
+                    writer.write(item);
+                    writer.newLine();
+                //}
             }
         } catch (IOException e) {
             e.printStackTrace();
