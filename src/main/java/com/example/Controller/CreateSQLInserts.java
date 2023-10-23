@@ -1,4 +1,4 @@
-package com.example;
+package com.example.Controller;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,7 +21,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class CreateSQLInserts {
 
-    public static void createSQLInserts() {
+    public void createSQLInserts() {
 
         try {
 

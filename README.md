@@ -13,14 +13,14 @@ Este projeto utiliza Java e o Maven.
 Para configurar o Maven para executar testes, é necessário declarar o plugin "maven-surefire-plugin" no arquivo "pom.xml" e configurar suas dependências. Para este propósito, são necessárias as seguintes dependências:
 * Apache POI
     - https://mvnrepository.com/artifact/org.apache.poi/poi
-        - required to work with Excel files
+        - necessário para trabalhar com ficheiros .xlsx
  
 
 ### Codigos Maven 
 
 #### Compila o codigo
 ```
-mvn clean install
+mvn clean package
 ```
 #### Executa o codigo
 ```
