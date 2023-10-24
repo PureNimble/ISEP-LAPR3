@@ -33,7 +33,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>com.example.Main</mainClass>
+                    <mainClass>com.example.ui.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>
