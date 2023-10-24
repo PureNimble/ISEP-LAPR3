@@ -69,7 +69,7 @@ public class CreateSQLInserts {
                                 formulaCell.setCellFormula(formula);
             
                                 CellValue cellValue = evaluator.evaluate(formulaCell);
-            
+                                
                                 if (cellValue.getCellType() == CellType.STRING) {
                                     resutList.add(cellValue.getStringValue());
                                 } else if (cellValue.getCellType() == CellType.NUMERIC) {
@@ -92,6 +92,8 @@ public class CreateSQLInserts {
     }
 
     public static void writeListToFile(LinkedHashSet<String> list) {
+        /*try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/sql/Inserts.sql", true))) {
+            writer.newLine();*/
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/sql/Inserts.sql"))) {
             for (String item : list) {
                 //if (!item.isEmpty()) {
