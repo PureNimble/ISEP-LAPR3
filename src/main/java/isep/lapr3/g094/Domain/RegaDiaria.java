@@ -1,4 +1,4 @@
-package com.example.Domain;
+package isep.lapr3.g094.Domain;
 
 public class RegaDiaria {
     private char parcela;

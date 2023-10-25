@@ -26,6 +26,10 @@ mvn clean package
 ```
 mvn exec:java
 ```
+### Verificar a cobertura dos testes
+```
+mvn clean verify
+```
 
 ## Lista de conteúdos 
 

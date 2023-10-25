@@ -1,8 +1,8 @@
-package com.example.ui;
+package isep.lapr3.g094.ui;
 
 import java.io.IOException;
 
-import com.example.Controller.CreateSQLInserts;
+import isep.lapr3.g094.Controller.CreateSQLInserts;
 
 public class Main {
     static ControllerUI controllerUI = new ControllerUI();
