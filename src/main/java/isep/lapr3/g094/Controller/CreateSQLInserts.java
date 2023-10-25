@@ -1,4 +1,4 @@
-package com.example.Controller;
+package isep.lapr3.g094.Controller;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

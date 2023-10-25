@@ -1,11 +1,11 @@
-package com.example.ui;
+package isep.lapr3.g094.ui;
 import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-import com.example.Controller.Controller;
-import com.example.Domain.RegaDiaria;
+import isep.lapr3.g094.Controller.Controller;
+import isep.lapr3.g094.Domain.RegaDiaria;
 public class ControllerUI {
     private Controller controller;
     ControllerUI(){
@@ -36,7 +36,7 @@ public void main() throws NumberFormatException, IOException{
                 input = scanner.nextLine();
                 dia = Integer.parseInt(input);
             }while(dia < 1 || dia > 30);
-            Pattern pattern = Pattern.compile("^\\d{2}:\\d{2}$");
+            Pattern pattern = Pattern.compile("^\\d{1,2}:\\d{1,2}$");
             do{
                 System.out.println("Insira a hora (Ex: 12:00)");
                 hora = scanner.nextLine();

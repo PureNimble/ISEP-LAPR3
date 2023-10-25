@@ -1,9 +1,8 @@
-package com.example.ui;
+package isep.lapr3.g094.ui;
 
 import java.io.IOException;
 import java.util.Scanner;
-import java.util.regex.Pattern;
-import com.example.Controller.CreateSQLInserts;
+import isep.lapr3.g094.Controller.CreateSQLInserts;
 public class MenuUI {
     private ControllerUI controllerUI;
     private CreateSQLInserts createSQLInserts;
