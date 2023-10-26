@@ -33,8 +33,8 @@ mvn clean verify
 
 ## Lista de conteúdos 
 
-* [Modelos Relacionais](docs/modelos/Diagramas.md)
-* [Glossário](docs/Glossário.md)
+* [Modelos Relacionais](docs/models/Diagrams.md)
+* [Glossário](docs/Glossary.md)
 
 ## Elementos do grupo 
 
