@@ -8,7 +8,7 @@ public class MenuUI {
     private CreateSQLInserts createSQLInserts;
     public MenuUI(){
         controllerUI = new ControllerUI();
-
+        createSQLInserts = new CreateSQLInserts();
     }
     public void main() throws NumberFormatException, IOException{
         String input;
