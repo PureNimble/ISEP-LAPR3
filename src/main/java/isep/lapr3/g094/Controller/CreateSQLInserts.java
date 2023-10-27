@@ -77,7 +77,7 @@ public class CreateSQLInserts {
                             String cellValue = "";
                             CellType cellType = cell.getCellType();
                             if (cellType == CellType.STRING) {
-                                cellValue = "'" + cell.getStringCellValue().strip().replaceAll("'", "''") + "'";
+                                cellValue = "'" + cell.getStringCellValue().replaceAll("\u00A0", "").replace("'", "''") + "'";
                             } else {
                                 if (DateUtil.isCellDateFormatted(cell)) {
                                     Date dateValue = cell.getDateCellValue();
@@ -158,8 +158,9 @@ public class CreateSQLInserts {
                 String[] values = aplicacaoDesignacao.split("\\+");
                 for (String value : values) {
                     value = value.replaceAll("'", "");
+                    value = "'" + value + "'";
                     if (uniqueValues.add(value)){
-                        resultList.add("INSERT INTO Aplicacao (ID, Designacao) VALUES (" + aplicacaoId + ", '" + value + "');");
+                        resultList.add("INSERT INTO Aplicacao (ID, Designacao) VALUES (" + aplicacaoId + ", " + value + ");");
                         aplicacaoId++;
                     }
                     resultList.add("INSERT INTO AplicacaoProduto (FatorDeProducaoId, AplicacaoId) VALUES ((SELECT ID FROM FatorDeProducao WHERE UPPER(Designacao) = UPPER(" 
@@ -171,7 +172,7 @@ public class CreateSQLInserts {
                     aplicacaoId++;
                 }
                 resultList.add("INSERT INTO AplicacaoProduto (FatorDeProducaoId, AplicacaoId) VALUES ((SELECT ID FROM FatorDeProducao WHERE UPPER(Designacao) = UPPER(" 
-                + rowData.get(0) + ")), (SELECT ID FROM Aplicacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(4) + ")));");
+                + rowData.get(0) + ")), (SELECT ID FROM Aplicacao WHERE UPPER(Designacao) = UPPER(" + aplicacaoDesignacao + ")));");
             }
 
             for (int i = 5; i < rowData.size(); i++) {
@@ -203,9 +204,9 @@ public class CreateSQLInserts {
                 tipoEdificioId++;
             }
             if (tipoEdificioDesignacao.equals("'Parcela'")) {
-                resultList.add("INSERT INTO Parcela (ID, Designacao, Area, QuintaID) VALUES (" + (int) Double.parseDouble(rowData.get(0)) + ", " + rowData.get(2) + ", " + rowData.get(3) + ", " + 1 + ");");
+                resultList.add("INSERT INTO Parcela (ID, Designacao, Area, QuintaID) VALUES (" + (int) Double.parseDouble(rowData.get(0)) + ", " + rowData.get(2) + ", " + rowData.get(3) + ", " + 0 + ");");
             } else {
-                resultList.add("INSERT INTO Edificio (ID, Designacao, Area, Unidade, QuintaID) VALUES (" + (int) Double.parseDouble(rowData.get(0)) + ", " + rowData.get(2) + ", " + rowData.get(3) + ", "+ rowData.get(4) + ", " + 1 + ");");
+                resultList.add("INSERT INTO Edificio (ID, Designacao, Area, Unidade, TipoEdificioID, QuintaID) VALUES (" + (int) Double.parseDouble(rowData.get(0)) + ", " + rowData.get(2) + ", " + rowData.get(3) + ", "+ rowData.get(4) + ", (SELECT ID FROM TipoEdificio WHERE UPPER(Designacao) = UPPER(" + tipoEdificioDesignacao + ")), " + 0 + ");");
             }
         }
         return resultList;
@@ -216,7 +217,7 @@ public class CreateSQLInserts {
         LinkedHashSet<String> resultList = new LinkedHashSet<>();
         int id = 0;
         for (List<String> rowData : sheetData) {
-            resultList.add("INSERT INTO Plantacao (ID, DataInicial, DataFinal, Quantidade, Unidade, ParcelaID, CulturaID) VALUES (" + id + ", " + rowData.get(4) + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", " + (int) Double.parseDouble(rowData.get(0)) + ", (SELECT C.ID FROM Cultura C INNER JOIN UPPER(NomeEspecie N) ON C.NomeEspecieID = N.ID WHERE UPPER(CONCAT(N.NomeComum, C.Variedade)) = " + rowData.get(2) + "));");
+            resultList.add("INSERT INTO Plantacao (ID, DataInicial, DataFinal, Quantidade, Unidade, ParcelaID, CulturaID) VALUES (" + id + ", " + rowData.get(4) + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", " + (int) Double.parseDouble(rowData.get(0)) + ", (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + rowData.get(2) + ")));");
             id++;
         }
         return resultList;
@@ -246,14 +247,14 @@ public class CreateSQLInserts {
             }
 
             if (!tipoOperacaoDesignacao.equals("'Plantação'") && !tipoOperacaoDesignacao.equals("'Fertilização'")) {
-                resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND ROWNUM = 1), " + 1 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(TipoOperacao) = UPPPER(" + rowData.get(2) + ")));");
+                resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + rowData.get(4) + ")) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")));");
                 operacaoID++;
             } else if (tipoOperacaoDesignacao.equals("'Plantação'")){
-                resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND DataInicial = " + rowData.get(5) + "), " + 1 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(TipoOperacao) = UPPPER(" + rowData.get(2) + ")));");
+                resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND DataInicial = " + rowData.get(5) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + rowData.get(4) + ")) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")));");
                 operacaoID++;
             } else {
-                resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND ROWNUM = 1), " + 1 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(TipoOperacao) = UPPPER(" + rowData.get(2) + ")));");
-                resultList.add("INSERT INTO Fertilizacao (OperacaoID, ModoFerilizacaoID, FatorDeProducaoID) VALUES (" + operacaoID + ");");
+                resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + rowData.get(4) + ")) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")));");
+                resultList.add("INSERT INTO Fertilizacao (OperacaoID, ModoFertilizacaoID, FatorDeProducaoID) VALUES (" + operacaoID + ", (SELECT ID FROM ModoFertilizacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(3) + ")), (SELECT ID FROM FatorDeProducao WHERE UPPER(Designacao) = UPPER(" + rowData.get(8) + ")));");
                 operacaoID++;
             }
         }
