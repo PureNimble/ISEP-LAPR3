@@ -27,9 +27,10 @@ public class CreateSQLInserts {
 
     private final static String FOLDER_PATH = "src/main/resources/";
     private static LinkedHashSet<String> insertsList = new LinkedHashSet<>();
-    public void createSQLInserts() {
+    public boolean createSQLInserts() {
         extractXlsx(findXlsxFile());
-        writeListToFile();
+        return writeListToFile();
+
     }
 
     private static void extractXlsx(String path) {
@@ -201,7 +202,7 @@ public class CreateSQLInserts {
                 resultList.add("INSERT INTO TipoEdificio (ID, Designacao) VALUES (" + tipoEdificioId + ", " + tipoEdificioDesignacao + ");");
                 tipoEdificioId++;
             }
-            if (tipoEdificioDesignacao == "Parcela") {
+            if (tipoEdificioDesignacao.equals("'Parcela'")) {
                 resultList.add("INSERT INTO Parcela (ID, Designacao, Area, QuintaID) VALUES (" + (int) Double.parseDouble(rowData.get(0)) + ", " + rowData.get(2) + ", " + rowData.get(3) + ", " + 1 + ");");
             } else {
                 resultList.add("INSERT INTO Edificio (ID, Designacao, Area, Unidade, QuintaID) VALUES (" + (int) Double.parseDouble(rowData.get(0)) + ", " + rowData.get(2) + ", " + rowData.get(3) + ", "+ rowData.get(4) + ", " + 1 + ");");
@@ -237,15 +238,17 @@ public class CreateSQLInserts {
                 tipoOperacaoId++;
             }
 
-            if (uniqueValues.add(modoFertilizacaoDesignacao)) {
-                resultList.add("INSERT INTO TipoOperacao (ID, Designacao) VALUES (" + modoFertilizacaoID + ", " + modoFertilizacaoDesignacao + ");");
+            if (!modoFertilizacaoDesignacao.equals("NULL")) {
+                if (uniqueValues.add(modoFertilizacaoDesignacao)) {
+                resultList.add("INSERT INTO ModoFertilizacao (ID, Designacao) VALUES (" + modoFertilizacaoID + ", " + modoFertilizacaoDesignacao + ");");
                 modoFertilizacaoID++;
+                }
             }
 
-            if (tipoOperacaoDesignacao != "Plantação" && tipoOperacaoDesignacao != "Fertilização") {
+            if (!tipoOperacaoDesignacao.equals("'Plantação'") && !tipoOperacaoDesignacao.equals("'Fertilização'")) {
                 resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND ROWNUM = 1), " + 1 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(TipoOperacao) = UPPPER(" + rowData.get(2) + ")));");
                 operacaoID++;
-            } else if (tipoOperacaoDesignacao == "Plantação"){
+            } else if (tipoOperacaoDesignacao.equals("'Plantação'")){
                 resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND DataInicial = " + rowData.get(5) + "), " + 1 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(TipoOperacao) = UPPPER(" + rowData.get(2) + ")));");
                 operacaoID++;
             } else {
@@ -272,15 +275,20 @@ public class CreateSQLInserts {
         }
     }
 
-    private static void writeListToFile() {
+    private static boolean writeListToFile() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/sql/Inserts.sql", true))) {
             writer.newLine();
+            int lines = 0;
             for (String item : insertsList) {
                 writer.write(item);
                 writer.newLine();
+                lines++;
+                if(lines % 100 == 0) writer.newLine();
             }
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 }

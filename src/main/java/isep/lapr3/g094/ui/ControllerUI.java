@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import isep.lapr3.g094.Main;
 import isep.lapr3.g094.Controller.Controller;
 import isep.lapr3.g094.Domain.RegaDiaria;
 public class ControllerUI {

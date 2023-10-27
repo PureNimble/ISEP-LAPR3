@@ -36,7 +36,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>isep.lapr3.g094.ui.Main</mainClass>
+                    <mainClass>isep.lapr3.g094.Main</mainClass>
                 </configuration>
             </plugin>
             <!-- JaCoCo Plugin for code coverage -->

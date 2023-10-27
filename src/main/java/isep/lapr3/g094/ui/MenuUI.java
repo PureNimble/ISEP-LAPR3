@@ -2,15 +2,15 @@ package isep.lapr3.g094.ui;
 
 import java.io.IOException;
 import java.util.Scanner;
-import isep.lapr3.g094.Controller.CreateSQLInserts;
 public class MenuUI {
     private ControllerUI controllerUI;
-    private CreateSQLInserts createSQLInserts;
+    private CreateSQLInsertsUI createSQLInsertsUI;
     public MenuUI(){
         controllerUI = new ControllerUI();
-        createSQLInserts = new CreateSQLInserts();
+        createSQLInsertsUI = new CreateSQLInsertsUI();
+
     }
-    public void main() throws NumberFormatException, IOException{
+    public void mainUI() throws NumberFormatException, IOException{
         String input;
         int opcao;
         Scanner scanner = new Scanner(System.in);
@@ -29,11 +29,12 @@ public class MenuUI {
             controllerUI.main();
             break;
         case 2 : 
-            createSQLInserts.createSQLInserts();
+            createSQLInsertsUI.mainUI();;
             break;
         case 3 :
             System.exit(0);
             break;
     }
+    scanner.close();
 }
 }

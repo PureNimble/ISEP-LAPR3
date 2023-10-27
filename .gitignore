@@ -16,9 +16,6 @@ dist/
 # Log files
 *.log
 
-# Xlsx files
-*.xlsx
-
 # Package files
 *.jar
 
