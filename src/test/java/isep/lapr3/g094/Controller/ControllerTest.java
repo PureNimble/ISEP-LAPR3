@@ -3,8 +3,9 @@ package isep.lapr3.g094.Controller;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,46 +14,65 @@ import isep.lapr3.g094.Domain.RegaDiaria;
 
 public class ControllerTest {
 
-@Test
-public void testSearchCheckOddDays() throws IOException {
-    Controller controller = new Controller();
-    controller.importData();
-    int dia;
-    String[] horas = {"8:31", "17:01"}; 
-    Set<Character> tiposRega = new HashSet<>();
-    //Check all the odd days
-    for(String hora : horas){
-        dia = 3;
-        List<RegaDiaria> output = controller.search(dia, hora);
-        
-            tiposRega = output.stream().map(i -> i.getTipoRega()).collect(Collectors.toSet());
+    @Test
+    public void testSearchCheckOddDays() throws IOException, ParseException {
+        Controller controller = new Controller();
+        controller.createPlan("01/12/2020");
+        Map<RegaDiaria,Integer> output;
+        Set<Character> tiposRega = new HashSet<>();
+        for(int i = 3; i < 30; i+=2){
+            
+            output = controller.search(i + "/12/2020", "8:31");
+            tiposRega = output.entrySet().stream().map((entry) -> entry.getKey().getTipoRega()).collect(Collectors.toSet());
 
-            System.out.println(tiposRega);
-            System.out.println(dia);
-            assertEquals(true, tiposRega.contains('I'));
-            assertEquals(false, tiposRega.contains('P'));
-        
-    }
-}
-@Test
-public void testSearchCheckEvenDays() throws NumberFormatException, IOException{
-    Controller controller = new Controller();
-    controller.importData();
-    int dia;
-    String[] horas = {"08:31", "17:01"}; 
-    Set<Character> tiposRega = new HashSet<>();
-
-    for(String hora : horas){
-        dia = 2;
-        List<RegaDiaria> output = controller.search(dia, hora);
-        
-            tiposRega = output.stream().map(i -> i.getTipoRega()).collect(Collectors.toSet());
-
-            System.out.println(tiposRega);
-            System.out.println(dia);
-            assertEquals(true, tiposRega.contains('P'));
-            assertEquals(false, tiposRega.contains('I'));
+            assertEquals(true,tiposRega.contains('I') );
         }
     }
+    @Test
+    public void testSearchCheckEvenDays() throws  IOException, ParseException{
+        Controller controller = new Controller();
+        controller.createPlan("01/12/2020");
+        Map<RegaDiaria,Integer> output;
+        Set<Character> tiposRega = new HashSet<>();
+        for(int i = 2; i < 30; i+=2){
+            int day = i;
+            
+            output = controller.search(day + "/12/2020", "8:31");
+            tiposRega = output.entrySet().stream().map((entry) -> entry.getKey().getTipoRega()).collect(Collectors.toSet());
 
+            assertEquals(true,tiposRega.contains('P') );
+            assertEquals(true,tiposRega.contains('T') );
+        }
+    }
+    @Test
+    public void testSearchCheck3Days() throws  IOException, ParseException{
+        Controller controller = new Controller();
+        controller.createPlan("01/12/2020");
+        Map<RegaDiaria,Integer> output;
+        Set<Character> tiposRega = new HashSet<>();
+        for(int i = 3; i < 30; i+=3){
+            int day = i;
+            
+            output = controller.search(day + "/12/2020", "8:31");
+            tiposRega = output.entrySet().stream().map((entry) -> entry.getKey().getTipoRega()).collect(Collectors.toSet());
+
+            assertEquals(true,tiposRega.contains('3') );
+        }
+    }
+    @Test
+    public void testSeachCheckHour() throws  IOException, ParseException{
+        Controller controller = new Controller();
+        controller.createPlan("01/12/2020");
+        Map<RegaDiaria,Integer> output;
+        Set<Character> tiposRega = new HashSet<>();
+        for(int i = 2; i < 30; i+=2){
+            int day = i;
+            
+            output = controller.search(day + "/12/2020", "8:31");
+            tiposRega = output.entrySet().stream().map((entry) -> entry.getKey().getTipoRega()).collect(Collectors.toSet());
+
+            assertEquals(true,tiposRega.contains('P') );
+        }
+  
+    }
 }

@@ -1,6 +1,7 @@
 package isep.lapr3.g094.ui;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Scanner;
 public class MenuUI {
     private ControllerUI controllerUI;
@@ -10,7 +11,7 @@ public class MenuUI {
         createSQLInsertsUI = new CreateSQLInsertsUI();
 
     }
-    public void mainUI() throws NumberFormatException, IOException{
+    public void mainUI() throws NumberFormatException, IOException, ParseException{
         String input;
         int opcao;
         Scanner scanner = new Scanner(System.in);
@@ -26,7 +27,7 @@ public class MenuUI {
 
     switch(opcao){
         case 1 :
-            controllerUI.main();
+            controllerUI.mainUI();
             break;
         case 2 : 
             createSQLInsertsUI.mainUI();;
