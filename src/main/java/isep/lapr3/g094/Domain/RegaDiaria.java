@@ -19,7 +19,4 @@ public class RegaDiaria {
     public char getTipoRega(){
         return tipoRega;
     }
-    public void setDuracao(int duracao){
-        this.duracao = duracao;
-    }
 }

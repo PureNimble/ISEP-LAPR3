@@ -1,5 +1,6 @@
 package isep.lapr3.g094.ui;
 import java.io.IOException;
+import java.text.ParseException;
 
 import isep.lapr3.g094.Main;
 import isep.lapr3.g094.Controller.CreateSQLInserts;
@@ -11,7 +12,7 @@ public class CreateSQLInsertsUI {
     public CreateSQLInsertsUI(){
         createSQLInserts = new CreateSQLInserts();
     }
-    public void mainUI() throws NumberFormatException, IOException{
+    public void mainUI() throws NumberFormatException, IOException, ParseException{
 
         if(createSQLInserts.createSQLInserts())
             System.out.println("\n" +"-> Ficheiro importado com sucesso" + "\n");
