@@ -127,6 +127,7 @@ public class CreateSQLInserts {
 
             resultList.add("INSERT INTO Cultura (ID, Variedade, Poda, Floracao, Colheita, Sementeira, NomeEspecieID, TipoCulturaID) VALUES (" + culturaId + ", " + rowData.get(2) + ", " + rowData.get(5) + ", "+ rowData.get(6) + ", "+ rowData.get(7) + ", "+ rowData.get(4) + ", (SELECT ID FROM NomeEspecie WHERE UPPER(Especie) = UPPER(" + especie + ")), (SELECT ID FROM TipoCultura WHERE UPPER(Designacao) = UPPER(" + tipoCulturaDesignacao + ")));");
             culturaId++;
+            
         }
         return resultList;
     }
@@ -245,36 +246,38 @@ public class CreateSQLInserts {
                 resultList.add("INSERT INTO ModoFertilizacao (ID, Designacao) VALUES (" + modoFertilizacaoID + ", " + modoFertilizacaoDesignacao + ");");
                 modoFertilizacaoID++;
                 }
-            }
-
+            }   
+            
             if(culturaDesignacao.contains(" ")){
 
-                if (!tipoOperacaoDesignacao.equals("'Plantação'") && !tipoOperacaoDesignacao.equals("'Fertilização'")) {
-                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")));");
+                if (!tipoOperacaoDesignacao.equals("'Plantação'") && !tipoOperacaoDesignacao.equals("'Fertilização'") && !tipoOperacaoDesignacao.equals("'Aplicação de fitofármaco'")) {
+                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID, ParcelaID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")), " + rowData.get(0) + ");");
                     operacaoID++;
                 } else if (tipoOperacaoDesignacao.equals("'Plantação'")){
-                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND DataInicial = " + rowData.get(5) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")));");
+                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID, ParcelaID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND DataInicial = " + rowData.get(5) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")), " + rowData.get(0) + ");");
+                    operacaoID++;
+                }else if (tipoOperacaoDesignacao.equals("'Aplicação de fitofármaco'")) {
+                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID, ParcelaID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")), " + rowData.get(0) + ");");
+                    resultList.add("INSERT INTO AplicacaoFitofarmaco (OperacaoID, FatorDeProducaoID) VALUES (" + operacaoID + ", (SELECT ID FROM FatorDeProducao WHERE UPPER(Designacao) = UPPER(" + rowData.get(8) + ")));");
                     operacaoID++;
                 } else {
-                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + culturaDesignacao + ")) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")));");
+                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID, ParcelaID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER(" + culturaDesignacao + ")) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")), " + rowData.get(0) + ");");
                     resultList.add("INSERT INTO Fertilizacao (OperacaoID, ModoFertilizacaoID, FatorDeProducaoID) VALUES (" + operacaoID + ", (SELECT ID FROM ModoFertilizacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(3) + ")), (SELECT ID FROM FatorDeProducao WHERE UPPER(Designacao) = UPPER(" + rowData.get(8) + ")));");
                     operacaoID++;
                 }
             } else {
-                if (culturaDesignacao != "NULL") {
-                    if (!tipoOperacaoDesignacao.equals("'Plantação'") && !tipoOperacaoDesignacao.equals("'Fertilização'")) {
-                        resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")));");
-                        operacaoID++;
-                    } else if (tipoOperacaoDesignacao.equals("'Plantação'")){
-                        resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND DataInicial = " + rowData.get(5) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")));");
-                        operacaoID++;
-                    } else {
-                        resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")));");
-                        resultList.add("INSERT INTO Fertilizacao (OperacaoID, ModoFertilizacaoID, FatorDeProducaoID) VALUES (" + operacaoID + ", (SELECT ID FROM ModoFertilizacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(3) + ")), (SELECT ID FROM FatorDeProducao WHERE UPPER(Designacao) = UPPER(" + rowData.get(8) + ")));");
-                        operacaoID++;
-                    }
-                }
-                
+
+                if (!tipoOperacaoDesignacao.equals("'Plantação'") && !tipoOperacaoDesignacao.equals("'Fertilização'")) {
+                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID, ParcelaID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")), " + rowData.get(0) + ");");
+                    operacaoID++;
+                } else if (tipoOperacaoDesignacao.equals("'Plantação'")){
+                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID, ParcelaID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND DataInicial = " + rowData.get(5) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")), " + rowData.get(0) + ");");
+                    operacaoID++;
+                } else {
+                    resultList.add("INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID, ParcelaID) VALUES (" + operacaoID + ", " + rowData.get(5) + ", " + rowData.get(6) + ", " + rowData.get(7) + ", (SELECT ID FROM Plantacao WHERE ParcelaID = " + rowData.get(0) + " AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum) = UPPER(" + culturaDesignacao + ") AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), " + 0 + ", (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(2) + ")), " + rowData.get(0) + ");");
+                    resultList.add("INSERT INTO Fertilizacao (OperacaoID, ModoFertilizacaoID, FatorDeProducaoID) VALUES (" + operacaoID + ", (SELECT ID FROM ModoFertilizacao WHERE UPPER(Designacao) = UPPER(" + rowData.get(3) + ")), (SELECT ID FROM FatorDeProducao WHERE UPPER(Designacao) = UPPER(" + rowData.get(8) + ")));");
+                    operacaoID++;
+                }   
             }
         }
         return resultList;

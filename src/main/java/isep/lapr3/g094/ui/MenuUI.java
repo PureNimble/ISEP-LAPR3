@@ -15,11 +15,11 @@ public class MenuUI {
         int opcao;
         Scanner scanner = new Scanner(System.in);
         do {
-            System.out.println("============Interface Principal============");
+            System.out.println("============Interface Principal==============");
             System.out.println("1 - Aceder ao controlador do Sistema de Rega");
             System.out.println("2 - Adicionar informação do sistema legacy");
             System.out.println("3 - Sair");
-            System.out.println("================================================");
+            System.out.println("=============================================");
             input = scanner.nextLine();
             opcao = Integer.parseInt(input);
         } while (opcao < 1 || opcao > 3);
