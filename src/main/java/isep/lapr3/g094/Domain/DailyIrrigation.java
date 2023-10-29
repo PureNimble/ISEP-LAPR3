@@ -1,11 +1,11 @@
 package isep.lapr3.g094.Domain;
 
-public class RegaDiaria {
+public class DailyIrrigation {
     private char parcela;
     private int duracao;
     private char tipoRega;
 
-    public RegaDiaria(char parcela, int duracao, char tipoRega) {
+    public DailyIrrigation(char parcela, int duracao, char tipoRega) {
         this.parcela = parcela;
         this.duracao = duracao;
         this.tipoRega = tipoRega;

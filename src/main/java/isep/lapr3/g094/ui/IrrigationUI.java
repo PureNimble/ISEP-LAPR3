@@ -6,13 +6,13 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 
 import isep.lapr3.g094.Main;
-import isep.lapr3.g094.Controller.Controller;
-import isep.lapr3.g094.Domain.RegaDiaria;
-public class ControllerUI {
-    private Controller controller;
+import isep.lapr3.g094.Controller.IrrigationController;
+import isep.lapr3.g094.Domain.DailyIrrigation;
+public class IrrigationUI {
+    private IrrigationController controller;
 
-    ControllerUI(){
-        controller = new Controller();
+    IrrigationUI(){
+        controller = new IrrigationController();
     }
 
     public void mainUI() throws NumberFormatException, IOException, ParseException{
@@ -91,7 +91,7 @@ public class ControllerUI {
                                     } while (!patternHora.matcher(input).matches());
 
                                     hora = input;
-                                    Map<RegaDiaria,Integer> lista = controller.search(data, hora);
+                                    Map<DailyIrrigation,Integer> lista = controller.search(data, hora);
                                     if(lista != null) printResults(lista);
                                     break;
                                 case 2: 
@@ -112,7 +112,7 @@ public class ControllerUI {
         }
     }
 
-    private void printResults(Map<RegaDiaria,Integer> lista){
+    private void printResults(Map<DailyIrrigation,Integer> lista){
         if(lista.isEmpty())
             System.out.println("Nao existem regas nesta hora");
         else

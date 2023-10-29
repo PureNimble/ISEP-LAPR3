@@ -16,17 +16,17 @@ import java.util.stream.Stream;
 import java.util.Calendar;
 import java.util.Date;
 
-import isep.lapr3.g094.Domain.RegaDiaria;
+import isep.lapr3.g094.Domain.DailyIrrigation;
 
-public class Controller {
+public class IrrigationController {
 
     private final static String FOLDER_PATH = "src/main/resources/";
     private final static SimpleDateFormat DATA_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
-    private  List<RegaDiaria> planoDeRega;
+    private  List<DailyIrrigation> planoDeRega;
     private  List<String> horarioDeRega;
     private  List<Date> diasDeRega;
 
-    public Controller(){
+    public IrrigationController(){
         planoDeRega = new ArrayList<>();
         horarioDeRega = new ArrayList<>();
         diasDeRega = new ArrayList<>();
@@ -37,19 +37,19 @@ public class Controller {
         getDatesBetween(data);
     }
 
-    public Map<RegaDiaria,Integer> search(String dataString, String hora) throws ParseException {
+    public Map<DailyIrrigation,Integer> search(String dataString, String hora) throws ParseException {
         Date dataPesquisa = DATA_FORMAT.parse(dataString);
         if(checkIfDateExists(dataPesquisa)) {
             int dia = Integer.parseInt(getNumbersBeforeSlash(dataString.toString()));
 
-            List<RegaDiaria> listaFinal = new ArrayList<>();
+            List<DailyIrrigation> listaFinal = new ArrayList<>();
             // Remove spaces from the string
             hora = hora.strip();
             //convert hours to minutes
             int minutoPesquisa = convertHoursToMinutes(hora);
 
             // Iterate over the daily watering and add to the filtered list
-            for (RegaDiaria regaDiaria : planoDeRega) {
+            for (DailyIrrigation regaDiaria : planoDeRega) {
                 if (regaDiaria.getTipoRega() == 'T')
                     listaFinal.add(regaDiaria);
                 else if (regaDiaria.getTipoRega() == 'P' && dia % 2 == 0) 
@@ -61,7 +61,7 @@ public class Controller {
 
                 
             }
-            Map<RegaDiaria, Integer> resultMap = new HashMap<>();
+            Map<DailyIrrigation, Integer> resultMap = new HashMap<>();
             // Iterate over the watering schedule and filter the list based on the search time
             for (String horarioInicial : horarioDeRega) {
                 //convert hours to minutes
@@ -98,7 +98,7 @@ public class Controller {
                 }
             }else{
                 String[] lineData = line.split(",");
-                RegaDiaria regaDiaria = new RegaDiaria(lineData[0].charAt(0),Integer.parseInt(lineData[1]), lineData[2].charAt(0));
+                DailyIrrigation regaDiaria = new DailyIrrigation(lineData[0].charAt(0),Integer.parseInt(lineData[1]), lineData[2].charAt(0));
                 planoDeRega.add(regaDiaria);
             }
         }

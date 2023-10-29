@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Scanner;
 public class MenuUI {
-    private ControllerUI controllerUI;
+    private IrrigationUI controllerUI;
     private CreateSQLInsertsUI createSQLInsertsUI;
     public MenuUI(){
-        controllerUI = new ControllerUI();
+        controllerUI = new IrrigationUI();
         createSQLInsertsUI = new CreateSQLInsertsUI();
 
     }
