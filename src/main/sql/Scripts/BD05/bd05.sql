@@ -1,5 +1,5 @@
 
-CREATE OR REPLACE PROCEDURE GETCOLLECTEDPRODUCTS(
+CREATE OR REPLACE PROCEDURE getCollectedProductsByParcela(
     p_Parcela VARCHAR2,
     p_StartDate DATE,
     p_EndDate DATE
@@ -15,18 +15,18 @@ BEGIN
         INNER JOIN Operacao O ON PL.ID = O.PlantacaoID
         INNER JOIN TipoOperacao TOp ON O.TipoOperacaoID = TOp.ID
         WHERE TOp.Designacao = 'Colheita'
-        AND P.Designacao = p_Parcela
+        AND UPPER(P.Designacao) = UPPER(p_Parcela)
         AND O.DataOperacao BETWEEN p_StartDate AND p_EndDate
         GROUP BY NP.NOMECOMUM, C.VARIEDADE
     )
     LOOP
-        DBMS_OUTPUT.PUT_LINE(' Produto: ' || rec.Produto || ';   Quantidade: ' || rec.Quantidade || ' ' || rec.Unidade);
+        DBMS_OUTPUT.PUT_LINE(' Produto: ' || rec.Produto || '; Quantidade: ' || rec.Quantidade || ' ' || rec.Unidade );
     END LOOP;
 END;
 /
 -- Call Function above
 BEGIN
-    GETCOLLECTEDPRODUCTS('Horta nova', TO_DATE('2003-01-01', 'yyyy-mm-dd'), TO_DATE('2024-12-31', 'yyyy-mm-dd'));
+    getCollectedProductsByParcela('Horta nova', TO_DATE('2003-01-01', 'yyyy-mm-dd'), TO_DATE('2024-12-31', 'yyyy-mm-dd'));
 END;
 /
 

@@ -41,7 +41,7 @@ BEGIN
         AND O.DataOperacao BETWEEN p_StartDate AND p_EndDate
         GROUP BY TP.Designacao
     ) LOOP
-        DBMS_OUTPUT.PUT_LINE('Tipo de Fator De Produção: ' || rec.Tipo || '; Número de Operações: ' || rec.numeroOperacoes);
+        DBMS_OUTPUT.PUT_LINE('Tipo de Fator De Produção: ' || rec.Tipo || ';    Número de Operações: ' || rec.numeroOperacoes);
     END LOOP;
 END;
 /

@@ -1259,40 +1259,8 @@ INSERT INTO AplicacaoFitofarmaco (OperacaoID, FatorDeProducaoID) VALUES (206, (S
 
 INSERT INTO Operacao (ID, DataOperacao, Quantidade, Unidade, PlantacaoID, CadernoDeCampoID, TipoOperacaoID, ParcelaID) VALUES (207, TO_DATE('03/20/2023', 'MM/DD/YYYY'), 1.3, 'ha', (SELECT ID FROM Plantacao WHERE ParcelaID = 103 AND CulturaID = (SELECT C.ID FROM Cultura C INNER JOIN NomeEspecie N ON C.NomeEspecieID = N.ID WHERE UPPER(N.NomeComum || ' ' || C.Variedade) = UPPER('Tremoço Amarelo') AND C.ID = Plantacao.CulturaID) AND ROWNUM = 1), 0, (SELECT ID FROM TipoOperacao WHERE UPPER(Designacao) = UPPER('Incorporação no solo')), 103);
 
-CREATE OR REPLACE PROCEDURE GetNumberOfOperationByType( 
-    p_Parcela VARCHAR2, 
-    p_StartDate DATE, 
-    p_EndDate DATE 
-) 
-IS 
-BEGIN 
-    FOR rec IN ( 
-        SELECT TOp.Designacao AS Tipo, COUNT(OP.ID) AS numeroOperacoes 
-        FROM Parcela P 
-        INNER JOIN Operacao OP ON P.ID = OP.ParcelaID                   -- Obter a operação da parcela 
-        INNER JOIN TipoOperacao TOp ON OP.TipoOperacaoID = TOp.ID       -- Obter o tipo de operação 
-        WHERE P.Designacao = p_Parcela                                    -- Selecionar a parcela passada como parâmetro 
-        AND OP.DataOperacao BETWEEN p_StartDate AND p_EndDate            -- Selecionar o intervalo de datas passado como parâmetro 
-        GROUP BY TOp.Designacao 
-    ) LOOP 
-        DBMS_OUTPUT.PUT_LINE('Tipo de Operação: ' || rec.Tipo || '; Número de Operações: ' || rec.numeroOperacoes); 
-    END LOOP; 
-END; 
-/
-
-SELECT P.Designacao AS Parcela, COUNT(O.ID) AS NUMERO_DE_OPERACOES 
-FROM Parcela P 
-INNER JOIN Operacao O ON P.ID = O.ParcelaID				-- Obter a operação da parcela 
-INNER JOIN TipoOperacao TOp ON O.TipoOperacaoID = TOp.ID		-- Obter o tipo de operação 
-WHERE TOp.Designacao = 'Rega' 
-GROUP BY P.Designacao 
-HAVING  COUNT(O.ID) = (SELECT MAX(COUNT(O.ID)) FROM Parcela P 
-                        INNER JOIN Operacao O ON P.ID = O.ParcelaID 
-                        INNER JOIN TipoOperacao TOp ON O.TipoOperacaoID = TOp.ID 
-                        WHERE TOp.Designacao = 'Rega' 
-    					GROUP BY P.Designacao);
-
-CREATE OR REPLACE PROCEDURE GETCOLLECTEDPRODUCTS(
+--US005
+CREATE OR REPLACE PROCEDURE getCollectedProductsByParcela(
     p_Parcela VARCHAR2,
     p_StartDate DATE,
     p_EndDate DATE
@@ -1302,22 +1270,22 @@ BEGIN
     FOR rec IN (
         SELECT NP.NOMECOMUM || ' ' || C.VARIEDADE AS PRODUTO, MAX(O.Unidade) AS Unidade, SUM(O.Quantidade) AS Quantidade
         FROM Parcela P
-        INNER JOIN Plantacao PL ON P.ID = PL.ParcelaID
-        INNER JOIN Cultura C ON PL.CulturaID = C.ID
-        INNER JOIN NomeEspecie NP ON C.NomeEspecieID = NP.ID
-        INNER JOIN Operacao O ON PL.ID = O.PlantacaoID
-        INNER JOIN TipoOperacao TOp ON O.TipoOperacaoID = TOp.ID
-        WHERE TOp.Designacao = 'Colheita'
-        AND P.Designacao = p_Parcela
-        AND O.DataOperacao BETWEEN p_StartDate AND p_EndDate
-        GROUP BY NP.NOMECOMUM, C.VARIEDADE
+        INNER JOIN Plantacao PL ON P.ID = PL.ParcelaID                  -- obter Plantacoes
+        INNER JOIN Cultura C ON PL.CulturaID = C.ID                     -- obter Culturas                   
+        INNER JOIN NomeEspecie NP ON C.NomeEspecieID = NP.ID            -- obter NomeEspecie
+        INNER JOIN Operacao O ON PL.ID = O.PlantacaoID                  -- obter Operacoes
+        INNER JOIN TipoOperacao TOp ON O.TipoOperacaoID = TOp.ID        -- obter TipoOperacao
+        WHERE TOp.Designacao = 'Colheita'                       -- obter Colheitas
+        AND UPPER(P.Designacao) = UPPER(p_Parcela)              -- obter Parcela
+        AND O.DataOperacao BETWEEN p_StartDate AND p_EndDate    -- obter Operacoes entre datas
+        GROUP BY NP.NOMECOMUM, C.VARIEDADE                      -- agrupar por NomeEspecie e Variedade
     )
     LOOP
         DBMS_OUTPUT.PUT_LINE(' Produto: ' || rec.Produto || ';   Quantidade: ' || rec.Quantidade || ' ' || rec.Unidade);
     END LOOP;
 END;
 /
-
+-- US006
 CREATE OR REPLACE PROCEDURE getNumberOfFactorsByType(
     p_Parcela VARCHAR2,
     p_StartDate DATE,
@@ -1358,7 +1326,7 @@ BEGIN
     END LOOP;
 END;
 /
-
+-- US006
 CREATE OR REPLACE PROCEDURE getNumberOfFactorsByTypeV2(
     p_Parcela VARCHAR2,
     p_StartDate DATE,
@@ -1401,54 +1369,29 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE PROCEDURE getNumberOfAplicationsByFarm(
-    p_FarmDesignation VARCHAR2,
-    p_StartDate DATE,
-    p_EndDate DATE
-)
-IS
-    v_QuintaID NUMBER;
-    v_QuintaDesignacao VARCHAR2(100);
-BEGIN
-    -- Retrieve the QuintaID and Designacao
-    SELECT Q.ID, Q.Designacao
-    INTO v_QuintaID, v_QuintaDesignacao
-    FROM Quinta Q
-    WHERE Q.Designacao = p_FarmDesignation;
-
-    DBMS_OUTPUT.PUT_LINE('Quinta ID: ' || v_QuintaID);
-    DBMS_OUTPUT.PUT_LINE('Nome da Quinta: ' || v_QuintaDesignacao);
-
-    FOR rec IN (
-        SELECT TP.Designacao AS Tipo, COUNT(DISTINCT AP.FATORDEPRODUCAOID) AS numeroOperacoes
-        FROM Quinta Q
-        INNER JOIN CadernoDeCampo CC ON Q.ID = CC.QuintaID         	  -- obter Caderno de campo
-    	INNER JOIN Operacao O ON CC.ID = O.CadernoDeCampoID		  -- obter Operações
-        INNER JOIN FERTILIZACAO F ON O.ID = F.OPERACAOID
-        INNER JOIN FATORDEPRODUCAO FDP ON F.FATORDEPRODUCAOID = FDP.ID
-        INNER JOIN TIPOPRODUTO TP ON FDP.TIPOPRODUTOID = TP.ID
-        INNER JOIN APLICACAOPRODUTO AP ON FDP.ID = AP.FATORDEPRODUCAOID
-        WHERE Q.Designacao = p_FarmDesignation
-        AND O.DataOperacao BETWEEN p_StartDate AND p_EndDate
-        GROUP BY TP.Designacao
-        UNION ALL
-        SELECT TP.Designacao  AS Tipo, COUNT(DISTINCT AP.FATORDEPRODUCAOID) AS numeroOperacoes
-        FROM Quinta Q
-    	INNER JOIN CadernoDeCampo CC ON Q.ID = CC.QuintaID         	  -- obter Caderno de campo
-    	INNER JOIN Operacao O ON CC.ID = O.CadernoDeCampoID		  -- obter Operações
-        INNER JOIN APLICACAOFITOFARMACO AF ON O.ID = AF.OPERACAOID
-        INNER JOIN FATORDEPRODUCAO FDP ON AF.FATORDEPRODUCAOID = FDP.ID
-        INNER JOIN TIPOPRODUTO TP ON FDP.TIPOPRODUTOID = TP.ID
-        INNER JOIN APLICACAOPRODUTO AP ON FDP.ID = AP.FATORDEPRODUCAOID
-        WHERE Q.Designacao = p_FarmDesignation
-        AND O.DataOperacao BETWEEN p_StartDate AND p_EndDate
-        GROUP BY TP.Designacao
-    ) LOOP
-        DBMS_OUTPUT.PUT_LINE('Tipo de Fator De Produção: ' || rec.Tipo || '; Número de Operações: ' || rec.numeroOperacoes);
-    END LOOP;
-END;
+--US007
+CREATE OR REPLACE PROCEDURE GetNumberOfOperationByType( 
+    p_Parcela VARCHAR2, 
+    p_StartDate DATE, 
+    p_EndDate DATE 
+) 
+IS 
+BEGIN 
+    FOR rec IN ( 
+        SELECT TOp.Designacao AS Tipo, COUNT(OP.ID) AS numeroOperacoes 
+        FROM Parcela P 
+        INNER JOIN Operacao OP ON P.ID = OP.ParcelaID                   -- Obter a operação da parcela 
+        INNER JOIN TipoOperacao TOp ON OP.TipoOperacaoID = TOp.ID       -- Obter o tipo de operação 
+        WHERE P.Designacao = p_Parcela                                    -- Selecionar a parcela passada como parâmetro 
+        AND OP.DataOperacao BETWEEN p_StartDate AND p_EndDate            -- Selecionar o intervalo de datas passado como parâmetro 
+        GROUP BY TOp.Designacao 
+    ) LOOP 
+        DBMS_OUTPUT.PUT_LINE('Tipo de Operação: ' || rec.Tipo || '; Número de Operações: ' || rec.numeroOperacoes); 
+    END LOOP; 
+END; 
 /
 
+-- US008
 CREATE OR REPLACE PROCEDURE GetFactorWithMostAplications(
     p_StartDate DATE,
     p_EndDate DATE
@@ -1482,3 +1425,65 @@ FOR rec IN (
 END LOOP;
 END;
 /
+
+-- US009
+CREATE OR REPLACE PROCEDURE getNumberOfAplicationsByFarm(
+    p_FarmDesignation VARCHAR2,
+    p_StartDate DATE,
+    p_EndDate DATE
+)
+IS
+    v_QuintaID NUMBER;
+    v_QuintaDesignacao VARCHAR2(100);
+BEGIN
+    -- Retrieve the QuintaID and Designacao
+    SELECT Q.ID, Q.Designacao
+    INTO v_QuintaID, v_QuintaDesignacao
+    FROM Quinta Q
+    WHERE Q.Designacao = p_FarmDesignation;
+
+    DBMS_OUTPUT.PUT_LINE('Quinta ID: ' || v_QuintaID);
+    DBMS_OUTPUT.PUT_LINE('Nome da Quinta: ' || v_QuintaDesignacao);
+
+    FOR rec IN (
+        SELECT TP.Designacao AS Tipo, COUNT(DISTINCT AP.FATORDEPRODUCAOID) AS numeroOperacoes
+        FROM Quinta Q
+        INNER JOIN CadernoDeCampo CC ON Q.ID = CC.QuintaID         	          -- obter Caderno de campo
+    	  INNER JOIN Operacao O ON CC.ID = O.CadernoDeCampoID		                -- obter Operações
+        INNER JOIN FERTILIZACAO F ON O.ID = F.OPERACAOID                      -- obter Fertilizações
+        INNER JOIN FATORDEPRODUCAO FDP ON F.FATORDEPRODUCAOID = FDP.ID        -- obter Fatores de Produção
+        INNER JOIN TIPOPRODUTO TP ON FDP.TIPOPRODUTOID = TP.ID                -- obter Tipo de Produto
+        INNER JOIN APLICACAOPRODUTO AP ON FDP.ID = AP.FATORDEPRODUCAOID       -- obter Aplicações de Produtos
+        WHERE Q.Designacao = p_FarmDesignation                          -- Selecionar a quinta passada como parâmetro
+        AND O.DataOperacao BETWEEN p_StartDate AND p_EndDate            -- Selecionar o intervalo de datas passado como parâmetro
+        GROUP BY TP.Designacao                                          -- Agrupar por Tipo de Produto
+        UNION ALL
+        SELECT TP.Designacao  AS Tipo, COUNT(DISTINCT AP.FATORDEPRODUCAOID) AS numeroOperacoes
+        FROM Quinta Q
+    	  INNER JOIN CadernoDeCampo CC ON Q.ID = CC.QuintaID         	          -- obter Caderno de campo
+    	  INNER JOIN Operacao O ON CC.ID = O.CadernoDeCampoID		                -- obter Operações
+        INNER JOIN APLICACAOFITOFARMACO AF ON O.ID = AF.OPERACAOID            -- obter Aplicações Fitofarmacos
+        INNER JOIN FATORDEPRODUCAO FDP ON AF.FATORDEPRODUCAOID = FDP.ID       -- obter Fatores de Produção
+        INNER JOIN TIPOPRODUTO TP ON FDP.TIPOPRODUTOID = TP.ID                -- obter Tipo de Produto
+        INNER JOIN APLICACAOPRODUTO AP ON FDP.ID = AP.FATORDEPRODUCAOID       -- obter Aplicações de Produtos
+        WHERE Q.Designacao = p_FarmDesignation                          -- Selecionar a quinta passada como parâmetro
+        AND O.DataOperacao BETWEEN p_StartDate AND p_EndDate            -- Selecionar o intervalo de datas passado como parâmetro
+        GROUP BY TP.Designacao                                          -- Agrupar por Tipo de Produto
+    ) LOOP
+        DBMS_OUTPUT.PUT_LINE('Tipo de Fator De Produção: ' || rec.Tipo || '; Número de Operações: ' || rec.numeroOperacoes); 
+    END LOOP;
+END;
+/
+
+--US010
+SELECT P.Designacao AS Parcela, COUNT(O.ID) AS NUMERO_DE_OPERACOES 
+FROM Parcela P 
+INNER JOIN Operacao O ON P.ID = O.ParcelaID				-- Obter a operação da parcela 
+INNER JOIN TipoOperacao TOp ON O.TipoOperacaoID = TOp.ID		-- Obter o tipo de operação 
+WHERE TOp.Designacao = 'Rega' 
+GROUP BY P.Designacao 
+HAVING  COUNT(O.ID) = (SELECT MAX(COUNT(O.ID)) FROM Parcela P 
+                        INNER JOIN Operacao O ON P.ID = O.ParcelaID 
+                        INNER JOIN TipoOperacao TOp ON O.TipoOperacaoID = TOp.ID 
+                        WHERE TOp.Designacao = 'Rega' 
+    					GROUP BY P.Designacao);

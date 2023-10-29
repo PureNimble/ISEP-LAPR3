@@ -1,0 +1,7 @@
+---------------------------------------------------
+|CHECK(DESIGNACAO IN ('Permanente', 'Temporária'))|
+---------------------------------------------------
+
+->  A função "CHECK(DESIGNACAO IN ('Permanente', 'Temporária'))" 
+    garante que os valores na coluna "DESIGNACAO" só podem ser "Permanente" ou "Temporária".
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
