@@ -1330,7 +1330,7 @@ BEGIN
     SELECT ID, Designacao
     INTO v_ParcelaID, v_ParcelaName
     FROM Parcela
-    WHERE Designacao = p_Parcela;
+    WHERE UPPER(Designacao) = UPPER(p_Parcela);
 
     DBMS_OUTPUT.PUT_LINE('ID da Parcela: ' || v_ParcelaID);
     DBMS_OUTPUT.PUT_LINE('Nome da Parcela: ' || v_ParcelaName);
@@ -1372,7 +1372,7 @@ BEGIN
     SELECT ID, Designacao
     INTO v_ParcelaID, v_ParcelaName
     FROM Parcela
-    WHERE Designacao = p_Parcela;
+    WHERE UPPER(Designacao) = UPPER(p_Parcela);
 
     DBMS_OUTPUT.PUT_LINE('ID da Parcela: ' || v_ParcelaID);
     DBMS_OUTPUT.PUT_LINE('Nome da Parcela: ' || v_ParcelaName);
@@ -1400,6 +1400,7 @@ BEGIN
     END LOOP;
 END;
 /
+
 CREATE OR REPLACE PROCEDURE getNumberOfAplicationsByFarm(
     p_FarmDesignation VARCHAR2,
     p_StartDate DATE,
