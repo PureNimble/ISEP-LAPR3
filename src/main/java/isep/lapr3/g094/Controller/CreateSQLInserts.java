@@ -306,7 +306,7 @@ public class CreateSQLInserts {
     }
 
     private static boolean writeListToFile() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/sql/Inserts.sql", true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/sql/Scripts/BD04/INSERTS.sql", true))) {
             writer.newLine();
             for (String item : insertsList) {
                 writer.write(item);
