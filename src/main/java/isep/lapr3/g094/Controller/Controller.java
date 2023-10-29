@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import javax.xml.crypto.Data;
-
 import java.util.Calendar;
 import java.util.Date;
 
@@ -41,44 +39,47 @@ public class Controller {
 
     public Map<RegaDiaria,Integer> search(String dataString, String hora) throws ParseException {
         Date dataPesquisa = DATA_FORMAT.parse(dataString);
-        checkIfDateExists(dataPesquisa); 
-        
-        int dia = dataPesquisa.getDay();
+        if(checkIfDateExists(dataPesquisa)) {
+            int dia = Integer.parseInt(getNumbersBeforeSlash(dataString.toString()));
 
-        List<RegaDiaria> listaFinal = new ArrayList<>();
-        // Remove spaces from the string
-        hora = hora.strip();
-        //convert hours to minutes
-        int minutoPesquisa = convertHoursToMinutes(hora);
-
-        // Iterate over the daily watering and add to the filtered list
-        for (RegaDiaria regaDiaria : planoDeRega) {
-            if (regaDiaria.getTipoRega() == 'T')
-                listaFinal.add(regaDiaria);
-            else if (regaDiaria.getTipoRega() == 'P' && dia % 2 == 0) 
-                listaFinal.add(regaDiaria);
-            else if (regaDiaria.getTipoRega() == 'I' && dia % 2 != 0)
-                listaFinal.add(regaDiaria);
-            else if (regaDiaria.getTipoRega() == '3' && dia % 3 == 0)
-                listaFinal.add(regaDiaria);
-
-            
-        }
-        Map<RegaDiaria, Integer> resultMap = new HashMap<>();
-        // Iterate over the watering schedule and filter the list based on the search time
-        for (String horarioInicial : horarioDeRega) {
+            List<RegaDiaria> listaFinal = new ArrayList<>();
+            // Remove spaces from the string
+            hora = hora.strip();
             //convert hours to minutes
-            int minutoInicial = convertHoursToMinutes(horarioInicial);
-            // Iterate over the filtered list and add to the final list
-            listaFinal.stream()
-                    .forEach((regaDiaria) -> {
-                        int minutoFinal = minutoInicial + regaDiaria.getDuracao();
-                        if (minutoInicial <= minutoPesquisa && minutoFinal > minutoPesquisa) {
-                            resultMap.put(regaDiaria, minutoFinal - minutoPesquisa);
-                        }
-                    });
-    }
-        return resultMap;
+            int minutoPesquisa = convertHoursToMinutes(hora);
+
+            // Iterate over the daily watering and add to the filtered list
+            for (RegaDiaria regaDiaria : planoDeRega) {
+                if (regaDiaria.getTipoRega() == 'T')
+                    listaFinal.add(regaDiaria);
+                else if (regaDiaria.getTipoRega() == 'P' && dia % 2 == 0) 
+                    listaFinal.add(regaDiaria);
+                else if (regaDiaria.getTipoRega() == 'I' && dia % 2 != 0)
+                    listaFinal.add(regaDiaria);
+                else if (regaDiaria.getTipoRega() == '3' && dia % 3 == 0)
+                    listaFinal.add(regaDiaria);
+
+                
+            }
+            Map<RegaDiaria, Integer> resultMap = new HashMap<>();
+            // Iterate over the watering schedule and filter the list based on the search time
+            for (String horarioInicial : horarioDeRega) {
+                //convert hours to minutes
+                int minutoInicial = convertHoursToMinutes(horarioInicial);
+                // Iterate over the filtered list and add to the final list
+                listaFinal.stream()
+                        .forEach((regaDiaria) -> {
+                            int minutoFinal = minutoInicial + regaDiaria.getDuracao();
+                            if (minutoInicial <= minutoPesquisa && minutoFinal > minutoPesquisa) {
+                                resultMap.put(regaDiaria, minutoFinal - minutoPesquisa);
+                            }
+                        });
+            }
+            return resultMap;
+        } else {
+            System.out.println("Data não existe no plano de rega, por favor insira uma data válida. (30 dias a partir da data de criação do plano)");
+        }
+        return null;       
     }
 
     private void importData() throws NumberFormatException, IOException{
@@ -103,6 +104,7 @@ public class Controller {
         }
         textFileReader.close();
     }
+
     private int convertHoursToMinutes(String hora) {
         String[] horas = hora.split(":");
         // Hours and minutes to search
@@ -113,6 +115,7 @@ public class Controller {
         minutes += hour;
         return minutes;
     }
+
     private String findTxtFile(){
             Path folder = Paths.get(FOLDER_PATH);
             try (Stream<Path> paths = Files.walk(folder)) {
@@ -127,6 +130,7 @@ public class Controller {
                 return null;
             }
     }
+
     private void getDatesBetween(String dateString) {
         try {
             Date startDate = DATA_FORMAT.parse(dateString);
@@ -140,6 +144,7 @@ public class Controller {
             e.printStackTrace();
         }
     }
+
     private boolean checkIfDateExists(Date dataPesquisa) {
         for (Date date : diasDeRega) {
             if (date.equals(dataPesquisa)) {
@@ -147,5 +152,11 @@ public class Controller {
             }
         }
         return false;
+    }
+
+    public static String getNumbersBeforeSlash(String str) {
+        int index = str.indexOf('/');
+        String numbers = str.substring(0, index);
+        return numbers.replaceAll("[^\\d]", "");
     }
 }
