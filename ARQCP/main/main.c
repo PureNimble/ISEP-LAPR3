@@ -12,7 +12,7 @@ int main() {
     time_t t;
     srand((unsigned)time(&t));
 
-    printf("\nExecuting Ex1:\n");
+    printf("\nExecuting Ex2:\n");
     sleep(2);
     for (i = 0; i < 30; i++) {
 		enqueue_value(array, length, &read, &write, rand() % 10000);
@@ -23,16 +23,16 @@ int main() {
 	}
     printf("Current Read Index: %i\nCurrent Write Index: %i\n", read, write);
 
-    printf("\nExecuting Ex2:\n");
+    printf("\nExecuting Ex3:\n");
     sleep(2);
-    if (copy_num_vec(array, length, &read, &write, num, vec)) {
+    if (move_num_vec(array, length, &read, &write, num, vec)) {
         printf("%i elements were successfully copied to vec:\n", num);
         for (i = 0; i < num; i++) {
             printf("Vec[%i]: %i\n", i, vec[i]);
         }
     } else printf("The number of elements to copy is invalid\n");
 
-    printf("\nExecuting Ex3:\n");
+    printf("\nExecuting Ex4:\n");
     sleep(2);
     sort_array(vec, num);
     printf("Sorted Vec:\n");

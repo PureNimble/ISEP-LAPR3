@@ -1,8 +1,8 @@
 .section .text
 
-	.global copy_num_vec
+	.global move_num_vec
 
-copy_num_vec:
+move_num_vec:
     #rdi -> array
     #rsi -> length
     #rdx -> &read
