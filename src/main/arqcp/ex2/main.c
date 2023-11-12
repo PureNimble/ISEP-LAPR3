@@ -1,25 +1,25 @@
 #include <stdio.h>
 #include "asm.h"
 
-void print_array(int *array, int length)
-{
-	for (int i = 0; i < length; i++)
-	{
+void print_array(int *array, int length, int read, int write) {
+	for (int i = 0; i < length; i++) {
 		printf("%d ", array[i]);
 	}
-	printf("\n");
+
+	printf("\tCurrent Read: %d, Current Write: %d\n", read, write);
 }
-int main()
-{
-	int length = 10;
+
+int main() {
+	int length = 15;
 	int array[length];
 	int read = 0;
 	int write = 0;
 
-	for (int value = 1; value < 30; value++)
-	{
-		print_array(array, length);
+	printf("Empty array:\n");
+	print_array(array, length, read, write);
+	for (int value = 1; value < 123; value++) {
 		enqueue_value(array, length, &read, &write, value);
+		print_array(array, length, read, write);
 	}
 
 	return 0;

@@ -2,22 +2,32 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include "../ex1/asm.h"
 #include "../ex2/asm.h"
 #include "../ex3/asm.h"
 #include "../ex4/asm.h"
 
 int main() {
-    int i, length = 8, num = 7, read = 0, write = 0;
-    int array[] = {1, 2, 3, 4, 5, 6, 7, 8}, vec[num];
+    int i, length = 18, num = 13, read = 0, write = 0;
+    int array[length], vec[num];
+    char baseInput[] = "sensor_id:8#type:atmospheric_temperature#value:21.60#unit:celsius#time:", token[] = "time";
     time_t t;
     srand((unsigned)time(&t));
 
-    printf("\nExecuting Ex2:\n");
+    printf("Executing Ex1 and Ex2:\n");
     sleep(2);
-    for (i = 0; i < 30; i++) {
-		enqueue_value(array, length, &read, &write, rand() % 10000);
+    for (i = 0; i < 50; i++) {
+        int output = 0;
+        char input[100];
+        sprintf(input, "%s%d", baseInput, (rand() % 99999) + 10000);
+        printf("\nProcessing: %s\n", input);
+        extract_token(input, token, &output);
+        printf("Storing %i in a Circular Buffer...\n", output);
+        enqueue_value(array, length, &read, &write, output);
+        printf("Value stored at array[%i], Read Index: %i, Write Index: %i\n", write, read, write);
 	}
-    printf("Final array:\n");
+
+    printf("\nFinal array:\n");
     for (i = 0; i < length; i++) {
         printf("Array[%i]: %i\n", i, array[i]);
 	}

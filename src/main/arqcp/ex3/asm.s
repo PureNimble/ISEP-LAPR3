@@ -18,8 +18,12 @@ move_num_vec:
     xorl %edx, %edx               # clear edx
     divl %esi                     # calculate writeIndex % length
 
-    xorl %eax, %eax               # clear return value
+    cmpl %eax, %r10d
+    jl skip_increment
     incl %edx                     # increment remainder
+
+skip_increment:
+    xorl %eax, %eax               # clear return value
     cmpl %edx, %r8d
     jg end                        # jump to end if (initialized elements < num)
 
