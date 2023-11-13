@@ -6,6 +6,7 @@
 #include "../ex2/asm.h"
 #include "../ex3/asm.h"
 #include "../ex4/asm.h"
+#include "../ex5/asm.h"
 
 int main() {
     int i, length = 18, num = 13, read = 0, write = 0;
@@ -49,6 +50,11 @@ int main() {
     for (i = 0; i < num; i++) {
         printf("Vec[%i]: %i\n", i, vec[i]);
     }
+
+    printf("\nExecuting Ex5:\n");
+    sleep(2);
+    int m = mediana(vec, num);
+    printf("Mediana: %d\n", mediana);
 
     return 0;
 }
