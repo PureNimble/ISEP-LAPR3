@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include "asm.h"
 
+void printVec(int *vec, int size){
+	for (int i = 0; i < size; i++)
+		printf("%d ", vec[i]);
+	printf("\n");
+}
+
 int main()
 {
 	int size = 8;
@@ -14,11 +20,11 @@ int main()
 		45,
 		22,
 	};
+	printf("Vec Inicial: ");
+	printVec(vec, size);
 	sort_array(vec, size);
-	printf("Sorted array: ");
-	for (int i = 0; i < size; i++)
-		printf("%d ", vec[i]);
-	printf("\n");
+	printf("Vec Ordenado: ");
+	printVec(vec, size);
 
 	return 0;
 }

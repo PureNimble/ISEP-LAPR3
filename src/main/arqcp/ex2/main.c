@@ -6,7 +6,7 @@ void print_array(int *array, int length, int read, int write) {
 		printf("%d ", array[i]);
 	}
 
-	printf("\tCurrent Read: %d, Current Write: %d\n", read, write);
+	printf("\nRead Index Atual: %i Write Index Atual: %i\n\n", read, write);
 }
 
 int main() {
@@ -15,7 +15,7 @@ int main() {
 	int read = 0;
 	int write = 0;
 
-	printf("Empty array:\n");
+	printf("Array Vazio:\n");
 	print_array(array, length, read, write);
 	for (int value = 1; value < 123; value++) {
 		enqueue_value(array, length, &read, &write, value);
