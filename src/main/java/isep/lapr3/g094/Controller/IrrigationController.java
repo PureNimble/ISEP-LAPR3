@@ -1,4 +1,4 @@
-package isep.lapr3.g094.Controller;
+package isep.lapr3.g094.controller;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import isep.lapr3.g094.domain.DailyIrrigation;
+
 import java.util.Calendar;
 import java.util.Date;
-
-import isep.lapr3.g094.Domain.DailyIrrigation;
 
 public class IrrigationController {
 

@@ -11,7 +11,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
-import isep.lapr3.g094.Domain.DailyIrrigation;
+
+import isep.lapr3.g094.controller.IrrigationController;
+import isep.lapr3.g094.domain.DailyIrrigation;
 
 public class IrrigationTest {
 

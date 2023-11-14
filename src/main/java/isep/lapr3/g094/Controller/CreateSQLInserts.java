@@ -1,4 +1,4 @@
-package isep.lapr3.g094.Controller;
+package isep.lapr3.g094.controller;
 
 import java.io.BufferedWriter;
 import java.io.FileInputStream;

@@ -1,4 +1,4 @@
-package isep.lapr3.g094.Domain;
+package isep.lapr3.g094.domain;
 
 public class DailyIrrigation {
     private char parcela;

@@ -6,8 +6,8 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 
 import isep.lapr3.g094.Main;
-import isep.lapr3.g094.Controller.IrrigationController;
-import isep.lapr3.g094.Domain.DailyIrrigation;
+import isep.lapr3.g094.controller.IrrigationController;
+import isep.lapr3.g094.domain.DailyIrrigation;
 public class IrrigationUI {
     private IrrigationController controller;
 
