@@ -33,7 +33,7 @@ public class Edge<V, E> {
 
     @Override
     public String toString() {
-        return String.format("%s -> %s\nValor: %s", vOrig, vDest, weight);
+        return String.format("%s -> %s Valor: %s\n", vOrig, vDest, weight);
     }
 
     @Override
