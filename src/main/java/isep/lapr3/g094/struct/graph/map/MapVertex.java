@@ -11,7 +11,7 @@ public class MapVertex<V, E> {
 
     public MapVertex(V vert) {
         if (vert == null)
-            throw new RuntimeException("Vertices não podem ser null!");
+            throw new RuntimeException("Vértices não podem ser null!");
         element = vert;
         outVerts = new LinkedHashMap<>();
     }

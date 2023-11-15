@@ -20,7 +20,7 @@ import java.util.Date;
 
 public class IrrigationController {
 
-    private final static String FOLDER_PATH = "src/main/resources/";
+    private final static String FOLDER_PATH = "src/main/resources/lapr3/";
     private final static SimpleDateFormat DATA_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
     private  List<DailyIrrigation> planoDeRega;
     private  List<String> horarioDeRega;

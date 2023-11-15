@@ -9,7 +9,7 @@ public class Edge<V, E> {
 
     public Edge(V vOrig, V vDest, E weight) {
         if ((vOrig == null) || (vDest == null))
-            throw new RuntimeException("Vertices não podem ser null!");
+            throw new RuntimeException("Vértices não podem ser null!");
         this.vOrig = vOrig;
         this.vDest = vDest;
         this.weight = weight;

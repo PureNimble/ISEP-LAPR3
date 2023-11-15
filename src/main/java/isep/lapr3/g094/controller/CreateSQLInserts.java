@@ -25,7 +25,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class CreateSQLInserts {
 
-    private final static String FOLDER_PATH = "src/main/resources/";
+    private final static String FOLDER_PATH = "src/main/resources/bddad/";
     private static LinkedHashSet<String> insertsList = new LinkedHashSet<>();
     public boolean createSQLInserts() {
         extractXlsx(findXlsxFile());

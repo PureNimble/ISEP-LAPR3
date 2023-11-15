@@ -124,7 +124,7 @@ public class MapGraph<V, E> extends CommonGraph<V, E> {
     public boolean addVertex(V vert) {
 
         if (vert == null)
-            throw new RuntimeException("Vertices não podem ser null!");
+            throw new RuntimeException("Vértices não podem ser null!");
         if (validVertex(vert))
             return false;
 
@@ -140,7 +140,7 @@ public class MapGraph<V, E> extends CommonGraph<V, E> {
     public boolean addEdge(V vOrig, V vDest, E weight) {
 
         if (vOrig == null || vDest == null)
-            throw new RuntimeException("Vertices não podem ser null!");
+            throw new RuntimeException("Vértices não podem ser null!");
         if (edge(vOrig, vDest) != null)
             return false;
 
@@ -171,7 +171,7 @@ public class MapGraph<V, E> extends CommonGraph<V, E> {
     public boolean removeVertex(V vert) {
 
         if (vert == null)
-            throw new RuntimeException("Vertices não podem ser null!");
+            throw new RuntimeException("Vértices não podem ser null!");
         if (!validVertex(vert))
             return false;
 
@@ -194,7 +194,7 @@ public class MapGraph<V, E> extends CommonGraph<V, E> {
     public boolean removeEdge(V vOrig, V vDest) {
 
         if (vOrig == null || vDest == null)
-            throw new RuntimeException("Vertices não podem ser null!");
+            throw new RuntimeException("Vértices não podem ser null!");
         if (!validVertex(vOrig) || !validVertex(vDest))
             return false;
 
@@ -235,7 +235,7 @@ public class MapGraph<V, E> extends CommonGraph<V, E> {
         if (numVerts == 0) {
             s = "\nGrafo não definido!";
         } else {
-            s = "Grafo: " + numVerts + " vertices, " + numEdges + " ramos\n";
+            s = "Grafo: " + numVerts + " vértices, " + numEdges + " arestas\n";
             for (MapVertex<V, E> mv : mapVertices.values())
                 s += mv + "\n";
         }
