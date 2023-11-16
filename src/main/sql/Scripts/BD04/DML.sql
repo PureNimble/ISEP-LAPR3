@@ -101,9 +101,11 @@ INSERT INTO Garagem
 VALUES 
   (?);
 INSERT INTO Hora
-  (HoraInicial) 
+  (ID, 
+  HoraInicial) 
 VALUES 
-  (?);
+  (?, 
+  ?);
 INSERT INTO ModoFertilizacao
   (ID, 
   Designacao) 
@@ -124,11 +126,9 @@ INSERT INTO Operacao
   Quantidade, 
   Unidade, 
   TipoOperacaoID, 
-  CadernoCampoID, 
-  PlantacaoID) 
+  CadernoCampoID) 
 VALUES 
   (?, 
-  ?, 
   ?, 
   ?, 
   ?, 
@@ -140,33 +140,39 @@ INSERT INTO OperacaoFator
 VALUES 
   (?, 
   ?);
+INSERT INTO OperacaoPlantacao
+  (OperacaoID, 
+  PlantacaoID) 
+VALUES 
+  (?, 
+  ?);
+INSERT INTO OperacaoSetor
+  (OperacaoID, 
+  Hora, 
+  SetorID) 
+VALUES 
+  (?, 
+  ?, 
+  ?);
 INSERT INTO Parcela
   (EspacoID) 
 VALUES 
   (?);
 INSERT INTO PlanoHora
-  (HoraHoraInicial, 
-  PlanoRegaID) 
+  (PlanoRegaAnoInsercao, 
+  HoraID) 
 VALUES 
   (?, 
   ?);
 INSERT INTO PlanoRega
-  (AnoInsercao) 
-VALUES 
-  (?);
-INSERT INTO PlanoRegaExecucao
-  (DataExecucao, 
-  PlanoRegaAnoInsercao, 
-  Execucao, 
+  (AnoInsercao, 
   SistemaRegaEspacoID) 
 VALUES 
   (?, 
-  ?, 
-  ?, 
   ?);
 INSERT INTO PlanoSetor
-  (SetorID, 
-  PlanoRegaAnoInsercao, 
+  (PlanoRegaAnoInsercao, 
+  SetorID, 
   Duracao, 
   Dispercao, 
   Periodicidade) 
