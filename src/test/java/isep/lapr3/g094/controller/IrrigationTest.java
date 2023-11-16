@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import isep.lapr3.g094.application.controller.IrrigationController;
 import isep.lapr3.g094.domain.DailyIrrigation;
 
 public class IrrigationTest {

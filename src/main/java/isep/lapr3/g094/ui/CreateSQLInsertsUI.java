@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.text.ParseException;
 
 import isep.lapr3.g094.Main;
-import isep.lapr3.g094.controller.CreateSQLInserts;
+import isep.lapr3.g094.application.controller.CreateSQLInserts;
 
 public class CreateSQLInsertsUI {
 
