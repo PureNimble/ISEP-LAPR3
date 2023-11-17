@@ -7,13 +7,14 @@ import java.util.Scanner;
 
 public class Import {
 
-    public List<String> importFile(String filePath) {
+    public List<String> importFile(String filePath, boolean skip) {
 
         InputStream stream = getClass().getClassLoader().getResourceAsStream(filePath);
         List<String> output = new ArrayList<>();
         Scanner sc = new Scanner(stream);
 
-        sc.nextLine();
+        if (skip)
+            sc.nextLine();
         while (sc.hasNext()) {
             output.add(sc.nextLine());
         }

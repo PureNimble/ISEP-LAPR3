@@ -8,6 +8,8 @@ import java.util.List;
 
 import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.domain.Location;
+import isep.lapr3.g094.respository.LocationRepository;
+import isep.lapr3.g094.respository.Repositories;
 import isep.lapr3.g094.struct.graph.map.BasketDistribution;
 
 public class MainTest {
@@ -18,8 +20,12 @@ public class MainTest {
     @BeforeEach
     void setUp() {
         ImportController importController = new ImportController();
+        Repositories repositories = Repositories.getInstance();
+        LocationRepository locationRepository = repositories.getLocationRepository();
         distances = importController.importDistances();
-        locations = importController.importLocations();
+        importController.importLocations();
+
+        locations = locationRepository.getLocations();
 
         basketDistribution = new BasketDistribution();
         for (Location location : locations) {

@@ -4,9 +4,9 @@ public class Repositories {
 
     private static final Repositories instance = new Repositories();
     private LocationRepository locationRepository = new LocationRepository();
-
-    private Repositories() {
-    }
+    private IrrigationSectorRepository irrigationSectorRepository = new IrrigationSectorRepository();
+    private IrrigationDateRepository IrrigationDateRepository = new IrrigationDateRepository();
+    private IrrigationHourRepository IrrigationHourRepository = new IrrigationHourRepository();
 
     public static Repositories getInstance() {
         return instance;
@@ -14,5 +14,17 @@ public class Repositories {
 
     public LocationRepository getLocationRepository() {
         return locationRepository;
+    }
+
+    public IrrigationSectorRepository getIrrigationSectorRepository() {
+        return irrigationSectorRepository;
+    }
+
+    public IrrigationDateRepository getIrrigationDateRepository() {
+        return IrrigationDateRepository;
+    }
+
+    public IrrigationHourRepository getIrrigationHourRepository() {
+        return IrrigationHourRepository;
     }
 }

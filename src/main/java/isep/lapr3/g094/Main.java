@@ -1,13 +1,13 @@
 package isep.lapr3.g094;
-import java.io.IOException;
-import java.text.ParseException;
 
-import isep.lapr3.g094.ui.MenuUI;
+import java.io.IOException;
+import isep.lapr3.g094.ui.menu.MainMenuUI;
 
 public class Main {
-    
-    static MenuUI menuUI = new MenuUI();
-    public static void main(String[] args) throws IOException, NumberFormatException, ParseException {
-        menuUI.mainUI();
+
+    public static void main(String[] args) throws IOException {
+
+        MainMenuUI menu = new MainMenuUI();
+        menu.run();
     }
 }

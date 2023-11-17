@@ -7,6 +7,7 @@ import java.util.Optional;
 import isep.lapr3.g094.domain.Location;
 
 public class LocationRepository {
+    
     private List<Location> locations = new ArrayList<>();
 
     public List<Location> getLocations() {
