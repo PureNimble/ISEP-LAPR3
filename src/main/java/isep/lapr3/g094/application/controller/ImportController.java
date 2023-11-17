@@ -49,18 +49,30 @@ public class ImportController {
         return irrigationHourRepository;
     }
 
-    public void importLocations() {
-        List<String> locations = importClass.importFile("esinf/locais_big.csv", true);
+    public boolean importLocations() {
+        List<String> locations = importClass.importTxtFile("esinf/locais_big.csv", true);
+        if (locations.isEmpty())
+            return false;
         for (String location : locations) {
             String[] line = location.split(",");
-            locationRepository.createLocations(line[0], Double.parseDouble(line[1].replace(',', '.')),
-                    Double.parseDouble(line[2].replace(',', '.')), Integer.parseInt(line[0].substring(2)));
+            try {
+                if (locationRepository.createLocations(line[0], Double.parseDouble(line[1].replace(',', '.')),
+                        Double.parseDouble(line[2].replace(',', '.')), Integer.parseInt(line[0].substring(2)))
+                        .isEmpty()) {
+                    return false;
+                }
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                return false;
+            }
         }
+        return true;
     }
 
-    public void importIrrigationPlan() {
+    public boolean importIrrigationPlan() {
 
-        List<String> plan = importClass.importFile("lapr3/PlanoDeRega.txt", false);
+        List<String> plan = importClass.importTxtFile("lapr3/PlanoDeRega.txt", false);
+        if (plan.isEmpty())
+            return false;
         Iterator<String> iterator = plan.iterator();
 
         if (iterator.hasNext()) {
@@ -69,18 +81,32 @@ public class ImportController {
                 if (element.length() != 5) {
                     element = "0" + element;
                 }
-                irrigationHourRepository.createIrrigationHour(element);
+                if (irrigationHourRepository.createIrrigationHour(element).isEmpty())
+                    return false;
             }
         }
 
         while (iterator.hasNext()) {
             String[] line = iterator.next().split(",");
-            irrigationSectorRepository.createIrrigationSectors(line[0].charAt(0), Integer.parseInt(line[1]),
-                    line[2].charAt(0));
+            try {
+                if (irrigationSectorRepository.createIrrigationSectors(line[0].charAt(0), Integer.parseInt(line[1]),
+                        line[2].charAt(0)).isEmpty()) {
+                    return false;
+                }
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                return false;
+            }
         }
+        return true;
+    }
+
+    public boolean importXlsx() {
+        if (importClass.importXlsxFile("bddad/Legacy_Data_v2a.xlsx").isEmpty())
+            return false;
+        return true;
     }
 
     public List<String> importDistances() {
-        return importClass.importFile("esinf/distancias_big.csv", true);
+        return importClass.importTxtFile("esinf/distancias_big.csv", true);
     }
 }

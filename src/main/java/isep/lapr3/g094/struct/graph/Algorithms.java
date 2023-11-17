@@ -134,6 +134,7 @@ public class Algorithms {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static <V, E> E shortestPath(Graph<V, E> g, V vOrig, V vDest,
             Comparator<E> ce, BinaryOperator<E> sum, E zero,
             LinkedList<V> shortPath) {
@@ -159,6 +160,7 @@ public class Algorithms {
         return dist[g.key(vDest)];
     }
 
+    @SuppressWarnings("unchecked")
     public static <V, E> boolean shortestPaths(Graph<V, E> g, V vOrig,
             Comparator<E> ce, BinaryOperator<E> sum, E zero,
             ArrayList<LinkedList<V>> paths, ArrayList<E> dists) {
@@ -209,6 +211,7 @@ public class Algorithms {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static <V, E> MatrixGraph<V, E> minDistGraph(Graph<V, E> g, Comparator<E> ce, BinaryOperator<E> sum) {
         int vertices = g.numVertices();
         E[][] dist = (E[][]) new Object[vertices][vertices];
