@@ -58,7 +58,8 @@ public class CreatePlanController {
         return irrigationHourRepository;
     }
 
-    public void createPlan(String date) {
+    public boolean createPlan(String date) {
+
         irrigationDateRepository.clearDate();
         Date startDate = null;
 
@@ -71,8 +72,9 @@ public class CreatePlanController {
         List<Date> dates = getDatesBetween(startDate);
 
         for (Date data : dates) {
-            irrigationDateRepository.createIrrigationDate(data);
+            if(irrigationDateRepository.createIrrigationDate(data).isEmpty()) return false;
         }
+        return true;
     }
 
     public Map<IrrigationSector, Integer> searchIrrigation(String dataString, String hora) throws ParseException {

@@ -1,7 +1,7 @@
 package isep.lapr3.g094.ui;
 
 import java.text.ParseException;
-import java.util.InputMismatchException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -11,54 +11,38 @@ import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.domain.irrigation.IrrigationDate;
 import isep.lapr3.g094.domain.irrigation.IrrigationHour;
 import isep.lapr3.g094.domain.irrigation.IrrigationSector;
+import isep.lapr3.g094.ui.menu.MenuItem;
+import isep.lapr3.g094.ui.utils.Utils;
 
 public class IrrigationUI implements Runnable {
 
     private CreatePlanController createPlanController = new CreatePlanController();
     private ImportController importController = new ImportController();
-    private static final Pattern PATTERN_DATA = Pattern.compile("^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/((19|20)\\d\\d)$");
+    private static final Pattern PATTERN_DATA = Pattern
+            .compile("^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/((19|20)\\d\\d)$");
     private static final Pattern PATTERN_HORA = Pattern.compile("^(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9])$");
     private static final Scanner scanner = new Scanner(System.in);
 
     public void run() {
 
-        int choice = -1;
-
-        do {
-            System.out.println("\n============Interface do Controlador============");
-            System.out.println("1. Criar plano de rega");
-            System.out.println("2. Ver plano de rega atual");
-            System.out.println("3. Ver regas em execução");
-            System.out.println("0. Voltar ao menu principal\n");
-            System.out.print("Insira uma opção: ");
+        List<MenuItem> options = new ArrayList<MenuItem>();
+        options.add(new MenuItem("Criar plano de rega", this::createPlan));
+        options.add(new MenuItem("Ver plano de rega atual", this::printPlan));
+        options.add(new MenuItem("Ver regas em execução", () -> {
             try {
-                choice = scanner.nextInt();
-                scanner.nextLine();
-                switch (choice) {
-                    case 1:
-                        createPlan();
-                        break;
-                    case 2:
-                        printPlan();
-                        break;
-                    case 3:
-                        try {
-                            searchWatering();
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                    case 0:
-                        break;
-                    default:
-                        System.out.println("Opção Inválida, por favor insira uma opção válida (0 - 3)");
-                        break;
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Opção Inválida, por favor insira uma opção válida (0 - 3)");
-                scanner.nextLine();
+                searchWatering();
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
-        } while (choice != 0);
+        }));
+        int option = 0;
+        do {
+            option = Utils.showAndSelectIndex(options,
+                    "\n=========Interface do Controlador De Rega=========");
+            if ((option >= 0) && (option < options.size())) {
+                options.get(option).run();
+            }
+        } while (option != -1);
 
     }
 
@@ -67,13 +51,11 @@ public class IrrigationUI implements Runnable {
         String data = getValidatedInput(PATTERN_DATA, "\nFormato: dia/mes/ano\n\nInsira a data: ",
                 "Formato de data invalido. Por favor insira uma data no formato dd/mm/yyyy");
 
-        importController.importIrrigationPlan();
-        createPlanController.createPlan(data);
-        if (createPlanController.getIrrigationSectors().isEmpty() || createPlanController.getIrrigationDates().isEmpty()
-                || createPlanController.getIrrigationHours().isEmpty()) {
-            System.out.println("Não foi possivel criar o plano de rega");
-        } else
+        if (importController.importIrrigationPlan() && createPlanController.createPlan(data)) {
             System.out.println("Plano de rega criado com sucesso");
+
+        } else
+            System.out.println("Não foi possivel criar o plano de rega");
 
     }
 
@@ -97,8 +79,8 @@ public class IrrigationUI implements Runnable {
     }
 
     private String getValidatedInput(Pattern pattern, String prompt, String errorMessage) {
-        String input;
 
+        String input;
         do {
             try {
                 System.out.print(prompt);
