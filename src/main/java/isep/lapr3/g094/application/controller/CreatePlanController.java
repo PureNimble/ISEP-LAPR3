@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import isep.lapr3.g094.domain.IrrigationDate;
-import isep.lapr3.g094.domain.IrrigationHour;
-import isep.lapr3.g094.domain.IrrigationSector;
-import isep.lapr3.g094.respository.IrrigationDateRepository;
-import isep.lapr3.g094.respository.IrrigationHourRepository;
-import isep.lapr3.g094.respository.IrrigationSectorRepository;
-import isep.lapr3.g094.respository.Repositories;
+import isep.lapr3.g094.domain.irrigation.IrrigationDate;
+import isep.lapr3.g094.domain.irrigation.IrrigationHour;
+import isep.lapr3.g094.domain.irrigation.IrrigationSector;
+import isep.lapr3.g094.repository.Repositories;
+import isep.lapr3.g094.repository.irrigation.IrrigationDateRepository;
+import isep.lapr3.g094.repository.irrigation.IrrigationHourRepository;
+import isep.lapr3.g094.repository.irrigation.IrrigationSectorRepository;
 
 import java.util.Calendar;
 import java.util.Date;

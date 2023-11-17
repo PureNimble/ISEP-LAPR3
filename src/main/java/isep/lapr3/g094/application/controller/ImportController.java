@@ -4,10 +4,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import isep.lapr3.g094.imports.Import;
-import isep.lapr3.g094.respository.IrrigationHourRepository;
-import isep.lapr3.g094.respository.IrrigationSectorRepository;
-import isep.lapr3.g094.respository.LocationRepository;
-import isep.lapr3.g094.respository.Repositories;
+import isep.lapr3.g094.repository.LocationRepository;
+import isep.lapr3.g094.repository.Repositories;
+import isep.lapr3.g094.repository.irrigation.IrrigationHourRepository;
+import isep.lapr3.g094.repository.irrigation.IrrigationSectorRepository;
 
 public class ImportController {
 

@@ -1,10 +1,10 @@
-package isep.lapr3.g094.respository;
+package isep.lapr3.g094.repository.irrigation;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import isep.lapr3.g094.domain.IrrigationSector;
+import isep.lapr3.g094.domain.irrigation.IrrigationSector;
 
 public class IrrigationSectorRepository {
 

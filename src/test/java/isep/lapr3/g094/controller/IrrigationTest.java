@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 import isep.lapr3.g094.application.controller.CreatePlanController;
 import isep.lapr3.g094.application.controller.ImportController;
-import isep.lapr3.g094.domain.IrrigationSector;
+import isep.lapr3.g094.domain.irrigation.IrrigationSector;
 
 
 public class IrrigationTest {

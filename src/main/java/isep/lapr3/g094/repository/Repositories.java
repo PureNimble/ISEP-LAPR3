@@ -1,4 +1,8 @@
-package isep.lapr3.g094.respository;
+package isep.lapr3.g094.repository;
+
+import isep.lapr3.g094.repository.irrigation.IrrigationDateRepository;
+import isep.lapr3.g094.repository.irrigation.IrrigationHourRepository;
+import isep.lapr3.g094.repository.irrigation.IrrigationSectorRepository;
 
 public class Repositories {
 

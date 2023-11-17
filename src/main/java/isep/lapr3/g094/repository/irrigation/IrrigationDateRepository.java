@@ -1,11 +1,11 @@
-package isep.lapr3.g094.respository;
+package isep.lapr3.g094.repository.irrigation;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import isep.lapr3.g094.domain.IrrigationDate;
+import isep.lapr3.g094.domain.irrigation.IrrigationDate;
 
 public class IrrigationDateRepository {
 

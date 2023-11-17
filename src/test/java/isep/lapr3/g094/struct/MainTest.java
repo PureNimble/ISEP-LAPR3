@@ -8,8 +8,8 @@ import java.util.List;
 
 import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.domain.Location;
-import isep.lapr3.g094.respository.LocationRepository;
-import isep.lapr3.g094.respository.Repositories;
+import isep.lapr3.g094.repository.LocationRepository;
+import isep.lapr3.g094.repository.Repositories;
 import isep.lapr3.g094.struct.graph.map.BasketDistribution;
 
 public class MainTest {

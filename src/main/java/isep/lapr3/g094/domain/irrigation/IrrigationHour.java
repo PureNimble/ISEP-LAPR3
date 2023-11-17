@@ -1,4 +1,4 @@
-package isep.lapr3.g094.domain;
+package isep.lapr3.g094.domain.irrigation;
 
 public class IrrigationHour {
 
