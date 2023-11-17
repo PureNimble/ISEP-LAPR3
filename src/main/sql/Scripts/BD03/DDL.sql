@@ -1,3 +1,6 @@
+DROP TRIGGER CheckUniqueOperacaoIDSetor;
+DROP TRIGGER CheckUniqueOperacaoIDParcela;
+DROP TRIGGER ChechUniqueOperacaoIDPlantacao;
 DROP TRIGGER CheckPlantacaoUnidade;
 DROP TRIGGER CheckUniqueTipoSensor;
 DROP TRIGGER CheckUniqueSensorIDEstacao;
@@ -20,6 +23,7 @@ DROP TABLE ModoFertilizacao CASCADE CONSTRAINTS;
 DROP TABLE NomeEspecie CASCADE CONSTRAINTS;
 DROP TABLE Operacao CASCADE CONSTRAINTS;
 DROP TABLE OperacaoFator CASCADE CONSTRAINTS;
+DROP TABLE OperacaoParcela CASCADE CONSTRAINTS;
 DROP TABLE OperacaoPlantacao CASCADE CONSTRAINTS;
 DROP TABLE OperacaoSetor CASCADE CONSTRAINTS;
 DROP TABLE Parcela CASCADE CONSTRAINTS;
@@ -165,6 +169,12 @@ CREATE TABLE OPERACAO (
 CREATE TABLE OPERACAOFATOR (
   OPERACAOID NUMBER(10) NOT NULL,
   FATORPRODUCAOID NUMBER(10) NOT NULL,
+  PRIMARY KEY (OPERACAOID)
+);
+
+CREATE TABLE OPERACAOPARCELA (
+  OPERACAOID NUMBER(10) NOT NULL,
+  PARCELAESPACOID NUMBER(10) NOT NULL,
   PRIMARY KEY (OPERACAOID)
 );
 
@@ -362,7 +372,100 @@ ALTER TABLE OperacaoSetor ADD CONSTRAINT FKOperacaoSe246661 FOREIGN KEY (Operaca
 ALTER TABLE OperacaoPlantacao ADD CONSTRAINT FKOperacaoPl849173 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
 ALTER TABLE OperacaoPlantacao ADD CONSTRAINT FKOperacaoPl732201 FOREIGN KEY (PlantacaoID) REFERENCES Plantacao (ID);
 ALTER TABLE PlanoHora ADD CONSTRAINT FKPlanoHora563720 FOREIGN KEY (HoraID) REFERENCES Hora (ID);
+ALTER TABLE OperacaoParcela ADD CONSTRAINT FKOperacaoPa455939 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
+ALTER TABLE OperacaoParcela ADD CONSTRAINT FKOperacaoPa344730 FOREIGN KEY (ParcelaEspacoID) REFERENCES Parcela (EspacoID);
 
+CREATE OR REPLACE TRIGGER CheckUniqueOperacaoIDSetor
+BEFORE INSERT OR UPDATE ON OperacaoSetor
+FOR EACH ROW
+DECLARE
+    existsParcela NUMBER;
+    existsPlantacao NUMBER;
+BEGIN
+    SELECT 1
+    INTO existsParcela
+    FROM dual
+    WHERE EXISTS (
+        SELECT 1
+        FROM OperacaoParcela OP
+        WHERE OP.OperacaoID = :NEW.OperacaoID
+    );
+
+    SELECT 1
+    INTO existsPlantacao
+    FROM dual
+    WHERE EXISTS (
+        SELECT 1
+        FROM OperacaoPlantacao OP
+        WHERE OP.OperacaoID = :NEW.OperacaoID
+    );
+
+    IF existsParcela = 1 OR existsPlantacao = 1 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Esta operação já está relacionada com um(a) parcela/plantação.');
+    END IF;
+END;
+/
+;
+CREATE OR REPLACE TRIGGER CheckUniqueOperacaoIDParcela
+BEFORE INSERT OR UPDATE ON OperacaoParcela
+FOR EACH ROW
+DECLARE
+    existsSetor NUMBER;
+    existsPlantacao NUMBER;
+BEGIN
+    SELECT 1
+    INTO existsSetor
+    FROM dual
+    WHERE EXISTS (
+        SELECT 1
+        FROM OperacaoSetor OS
+        WHERE OS.OperacaoID = :NEW.OperacaoID
+    );
+
+    SELECT 1
+    INTO existsPlantacao
+    FROM dual
+    WHERE EXISTS (
+        SELECT 1
+        FROM OperacaoPlantacao OP
+        WHERE OP.OperacaoID = :NEW.OperacaoID
+    );
+
+    IF existsSetor = 1 OR existsPlantacao = 1 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Esta operação já está relacionada com um(a) setor/plantação.');
+    END IF;
+END;
+/;
+CREATE OR REPLACE TRIGGER ChechUniqueOperacaoIDPlantacao
+BEFORE INSERT OR UPDATE ON OperacaoPlantacao
+FOR EACH ROW
+DECLARE
+    existsSetor NUMBER;
+    existsParcela NUMBER;
+BEGIN
+    SELECT 1
+    INTO existsSetor
+    FROM dual
+    WHERE EXISTS (
+        SELECT 1
+        FROM OperacaoSetor OS
+        WHERE OS.OperacaoID = :NEW.OperacaoID
+    );
+
+    SELECT 1
+    INTO existsParcela
+    FROM dual
+    WHERE EXISTS (
+        SELECT 1
+        FROM OperacaoParcela OP
+        WHERE OP.OperacaoID = :NEW.OperacaoID
+    );
+
+    IF existsSetor = 1 OR existsParcela = 1 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Esta operação já está relacionada com um(a) setor/parcela.');
+    END IF;
+END;
+/;
 CREATE OR REPLACE TRIGGER CheckPlantacaoUnidade
 BEFORE INSERT OR UPDATE ON Plantacao
 FOR EACH ROW

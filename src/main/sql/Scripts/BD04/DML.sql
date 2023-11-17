@@ -1,304 +1,391 @@
-INSERT INTO Aplicacao
-  (ID, 
-  Designacao) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO AplicacaoProduto
-  (FatorProducaoID, 
-  AplicacaoID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO Armazem
-  (EspacoID, 
-  Capacidade) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO CadernoCampo
-  (ID, 
-  QuintaID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO Cultura
-  (ID, 
-  Poda, 
-  Floracao, 
-  Colheita, 
-  Sementeira, 
-  NomeEspecieID, 
-  TipoCulturaID, 
-  VariedadeID, 
-  ProdutoID) 
-VALUES 
-  (?, 
-  ?, 
-  ?, 
-  ?, 
-  ?, 
-  ?, 
-  ?, 
-  ?, 
-  ?);
-INSERT INTO Elemento
-  (ID, 
-  Designacao) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO ElementoFicha
-  (FatorProducaoID, 
-  ElementoID, 
-  Quantidade) 
-VALUES 
-  (?, 
-  ?, 
-  ?);
-INSERT INTO Espaco
-  (ID, 
-  Designacao, 
-  Area, 
-  Unidade, 
-  QuintaID) 
-VALUES 
-  (?, 
-  ?, 
-  ?, 
-  ?, 
-  ?);
-INSERT INTO Estabulo
-  (EspacoID) 
-VALUES 
-  (?);
-INSERT INTO EstacaoMeteorologica
-  (ID, 
-  QuintaID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO FatorProducao
-  (ID, 
-  Designacao, 
-  Fabricante, 
-  Formato, 
-  TipoProdutoID) 
-VALUES 
-  (?, 
-  ?, 
-  ?, 
-  ?, 
-  ?);
-INSERT INTO Fertilizacao
-  (OperacaoID, 
-  ModoFertilizacaoID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO Garagem
-  (EspacoID) 
-VALUES 
-  (?);
-INSERT INTO Hora
-  (ID, 
-  HoraInicial) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO ModoFertilizacao
-  (ID, 
-  Designacao) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO NomeEspecie
-  (ID, 
-  NomeComum, 
-  Especie) 
-VALUES 
-  (?, 
-  ?, 
-  ?);
-INSERT INTO Operacao
-  (ID, 
-  DataOperacao, 
-  Quantidade, 
-  Unidade, 
-  TipoOperacaoID, 
-  CadernoCampoID) 
-VALUES 
-  (?, 
-  ?, 
-  ?, 
-  ?, 
-  ?, 
-  ?);
-INSERT INTO OperacaoFator
-  (OperacaoID, 
-  FatorProducaoID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO OperacaoPlantacao
-  (OperacaoID, 
-  PlantacaoID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO OperacaoSetor
-  (OperacaoID, 
-  Hora, 
-  SetorID) 
-VALUES 
-  (?, 
-  ?, 
-  ?);
-INSERT INTO Parcela
-  (EspacoID) 
-VALUES 
-  (?);
-INSERT INTO PlanoHora
-  (PlanoRegaAnoInsercao, 
-  HoraID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO PlanoRega
-  (AnoInsercao, 
-  SistemaRegaEspacoID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO PlanoSetor
-  (PlanoRegaAnoInsercao, 
-  SetorID, 
-  Duracao, 
-  Dispercao, 
-  Periodicidade) 
-VALUES 
-  (?, 
-  ?, 
-  ?, 
-  ?, 
-  ?);
-INSERT INTO Plantacao
-  (ID, 
-  DataInicial, 
-  DataFinal, 
-  Quantidade, 
-  Unidade, 
-  EstadoFenologico, 
-  CulturaID, 
-  ParcelaEspacoID) 
-VALUES 
-  (?, 
-  ?, 
-  ?, 
-  ?, 
-  ?, 
-  ?, 
-  ?, 
-  ?);
-INSERT INTO PlantacaoSetor
-  (PlantacaoID, 
-  SetorID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO Produto
-  (ID, 
-  Designacao, 
-  VariedadeID) 
-VALUES 
-  (?, 
-  ?, 
-  ?);
-INSERT INTO ProdutoArmazem
-  (ArmazemEspacoID, 
-  ProdutoID, 
-  Quantidade) 
-VALUES 
-  (?, 
-  ?, 
-  ?);
-INSERT INTO Quinta
-  (ID, 
-  Designacao) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO RegistoSensor
-  (ID, 
-  Valor, 
-  DataRegisto, 
-  SensorID, 
-  CadernoCampoID) 
-VALUES 
-  (?, 
-  ?, 
-  ?, 
-  ?, 
-  ?);
-INSERT INTO Sensor
-  (ID, 
-  TipoSensorID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO SensorEstacao
-  (SensorID, 
-  EstacaoMeteorologicaID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO SensorParcela
-  (SensorID, 
-  ParcelaEspacoID) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO Setor
-  (ID, 
-  Designacao) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO SistemaRega
-  (EspacoID, 
-  DebitoMaximo) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO TipoCultura
-  (ID, 
-  Designacao) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO TipoOperacao
-  (ID, 
-  Designacao) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO TipoProduto
-  (ID, 
-  Designacao) 
-VALUES 
-  (?, 
-  ?);
-INSERT INTO TipoSensor
-  (ID, 
-  Designacao, 
-  Unidade) 
-VALUES 
-  (?, 
-  ?, 
-  ?);
-INSERT INTO Variedade
-  (ID, 
-  Variedade) 
-VALUES 
-  (?, 
-  ?);
+INSERT INTO APLICACAO (
+  ID,
+  DESIGNACAO
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO APLICACAOPRODUTO (
+  FATORPRODUCAOID,
+  APLICACAOID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO ARMAZEM (
+  ESPACOID,
+  CAPACIDADE
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO CADERNOCAMPO (
+  ID,
+  QUINTAID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO CULTURA (
+  ID,
+  PODA,
+  FLORACAO,
+  COLHEITA,
+  SEMENTEIRA,
+  NOMEESPECIEID,
+  TIPOCULTURAID,
+  VARIEDADEID,
+  PRODUTOID
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO ELEMENTO (
+  ID,
+  DESIGNACAO
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO ELEMENTOFICHA (
+  FATORPRODUCAOID,
+  ELEMENTOID,
+  QUANTIDADE
+) VALUES (
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO ESPACO (
+  ID,
+  DESIGNACAO,
+  AREA,
+  UNIDADE,
+  QUINTAID
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO ESTABULO (
+  ESPACOID
+) VALUES (
+  ?
+);
+
+INSERT INTO ESTACAOMETEOROLOGICA (
+  ID,
+  QUINTAID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO FATORPRODUCAO (
+  ID,
+  DESIGNACAO,
+  FABRICANTE,
+  FORMATO,
+  TIPOPRODUTOID
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO FERTILIZACAO (
+  OPERACAOID,
+  MODOFERTILIZACAOID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO GARAGEM (
+  ESPACOID
+) VALUES (
+  ?
+);
+
+INSERT INTO HORA (
+  ID,
+  HORAINICIAL
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO MODOFERTILIZACAO (
+  ID,
+  DESIGNACAO
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO NOMEESPECIE (
+  ID,
+  NOMECOMUM,
+  ESPECIE
+) VALUES (
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO OPERACAO (
+  ID,
+  DATAOPERACAO,
+  QUANTIDADE,
+  UNIDADE,
+  TIPOOPERACAOID,
+  CADERNOCAMPOID
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO OPERACAOFATOR (
+  OPERACAOID,
+  FATORPRODUCAOID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO OPERACAOPARCELA (
+  OPERACAOID,
+  PARCELAESPACOID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO OPERACAOPLANTACAO (
+  OPERACAOID,
+  PLANTACAOID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO OPERACAOSETOR (
+  OPERACAOID,
+  HORA,
+  SETORID
+) VALUES (
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO PARCELA (
+  ESPACOID
+) VALUES (
+  ?
+);
+
+INSERT INTO PLANOHORA (
+  PLANOREGAANOINSERCAO,
+  HORAID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO PLANOREGA (
+  ANOINSERCAO,
+  SISTEMAREGAESPACOID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO PLANOSETOR (
+  PLANOREGAANOINSERCAO,
+  SETORID,
+  DURACAO,
+  DISPERCAO,
+  PERIODICIDADE
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO PLANTACAO (
+  ID,
+  DATAINICIAL,
+  DATAFINAL,
+  QUANTIDADE,
+  UNIDADE,
+  ESTADOFENOLOGICO,
+  CULTURAID,
+  PARCELAESPACOID
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO PLANTACAOSETOR (
+  PLANTACAOID,
+  SETORID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO PRODUTO (
+  ID,
+  DESIGNACAO,
+  VARIEDADEID
+) VALUES (
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO PRODUTOARMAZEM (
+  ARMAZEMESPACOID,
+  PRODUTOID,
+  QUANTIDADE
+) VALUES (
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO QUINTA (
+  ID,
+  DESIGNACAO
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO REGISTOSENSOR (
+  ID,
+  VALOR,
+  DATAREGISTO,
+  SENSORID,
+  CADERNOCAMPOID
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO SENSOR (
+  ID,
+  TIPOSENSORID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO SENSORESTACAO (
+  SENSORID,
+  ESTACAOMETEOROLOGICAID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO SENSORPARCELA (
+  SENSORID,
+  PARCELAESPACOID
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO SETOR (
+  ID,
+  DESIGNACAO
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO SISTEMAREGA (
+  ESPACOID,
+  DEBITOMAXIMO
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO TIPOCULTURA (
+  ID,
+  DESIGNACAO
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO TIPOOPERACAO (
+  ID,
+  DESIGNACAO
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO TIPOPRODUTO (
+  ID,
+  DESIGNACAO
+) VALUES (
+  ?,
+  ?
+);
+
+INSERT INTO TIPOSENSOR (
+  ID,
+  DESIGNACAO,
+  UNIDADE
+) VALUES (
+  ?,
+  ?,
+  ?
+);
+
+INSERT INTO VARIEDADE (
+  ID,
+  VARIEDADE
+) VALUES (
+  ?,
+  ?
+);
