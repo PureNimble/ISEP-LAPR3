@@ -2,6 +2,7 @@ package isep.lapr3.g094.ui.menu;
 
 import isep.lapr3.g094.ui.ImportXlsxFileUI;
 import isep.lapr3.g094.ui.DevTeamUI;
+import isep.lapr3.g094.ui.GestorAgriculaUI;
 import isep.lapr3.g094.ui.IrrigationUI;
 import isep.lapr3.g094.ui.utils.Utils;
 import java.util.ArrayList;
@@ -15,11 +16,12 @@ public class MainMenuUI implements Runnable {
         options.add(new MenuItem("Aceder ao controlador do Sistema de Rega", new IrrigationUI()));
         options.add(new MenuItem("Adicionar informação do sistema legacy", new ImportXlsxFileUI()));
         options.add(new MenuItem("Equipa de Desenvolvimento", new DevTeamUI()));
+        options.add(new MenuItem("Gestor Agricula UI", new GestorAgriculaUI()));
         int option = 0;
         do {
             option = Utils.showAndSelectIndex(options,
                     "\n====================Menu====================");
-            if ((option >= 0) && (option < options.size())) {
+            if (option != -1) {
                 options.get(option).run();
             }
         } while (option != -1);

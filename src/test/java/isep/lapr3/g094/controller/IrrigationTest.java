@@ -12,21 +12,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import isep.lapr3.g094.application.controller.CreatePlanController;
+import isep.lapr3.g094.application.controller.IrrigationPlanController;
 import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.domain.irrigation.IrrigationSector;
 
-
 public class IrrigationTest {
 
-    private CreatePlanController controller;
+    private IrrigationPlanController controller;
     private ImportController importController;
 
     @BeforeEach
     void setUp() {
         importController = new ImportController();
         importController.importIrrigationPlan();
-        controller = new CreatePlanController();
+        controller = new IrrigationPlanController();
         controller.createPlan("01/12/2020");
     }
 

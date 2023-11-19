@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
-import isep.lapr3.g094.application.controller.CreatePlanController;
+import isep.lapr3.g094.application.controller.IrrigationPlanController;
 import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.domain.irrigation.IrrigationDate;
 import isep.lapr3.g094.domain.irrigation.IrrigationHour;
@@ -16,7 +16,7 @@ import isep.lapr3.g094.ui.utils.Utils;
 
 public class IrrigationUI implements Runnable {
 
-    private CreatePlanController createPlanController = new CreatePlanController();
+    private IrrigationPlanController irrigationPlanController = new IrrigationPlanController();
     private ImportController importController = new ImportController();
     private static final Pattern PATTERN_DATA = Pattern
             .compile("^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/((19|20)\\d\\d)$");
@@ -39,9 +39,9 @@ public class IrrigationUI implements Runnable {
         do {
             option = Utils.showAndSelectIndex(options,
                     "\n=========Interface do Controlador De Rega=========");
-            if ((option >= 0) && (option < options.size())) {
+            if (option != -1)
                 options.get(option).run();
-            }
+
         } while (option != -1);
 
     }
@@ -51,7 +51,7 @@ public class IrrigationUI implements Runnable {
         String data = getValidatedInput(PATTERN_DATA, "\nFormato: dia/mes/ano\n\nInsira a data: ",
                 "Formato de data invalido. Por favor insira uma data no formato dd/mm/yyyy");
 
-        if (importController.importIrrigationPlan() && createPlanController.createPlan(data)) {
+        if (importController.importIrrigationPlan() && irrigationPlanController.createPlan(data)) {
             System.out.println("Plano de rega criado com sucesso");
 
         } else
@@ -61,13 +61,13 @@ public class IrrigationUI implements Runnable {
 
     private void searchWatering() throws ParseException {
 
-        if (!createPlanController.getIrrigationSectors().isEmpty()) {
+        if (!irrigationPlanController.getIrrigationSectors().isEmpty()) {
             String data = getValidatedInput(PATTERN_DATA, "\nFormato: dia/mes/ano\n\nInsira a data: ",
                     "Formato de data invalido. Por favor insira uma data no formato dd/mm/yyyy");
             String hora = getValidatedInput(PATTERN_HORA, "\nFormato: hh:mm\n\nInsira a hora: ",
                     "Formato de hora invalido. Por favor insira uma hora no formato hh:mm");
 
-            Map<IrrigationSector, Integer> lista = createPlanController.searchIrrigation(data, hora);
+            Map<IrrigationSector, Integer> lista = irrigationPlanController.searchIrrigation(data, hora);
             if (lista != null)
                 printResults(lista);
             else
@@ -98,9 +98,9 @@ public class IrrigationUI implements Runnable {
     }
 
     private void printPlan() {
-        List<IrrigationSector> irrigationSectors = createPlanController.getIrrigationSectors();
-        List<IrrigationHour> irrigationHours = createPlanController.getIrrigationHours();
-        List<IrrigationDate> irrigationDates = createPlanController.getIrrigationDates();
+        List<IrrigationSector> irrigationSectors = irrigationPlanController.getIrrigationSectors();
+        List<IrrigationHour> irrigationHours = irrigationPlanController.getIrrigationHours();
+        List<IrrigationDate> irrigationDates = irrigationPlanController.getIrrigationDates();
         if (irrigationSectors.isEmpty() || irrigationHours.isEmpty())
             System.out.println("Ainda não existe um plano criado");
 

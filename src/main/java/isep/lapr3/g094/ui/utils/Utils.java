@@ -3,7 +3,7 @@ package isep.lapr3.g094.ui.utils;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,7 +12,7 @@ public class Utils {
 
     static public String readLineFromConsole(String prompt) {
         try {
-            System.out.print("\n" + prompt);
+            System.out.println(prompt);
 
             InputStreamReader converter = new InputStreamReader(System.in);
             BufferedReader in = new BufferedReader(converter);
@@ -59,7 +59,7 @@ public class Utils {
 
                 SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
 
-                Date date = df.parse(strDate);
+                Date date = new Date(df.parse(strDate).getTime());
 
                 return date;
             } catch (ParseException ex) {
@@ -107,11 +107,8 @@ public class Utils {
             value = Integer.valueOf(input);
         } while (value < 0 || value > list.size());
 
-        if (value == 0) {
-            return null;
-        } else {
-            return list.get(value - 1);
-        }
+        return value == 0 ? null : list.get(value - 1);
+
     }
 
     static public <E> int selectsIndex(List<E> list) {
