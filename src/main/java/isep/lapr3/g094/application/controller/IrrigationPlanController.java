@@ -18,14 +18,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 
-public class CreatePlanController {
+public class IrrigationPlanController {
 
     private final static SimpleDateFormat DATA_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
     private IrrigationSectorRepository irrigationSectorRepository;
     private IrrigationDateRepository irrigationDateRepository;
     private IrrigationHourRepository irrigationHourRepository;
 
-    public CreatePlanController() {
+    public IrrigationPlanController() {
         getIrrigationSectorRepository();
         getIrrigationDateRepository();
         getIrrigationHourRepository();

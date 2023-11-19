@@ -27,6 +27,10 @@
     garante que os valores na coluna "AREA" só podem ser superiores a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
+-  A função "**__CHECK(PH >= 0 AND PH <= 14)__**"
+    garante que os valores na coluna "PH" só podem ser iguais ou superiores a 0 e inferiores ou iguais a 14.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
  - A função **__"CHECK(DURACAO > 0)"__**
     garante que os valores na coluna "DURACAO" só podem ser superiores a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
@@ -35,16 +39,8 @@
     garante que os valores na coluna "PERIODICIDADE" só possam ser 'P', 'I' ou 'T'.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
- - A função **__"CHECK(QUANTIDADE > 0)"__*
-    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero.
-    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
-
  - A função **__"CHECK (DATAINICIAL <= DATAFINAL)"__**
     garante que os valores da coluna "DATAFINAL" sejam sempre superiores ou iguais aos valores de coluna "DATAINICIAL".
-    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
-
- - A função **__"CHECK(QUANTIDADE > 0)"__**
-    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
     
  - A função **__"CHECK(DEBITOMAXIMO > 0)"__*

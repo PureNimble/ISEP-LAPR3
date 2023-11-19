@@ -22,6 +22,22 @@
     garante que os valores na coluna "AREA" só podem ser superiores a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
+-----------------------------
+|CHECK(PH >= 0 AND PH <= 14)|
+-----------------------------
+->  Tabela: FATORPRODUCAO
+->  A função "CHECK(PH >= 0 AND PH <= 14)"
+    garante que os valores na coluna "PH" só podem ser iguais ou superiores a 0 e inferiores ou iguais a 14.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+----------------------------------
+|CHECK (DATAINICIAL <= DATAFINAL)|
+----------------------------------
+->  Tabela: PLANOPLANTACAO
+->  A função "CHECK (DATAINICIAL <= DATAFINAL)"
+    garante que os valores da coluna "DATAFINAL" sejam sempre superiores ou iguais aos valores de coluna "DATAINICIAL".
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
 --------------------
 |CHECK(DURACAO > 0)|
 --------------------
@@ -36,6 +52,14 @@
 ->  Tabela: PLANOSETOR
 ->  A função "CHECK(PERIODICIDADE IN ('P', 'I', 'T'))"
     garante que os valores na coluna "PERIODICIDADE" só possam ser 'P', 'I' ou 'T'.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+----------------------------------
+|CHECK (DATAINICIAL <= DATAFINAL)|
+----------------------------------
+->  Tabela: PLANOSETOR
+->  A função "CHECK (DATAINICIAL <= DATAFINAL)"
+    garante que os valores da coluna "DATAFINAL" sejam sempre superiores ou iguais aos valores de coluna "DATAINICIAL".
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
 -----------------------
