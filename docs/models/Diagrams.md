@@ -35,12 +35,20 @@
     garante que os valores na coluna "DURACAO" só podem ser superiores a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
+ - A função **__"CHECK(CAUDAL > 0)"__**
+    garante que os valores na coluna "CAUDAL" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
  - A função **__"CHECK(PERIODICIDADE IN ('P', 'I', 'T'))"__**
     garante que os valores na coluna "PERIODICIDADE" só possam ser 'P', 'I' ou 'T'.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
  - A função **__"CHECK (DATAINICIAL <= DATAFINAL)"__**
     garante que os valores da coluna "DATAFINAL" sejam sempre superiores ou iguais aos valores de coluna "DATAINICIAL".
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+ - A função **__"CHECK(QUANTIDADE >= 0)"__**
+    garante que os valores na coluna "QUANTIDADE" só podem ser superiores ou iguais a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
     
  - A função **__"CHECK(DEBITOMAXIMO > 0)"__*

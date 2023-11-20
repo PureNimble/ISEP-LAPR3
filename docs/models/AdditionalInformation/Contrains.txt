@@ -30,12 +30,28 @@
     garante que os valores na coluna "PH" só podem ser iguais ou superiores a 0 e inferiores ou iguais a 14.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
+-----------------------
+|CHECK(QUANTIDADE > 0)|
+-----------------------
+->  Tabela: OPERACAO
+->  A função "CHECK(QUANTIDADE > 0)"
+    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
 ----------------------------------
 |CHECK (DATAINICIAL <= DATAFINAL)|
 ----------------------------------
 ->  Tabela: PLANOPLANTACAO
 ->  A função "CHECK (DATAINICIAL <= DATAFINAL)"
     garante que os valores da coluna "DATAFINAL" sejam sempre superiores ou iguais aos valores de coluna "DATAINICIAL".
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+--------------------
+|CHECK(CAUDAL > 0)|
+--------------------
+->  Tabela: PLANOSETOR
+->  A função "CHECK(CAUDAL > 0)"
+    garante que os valores na coluna "CAUDAL" só podem ser superiores a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
 --------------------
@@ -79,11 +95,11 @@
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
 -----------------------
-|CHECK(QUANTIDADE > 0)|
+|CHECK(QUANTIDADE >= 0)|
 -----------------------
 ->  Tabela: PRODUTOARMAZEM
-->  A função "CHECK(QUANTIDADE > 0)"
-    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero.
+->  A função "CHECK(QUANTIDADE >= 0)"
+    garante que os valores na coluna "QUANTIDADE" só podem ser superiores ou iguais a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
 -------------------------
