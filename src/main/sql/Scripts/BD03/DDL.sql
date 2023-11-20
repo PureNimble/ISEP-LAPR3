@@ -37,6 +37,7 @@ DROP TABLE PlantacaoSetor CASCADE CONSTRAINTS;
 DROP TABLE Produto CASCADE CONSTRAINTS;
 DROP TABLE ProdutoArmazem CASCADE CONSTRAINTS;
 DROP TABLE Quinta CASCADE CONSTRAINTS;
+DROP TABLE Rega CASCADE CONSTRAINTS;
 DROP TABLE RegistoSensor CASCADE CONSTRAINTS;
 DROP TABLE Sensor CASCADE CONSTRAINTS;
 DROP TABLE SensorEstacao CASCADE CONSTRAINTS;
@@ -121,7 +122,7 @@ CREATE TABLE FATORPRODUCAO (
   ID NUMBER(10) NOT NULL,
   DESIGNACAO VARCHAR2(255) NOT NULL UNIQUE,
   FABRICANTE VARCHAR2(255) NOT NULL,
-  FORMATO NUMBER(10) NOT NULL,
+  FORMATO VARCHAR2(255) NOT NULL,
   PH DOUBLE PRECISION CHECK(PH >= 0 AND PH <= 14),
   TIPOPRODUTOID NUMBER(10) NOT NULL,
   PRIMARY KEY (ID)
@@ -160,7 +161,7 @@ CREATE TABLE NOMEESPECIE (
 CREATE TABLE OPERACAO (
   ID NUMBER(10) NOT NULL,
   DATAOPERACAO DATE NOT NULL,
-  QUANTIDADE NUMBER(10) NOT NULL,
+  QUANTIDADE DOUBLE PRECISION NOT NULL CHECK(QUANTIDADE > 0),
   UNIDADE VARCHAR2(255) NOT NULL,
   TIPOOPERACAOID NUMBER(10) NOT NULL,
   CADERNOCAMPOID NUMBER(10) NOT NULL,
@@ -209,12 +210,13 @@ CREATE TABLE PLANOPLANTACAO (
   DATAINICIAL DATE NOT NULL,
   DATAFINAL DATE,
   PRIMARY KEY (PLANTACAOSETORPLANTACAOID),
-  CONSTRAINT CHECKDATES CHECK (DATAINICIAL <= DATAFINAL)
+  CONSTRAINT CHECKDATESPLANOPLANTACAO CHECK (DATAINICIAL <= DATAFINAL)
 );
 
 CREATE TABLE PLANOREGA (
   ANOINSERCAO NUMBER(10) NOT NULL,
   SISTEMAREGAESPACOID NUMBER(10) NOT NULL,
+  SISTEMAREGAQUINTAID NUMBER(10) NOT NULL,
   PRIMARY KEY (ANOINSERCAO)
 );
 
@@ -223,12 +225,12 @@ CREATE TABLE PLANOSETOR (
   SETORID NUMBER(10) NOT NULL,
   DATAINICIAL DATE NOT NULL,
   DATAFINAL DATE,
-  CAUDAL NUMBER(10) DEFAULT CAUDAL > 0 NOT NULL,
+  CAUDAL NUMBER(10) NOT NULL CHECK(CAUDAL > 0),
   DURACAO NUMBER(10) NOT NULL CHECK(DURACAO > 0),
   DISPERCAO VARCHAR2(255) NOT NULL,
   PERIODICIDADE NUMBER(10) NOT NULL CHECK(PERIODICIDADE IN ('P', 'I', 'T')),
   PRIMARY KEY (PLANOREGAANOINSERCAO, SETORID),
-  CONSTRAINT CHECKDATES CHECK (DATAINICIAL<= DATAFINAL)
+  CONSTRAINT CHECKDATESPLANOSETOR CHECK (DATAINICIAL<= DATAFINAL)
 );
 
 CREATE TABLE PLANTACAO (
@@ -237,11 +239,11 @@ CREATE TABLE PLANTACAO (
   DATAFINAL DATE,
   QUANTIDADE DOUBLE PRECISION NOT NULL CHECK(QUANTIDADE > 0),
   UNIDADE VARCHAR2(255) NOT NULL,
-  ESTADOFENOLOGICO VARCHAR2(255) NOT NULL,
+  ESTADOFENOLOGICO VARCHAR2(255),
   CULTURAID NUMBER(10) NOT NULL,
   PARCELAESPACOID NUMBER(10) NOT NULL,
   PRIMARY KEY (ID),
-  CONSTRAINT CHECKDATES CHECK (DATAINICIAL <= DATAFINAL)
+  CONSTRAINT CHECKDATESPLANTACAO CHECK (DATAINICIAL <= DATAFINAL)
 );
 
 CREATE TABLE PLANTACAOSETOR (
@@ -267,6 +269,11 @@ CREATE TABLE QUINTA (
   ID NUMBER(10) NOT NULL,
   DESIGNACAO VARCHAR2(255) NOT NULL,
   PRIMARY KEY (ID)
+);
+
+CREATE TABLE REGA (
+  ESPACOID NUMBER(10) NOT NULL,
+  PRIMARY KEY (ESPACOID)
 );
 
 CREATE TABLE REGISTOSENSOR (
@@ -303,9 +310,9 @@ CREATE TABLE SETOR (
 );
 
 CREATE TABLE SISTEMAREGA (
-  ESPACOID NUMBER(10) NOT NULL,
+  QUINTAID NUMBER(10) NOT NULL,
   DEBITOMAXIMO NUMBER(10) NOT NULL CHECK(DEBITOMAXIMO > 0),
-  PRIMARY KEY (ESPACOID)
+  PRIMARY KEY (QUINTAID)
 );
 
 CREATE TABLE TIPOCULTURA (
@@ -351,7 +358,6 @@ ALTER TABLE Cultura ADD CONSTRAINT FKCultura303785 FOREIGN KEY (TipoCulturaID) R
 ALTER TABLE ProdutoArmazem ADD CONSTRAINT FKProdutoArm383884 FOREIGN KEY (ArmazemEspacoID) REFERENCES Armazem (EspacoID);
 ALTER TABLE Armazem ADD CONSTRAINT FKArmazem321482 FOREIGN KEY (EspacoID) REFERENCES Espaco (ID);
 ALTER TABLE Parcela ADD CONSTRAINT FKParcela936398 FOREIGN KEY (EspacoID) REFERENCES Espaco (ID);
-ALTER TABLE SistemaRega ADD CONSTRAINT FKSistemaReg467386 FOREIGN KEY (EspacoID) REFERENCES Espaco (ID);
 ALTER TABLE PlantacaoSetor ADD CONSTRAINT FKPlantacaoS872782 FOREIGN KEY (PlantacaoID) REFERENCES Plantacao (ID);
 ALTER TABLE PlantacaoSetor ADD CONSTRAINT FKPlantacaoS6264 FOREIGN KEY (SetorID) REFERENCES Setor (ID);
 ALTER TABLE Estabulo ADD CONSTRAINT FKEstabulo107470 FOREIGN KEY (EspacoID) REFERENCES Espaco (ID);
@@ -369,7 +375,6 @@ ALTER TABLE OperacaoFator ADD CONSTRAINT FKOperacaoFa436815 FOREIGN KEY (FatorPr
 ALTER TABLE ProdutoArmazem ADD CONSTRAINT FKProdutoArm466455 FOREIGN KEY (ProdutoCulturaID) REFERENCES Produto (CulturaID);
 ALTER TABLE PlanoSetor ADD CONSTRAINT FKPlanoSetor822837 FOREIGN KEY (SetorID) REFERENCES Setor (ID);
 ALTER TABLE PlanoSetor ADD CONSTRAINT FKPlanoSetor30287 FOREIGN KEY (PlanoRegaAnoInsercao) REFERENCES PlanoRega (AnoInsercao);
-ALTER TABLE PlanoRega ADD CONSTRAINT FKPlanoRega898248 FOREIGN KEY (SistemaRegaEspacoID) REFERENCES SistemaRega (EspacoID);
 ALTER TABLE PlanoHora ADD CONSTRAINT FKPlanoHora58591 FOREIGN KEY (PlanoRegaAnoInsercao) REFERENCES PlanoRega (AnoInsercao);
 ALTER TABLE OperacaoSetor ADD CONSTRAINT FKOperacaoSe277035 FOREIGN KEY (SetorID) REFERENCES Setor (ID);
 ALTER TABLE OperacaoSetor ADD CONSTRAINT FKOperacaoSe246661 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
@@ -380,6 +385,9 @@ ALTER TABLE OperacaoParcela ADD CONSTRAINT FKOperacaoPa455939 FOREIGN KEY (Opera
 ALTER TABLE OperacaoParcela ADD CONSTRAINT FKOperacaoPa344730 FOREIGN KEY (ParcelaEspacoID) REFERENCES Parcela (EspacoID);
 ALTER TABLE Produto ADD CONSTRAINT FKProduto49 FOREIGN KEY (CulturaID) REFERENCES Cultura (ID);
 ALTER TABLE PlanoPlantacao ADD CONSTRAINT FKPlanoPlant813901 FOREIGN KEY (PlantacaoSetorPlantacaoID) REFERENCES PlantacaoSetor (PlantacaoID);
+ALTER TABLE Rega ADD CONSTRAINT FKRega269439 FOREIGN KEY (EspacoID) REFERENCES Espaco (ID);
+ALTER TABLE SistemaRega ADD CONSTRAINT FKSistemaReg724918 FOREIGN KEY (QuintaID) REFERENCES Quinta (ID);
+ALTER TABLE PlanoRega ADD CONSTRAINT FKPlanoRega92068 FOREIGN KEY (SistemaRegaQuintaID) REFERENCES SistemaRega (QuintaID);
 
 CREATE OR REPLACE TRIGGER CheckUniqueOperacaoIDSetor
 BEFORE INSERT OR UPDATE ON OperacaoSetor
@@ -388,30 +396,22 @@ DECLARE
     existsParcela NUMBER;
     existsPlantacao NUMBER;
 BEGIN
-    SELECT 1
+    SELECT COUNT(*)
     INTO existsParcela
-    FROM dual
-    WHERE EXISTS (
-        SELECT 1
-        FROM OperacaoParcela OP
-        WHERE OP.OperacaoID = :NEW.OperacaoID
-    );
+    FROM OperacaoParcela OP
+    WHERE OP.OperacaoID = :NEW.OperacaoID;
 
-    SELECT 1
+    SELECT COUNT(*)
     INTO existsPlantacao
-    FROM dual
-    WHERE EXISTS (
-        SELECT 1
-        FROM OperacaoPlantacao OP
-        WHERE OP.OperacaoID = :NEW.OperacaoID
-    );
+    FROM OperacaoPlantacao OP
+    WHERE OP.OperacaoID = :NEW.OperacaoID;
 
-    IF existsParcela = 1 OR existsPlantacao = 1 THEN
+    IF existsParcela > 0 OR existsPlantacao > 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Esta operação já está relacionada com um(a) parcela/plantação.');
     END IF;
 END;
 /
-;
+
 CREATE OR REPLACE TRIGGER CheckUniqueOperacaoIDParcela
 BEFORE INSERT OR UPDATE ON OperacaoParcela
 FOR EACH ROW
@@ -419,29 +419,22 @@ DECLARE
     existsSetor NUMBER;
     existsPlantacao NUMBER;
 BEGIN
-    SELECT 1
+    SELECT COUNT(*)
     INTO existsSetor
-    FROM dual
-    WHERE EXISTS (
-        SELECT 1
-        FROM OperacaoSetor OS
-        WHERE OS.OperacaoID = :NEW.OperacaoID
-    );
+    FROM OperacaoSetor OS
+    WHERE OS.OperacaoID = :NEW.OperacaoID;
 
-    SELECT 1
+    SELECT COUNT(*)
     INTO existsPlantacao
-    FROM dual
-    WHERE EXISTS (
-        SELECT 1
-        FROM OperacaoPlantacao OP
-        WHERE OP.OperacaoID = :NEW.OperacaoID
-    );
+    FROM OperacaoPlantacao OP
+    WHERE OP.OperacaoID = :NEW.OperacaoID;
 
-    IF existsSetor = 1 OR existsPlantacao = 1 THEN
+    IF existsSetor > 0 OR existsPlantacao > 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Esta operação já está relacionada com um(a) setor/plantação.');
     END IF;
 END;
-/;
+/
+
 CREATE OR REPLACE TRIGGER ChechUniqueOperacaoIDPlantacao
 BEFORE INSERT OR UPDATE ON OperacaoPlantacao
 FOR EACH ROW
@@ -449,29 +442,22 @@ DECLARE
     existsSetor NUMBER;
     existsParcela NUMBER;
 BEGIN
-    SELECT 1
+    SELECT COUNT(*)
     INTO existsSetor
-    FROM dual
-    WHERE EXISTS (
-        SELECT 1
-        FROM OperacaoSetor OS
-        WHERE OS.OperacaoID = :NEW.OperacaoID
-    );
+    FROM OperacaoSetor OS
+    WHERE OS.OperacaoID = :NEW.OperacaoID;
 
-    SELECT 1
+    SELECT COUNT(*)
     INTO existsParcela
-    FROM dual
-    WHERE EXISTS (
-        SELECT 1
-        FROM OperacaoParcela OP
-        WHERE OP.OperacaoID = :NEW.OperacaoID
-    );
+    FROM OperacaoParcela OP
+    WHERE OP.OperacaoID = :NEW.OperacaoID;
 
-    IF existsSetor = 1 OR existsParcela = 1 THEN
+    IF existsSetor > 0 OR existsParcela > 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Esta operação já está relacionada com um(a) setor/parcela.');
     END IF;
 END;
-/;
+/
+
 CREATE OR REPLACE TRIGGER CheckPlantacaoUnidade
 BEFORE INSERT OR UPDATE ON Plantacao
 FOR EACH ROW
@@ -481,26 +467,23 @@ BEGIN
   SELECT Designacao INTO designacao 
   FROM TipoCultura
   WHERE ID = (SELECT TipoCulturaID FROM Cultura WHERE ID = :NEW.CulturaID);
-  
-  IF INSERTING THEN
 
+  IF INSERTING THEN
     IF designacao = 'Temporária' THEN
       :NEW.Unidade := 'ha';
     ELSE
       :NEW.Unidade := 'un';
-
-   END IF;
-
+    END IF;
   ELSIF UPDATING THEN
     IF designacao = 'Temporária' AND :NEW.Unidade != 'ha' THEN
-      RAISE_APPLICATION_ERROR(-20001, 'Se o TipoCultura é Temporária, então Unidade têm de ser ha');
+      RAISE_APPLICATION_ERROR(-20001, 'Se o TipoCultura é Temporária, então Unidade deve ser ha');
     ELSIF designacao != 'Temporária' AND :NEW.Unidade != 'un' THEN
-      RAISE_APPLICATION_ERROR(-20001, 'Se o TipoCultura é Permanente, então Unidade têm de ser un');
+      RAISE_APPLICATION_ERROR(-20001, 'Se o TipoCultura é Permanente, então Unidade deve ser un');
     END IF;
-
   END IF;
 END;
-/;
+/
+
 CREATE OR REPLACE TRIGGER CheckCaudal
 BEFORE INSERT OR UPDATE ON PlanoSetor
 FOR EACH ROW
@@ -509,8 +492,8 @@ DECLARE
 BEGIN
     SELECT DebitoMaximo INTO debitoMaximo
     FROM SistemaRega
-    WHERE EspacoID = (
-        SELECT SistemaRegaEspacoID
+    WHERE QuintaID = (
+        SELECT SistemaRegaQuintaID
         FROM PlanoRega
         WHERE AnoInsercao = :new.PlanoRegaAnoInsercao
     );
@@ -519,87 +502,59 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20001, 'O valor de Caudal ultrapassa os limites do valor previsto para o Sistema de Rega');
     END IF;
 END;
-/;
+/
+
 CREATE OR REPLACE TRIGGER CheckUniqueTipoSensor
 BEFORE INSERT OR UPDATE ON SensorEstacao
 FOR EACH ROW
 DECLARE
-    exists NUMBER;
+    existsNum NUMBER;
 BEGIN
-    IF INSERTING THEN
-        SELECT 1
-        INTO exists
-        FROM dual
-        WHERE EXISTS (
-            SELECT 1
-            FROM SensorEstacao SE
-            JOIN Sensor S ON SE.SensorID = S.ID
-            WHERE S.TipoSensorID = :NEW.TipoSensorID
-            AND SE.EstacaoMeteorologicaID = :NEW.EstacaoMeteorologicaID
-        );
+    SELECT COUNT(*)
+    INTO existsNum
+    FROM SensorEstacao SE
+    JOIN Sensor S ON SE.SensorID = S.ID
+    WHERE S.TipoSensorID = (
+        SELECT TipoSensorID FROM Sensor WHERE ID = :NEW.SensorID
+    )
+    AND SE.EstacaoMeteorologicaID = :NEW.EstacaoMeteorologicaID;
 
-        IF exists = 1 THEN
-            RAISE_APPLICATION_ERROR(-20001, 'Já existe um sensor desse tipo associado a esta estação meteorológica.');
-        END IF;
-    ELSIF UPDATING THEN
-        SELECT 1
-        INTO exists
-        FROM dual
-        WHERE EXISTS (
-            SELECT 1
-            FROM SensorEstacao SE
-            JOIN Sensor S ON SE.SensorID = S.ID
-            WHERE S.TipoSensorID = :NEW.TipoSensorID
-            AND SE.EstacaoMeteorologicaID = :NEW.EstacaoMeteorologicaID
-            AND SE.SensorID != :NEW.SensorID
-        );
-
-        IF exists = 1 THEN
-            RAISE_APPLICATION_ERROR(-20001, 'Já existe um sensor desse tipo associado a esta estação meteorológica.');
-        END IF;
+    IF existsNum > 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Já existe um sensor desse tipo associado a esta estação meteorológica.');
     END IF;
 END;
 /
-;
+
 CREATE OR REPLACE TRIGGER CheckUniqueSensorIDEstacao
 BEFORE INSERT OR UPDATE ON SensorEstacao
 FOR EACH ROW
 DECLARE
-    exists NUMBER;
+    existsCheck NUMBER;
 BEGIN
-    SELECT 1
-    INTO exists
-    FROM dual
-    WHERE EXISTS (
-        SELECT 1
-        FROM SensorParcela SP
-        WHERE SP.SensorID = :NEW.SensorID
-    );
+    SELECT COUNT(*)
+    INTO existsCheck
+    FROM SensorParcela SP
+    WHERE SP.SensorID = :NEW.SensorID;
 
-    IF exists = 1 THEN
+    IF existsCheck > 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Este sensor já está a ser usado numa Parcela.');
     END IF;
 END;
 /
-;
+
 CREATE OR REPLACE TRIGGER CheckUniqueSensorIDParcela
 BEFORE INSERT OR UPDATE ON SensorParcela
 FOR EACH ROW
 DECLARE
-    exists NUMBER;
+    existsCheck NUMBER;
 BEGIN
-    SELECT 1
-    INTO exists
-    FROM dual
-    WHERE EXISTS (
-        SELECT 1
-        FROM SensorEstacao SE
-        WHERE SE.SensorID = :NEW.SensorID
-    );
+    SELECT COUNT(*)
+    INTO existsCheck
+    FROM SensorEstacao SE
+    WHERE SE.SensorID = :NEW.SensorID;
 
-    IF exists = 1 THEN
+    IF existsCheck > 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Este sensor já está a ser usado numa Estação Meteorológica.');
     END IF;
 END;
 /
-;
