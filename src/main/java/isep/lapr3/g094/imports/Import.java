@@ -68,7 +68,8 @@ public class Import {
                         String processedCell = processCell(cell, sheet.getSheetName());
                         if (processedCell != null) {
                             rowData.add(processedCell);
-                        }                    }
+                        }
+                    }
                     sheetData.add(rowData);
                 }
             }
@@ -83,11 +84,11 @@ public class Import {
         String cellValue = "";
         CellType cellType = cell.getCellType();
         if (cellType == CellType.STRING) {
-            cellValue = "'" + cell.getStringCellValue().replaceAll("\u00A0", "").replace("'", "''") + "'";
+            cellValue = cell.getStringCellValue().replaceAll("\u00A0", "").replace("'", "''");
         } else {
             if (DateUtil.isCellDateFormatted(cell)) {
                 Date dateValue = cell.getDateCellValue();
-                cellValue = "TO_DATE('" + new SimpleDateFormat("MM/dd/yyyy").format(dateValue) + "', 'MM/DD/YYYY')";
+                cellValue = new SimpleDateFormat("MM-dd-yyyy").format(dateValue);
             } else {
                 double doubleValue = cell.getNumericCellValue();
                 cellValue = String.valueOf(doubleValue).strip();

@@ -2,10 +2,8 @@ package isep.lapr3.g094.ui;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.text.ParseException;
 
-import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.application.controller.TransformXlsxController;
 
 public class ImportXlsxFileUI implements Runnable {
@@ -19,8 +17,7 @@ public class ImportXlsxFileUI implements Runnable {
                 System.out.println("\n-> Ficheiro .Xlsx importado com sucesso");
             else
                 System.out.println("\n-> Erro ao importar ficheiro .Xlsx");
-        } catch (ClassNotFoundException | IOException | SQLException e) {
-            // TODO Auto-generated catch block
+        } catch (ClassNotFoundException | IOException | SQLException | ParseException e) {
             e.printStackTrace();
         }
 

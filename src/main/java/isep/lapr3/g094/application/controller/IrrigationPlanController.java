@@ -72,7 +72,8 @@ public class IrrigationPlanController {
         List<Date> dates = getDatesBetween(startDate);
 
         for (Date data : dates) {
-            if(irrigationDateRepository.createIrrigationDate(data).isEmpty()) return false;
+            if (irrigationDateRepository.createIrrigationDate(data).isEmpty())
+                return false;
         }
         return true;
     }

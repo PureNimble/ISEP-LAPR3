@@ -1,6 +1,7 @@
 package isep.lapr3.g094.application.controller;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import isep.lapr3.g094.imports.Import;
@@ -100,10 +101,8 @@ public class ImportController {
         return true;
     }
 
-    public boolean importXlsx() {
-        if (importClass.importXlsxFile("bddad/Legacy_Data_v2a.xlsx").isEmpty())
-            return false;
-        return true;
+    public List<LinkedHashSet<List<String>>> importXlsx() {
+        return importClass.importXlsxFile("bddad/Legacy_Data_v2a.xlsx");
     }
 
     public List<String> importDistances() {

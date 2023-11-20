@@ -1,12 +1,10 @@
 package isep.lapr3.g094.ui;
 
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import isep.lapr3.g094.application.controller.GestorAgriculaController;
-import isep.lapr3.g094.ui.menu.MainMenuUI;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
 
