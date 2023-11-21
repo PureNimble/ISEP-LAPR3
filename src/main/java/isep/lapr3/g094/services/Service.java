@@ -1,8 +1,8 @@
 package isep.lapr3.g094.services;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+
+import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.repository.GraphRepository;
 import isep.lapr3.g094.repository.Repositories;
@@ -104,5 +104,49 @@ public class Service {
 
     public MapGraph<Location, Integer> getBasketDistribution() {
         return graphRepository.getBasketDistribution();
+    }
+
+    public Map<String, Criteria> getVerticesIdeais() {
+        Map<String, Criteria> map = new HashMap<>();
+        int i = 0;
+        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+            int degree = graphRepository.getBasketDistribution().inDegree(location);
+            i++;
+            List<String> paths = new ArrayList<>();
+            paths.add("Path1");
+            paths.add("Path2");
+            paths.add("Path3");
+            paths.add("Path3");
+            Criteria criteria = new Criteria(degree, paths, i);
+            map.put(location.getId(), criteria);
+        }
+        map = sortByValue(map);
+        return map;
+    }
+    public static Map<String, Criteria> sortByValue(Map<String, Criteria> map) {
+        // Convert the map to a list of entries
+        List<Map.Entry<String, Criteria>> list = new ArrayList<>(map.entrySet());
+
+        // Sort the list using a custom comparator
+        Collections.sort(list, new Comparator<Map.Entry<String, Criteria>>() {
+            public int compare(Map.Entry<String, Criteria> o1, Map.Entry<String, Criteria> o2) {
+                // Compare by degree in descending order
+                int degreeComparison = Integer.compare(o2.getValue().getDegree(), o1.getValue().getDegree());
+                if (degreeComparison != 0) {
+                    return degreeComparison;
+                } else {
+                    // If degrees are equal, compare by number of minimum paths in descending order
+                    return Integer.compare(o2.getValue().getNumberMinimumPaths(), o1.getValue().getNumberMinimumPaths());
+                }
+            }
+        });
+
+        // Convert the sorted list back to a map
+        Map<String, Criteria> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<String, Criteria> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
     }
 }
