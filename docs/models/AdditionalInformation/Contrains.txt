@@ -6,12 +6,12 @@
     garante que os valores na coluna "CAPACIDADE" só podem ser superiores a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
------------------------
-|CHECK(QUANTIDADE > 0)|
------------------------
+---------------------------------------------
+|CHECK(QUANTIDADE > 0 AND QUANTIDADE <= 100)|
+---------------------------------------------
 ->  Tabela: ELEMENTOFICHA
-->  A função "CHECK(QUANTIDADE > 0)"
-    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero.
+->  A função "CHECK(QUANTIDADE > 0 AND QUANTIDADE <= 100)"
+    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero e inferiores ou iguais a 100.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
 -----------------
@@ -20,6 +20,14 @@
 ->  Tabela: ESPACO
 ->  A função "CHECK(AREA > 0)"
     garante que os valores na coluna "AREA" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+--------------------------------------------------------
+|CHECK(MATERIAORGANICA >= 0 AND MATERIAORGANICA <= 100)|
+--------------------------------------------------------
+->  Tabela: FATORPRODUCAO
+->  A função "CHECK(MATERIAORGANICA >= 0 AND MATERIAORGANICA <= 100)"
+    garante que os valores na coluna "MATERIAORGANICA" só podem ser iguais ou superiores a 0 e inferiores ou iguais a 100.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
 -----------------------------

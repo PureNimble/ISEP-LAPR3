@@ -142,7 +142,7 @@ public class TransformXlsxController {
                     PreparedStatement pstmtAplicacao = conn.prepareStatement("INSERT INTO APLICACAO VALUES (?,?)");
                     PreparedStatement pstmtElemento = conn.prepareStatement("INSERT INTO ELEMENTO VALUES (?,?)");
                     PreparedStatement pstmtFatorProducao = conn
-                            .prepareStatement("INSERT INTO FatorProducao VALUES (?, ?, ?, ?, ?, ?)");
+                            .prepareStatement("INSERT INTO FatorProducao VALUES (?, ?, ?, ?, ?, ?, ?)");
                     PreparedStatement pstmtAplicacaoProduto = conn
                             .prepareStatement("INSERT INTO AplicacaoProduto VALUES (?, ?)");
                     PreparedStatement pstmtElementoFicha = conn
@@ -189,8 +189,9 @@ public class TransformXlsxController {
                     pstmtFatorProducao.setString(2, rowData.get(0)); // Designacao
                     pstmtFatorProducao.setString(3, rowData.get(1)); // Fabricante
                     pstmtFatorProducao.setString(4, rowData.get(2)); // Formato
-                    pstmtFatorProducao.setNull(5, java.sql.Types.DOUBLE); // PH
-                    pstmtFatorProducao.setInt(6, (insertedDataIndex.get(0).indexOf(tipoProduto)) + 1); // TipoProduto
+                    pstmtFatorProducao.setNull(5, java.sql.Types.DOUBLE); // MateriaOrganica
+                    pstmtFatorProducao.setNull(6, java.sql.Types.DOUBLE); // PH
+                    pstmtFatorProducao.setInt(7, (insertedDataIndex.get(0).indexOf(tipoProduto)) + 1); // TipoProduto
                     pstmtFatorProducao.addBatch();
                     insertedDataIndex.get(3).add(fatorProducao);
                     // AplicacaoProduto
@@ -243,7 +244,7 @@ public class TransformXlsxController {
             conn.setAutoCommit(false);
 
             try (PreparedStatement pstmtQuinta = conn.prepareStatement("INSERT INTO Quinta VALUES (?,?)");
-                    PreparedStatement pstmtEspaco = conn.prepareStatement("INSERT INTO Espaco VALUES (?,?,?,?,?)");
+                    PreparedStatement pstmtEspaco = conn.prepareStatement("INSERT INTO Espaco VALUES (?,?,?,?,?,?)");
                     PreparedStatement pstmtParcela = conn.prepareStatement("INSERT INTO Parcela VALUES (?)");
                     PreparedStatement pstmtRega = conn.prepareStatement("INSERT INTO Rega VALUES (?)");
                     PreparedStatement pstmtArmazem = conn.prepareStatement("INSERT INTO ARMAZEM (ESPACOID) VALUES (?)");
@@ -266,7 +267,8 @@ public class TransformXlsxController {
                     pstmtEspaco.setString(2, designacao); // Designação
                     pstmtEspaco.setDouble(3, dimensao); // Dimensao
                     pstmtEspaco.setString(4, unidade); // Unidade
-                    pstmtEspaco.setInt(5, 1); // QuintaID
+                    pstmtEspaco.setNull(5, java.sql.Types.DATE);
+                    pstmtEspaco.setInt(6, 1); // QuintaID
                     pstmtEspaco.addBatch();
 
                     switch (tipoEspaco.toLowerCase().charAt(0)) {
