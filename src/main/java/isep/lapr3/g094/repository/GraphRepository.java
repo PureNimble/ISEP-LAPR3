@@ -1,22 +1,23 @@
-package isep.lapr3.g094.struct.graph.map;
+package isep.lapr3.g094.repository;
 
-import isep.lapr3.g094.domain.Location;
+import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.struct.graph.Edge;
+import isep.lapr3.g094.struct.graph.map.MapGraph;
 
-public class BasketDistribution {
+public class GraphRepository {
 
     final private MapGraph<Location, Integer> basketDistribution;
 
-    public BasketDistribution() {
+    public GraphRepository() {
         this.basketDistribution = new MapGraph<>(false);
     }
 
-    public void addLocation(Location location) {
-        this.basketDistribution.addVertex(location);
+    public boolean addLocation(Location location) {
+        return this.basketDistribution.addVertex(location);
     }
 
-    public void addDistance(Location location1, Location location2, Integer distance) {
-        this.basketDistribution.addEdge(location1, location2, distance);
+    public boolean addDistance(Location location1, Location location2, Integer distance) {
+        return this.basketDistribution.addEdge(location1, location2, distance);
     }
 
     public int keyLocation(Location location) {
@@ -47,6 +48,10 @@ public class BasketDistribution {
 
     public int getNumDistances() {
         return this.basketDistribution.numEdges();
+    }
+
+    public MapGraph<Location, Integer> getBasketDistribution() {
+        return basketDistribution;
     }
 
     @Override

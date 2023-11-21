@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 import isep.lapr3.g094.repository.dataAccess.DatabaseConnection;
 
-public class GestorAgriculaRepository {
+public class FarmManagerRepository {
 
 	public boolean registerPoda(int quantidade, int parcelaID, int plantacaoID, Date dataOperacao) throws SQLException {
 

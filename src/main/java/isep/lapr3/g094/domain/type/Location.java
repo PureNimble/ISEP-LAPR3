@@ -1,4 +1,4 @@
-package isep.lapr3.g094.domain;
+package isep.lapr3.g094.domain.type;
 
 import java.util.Objects;
 
@@ -14,6 +14,10 @@ public class Location {
         this.latitude = latitude;
         this.longitude = longitude;
         this.numEmployees = numEmployees;
+    }
+
+    public Location(String id) {
+        this.id = id;
     }
 
     public String getId() {
@@ -55,5 +59,4 @@ public class Location {
                 + ", Número de empregados= "
                 + numEmployees + "]";
     }
-
 }
