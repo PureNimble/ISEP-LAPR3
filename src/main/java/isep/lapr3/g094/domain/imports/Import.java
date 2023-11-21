@@ -1,4 +1,4 @@
-package isep.lapr3.g094.imports;
+package isep.lapr3.g094.domain.imports;
 
 import java.io.IOException;
 import java.io.InputStream;
