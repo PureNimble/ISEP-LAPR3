@@ -71,17 +71,18 @@ public class BasketDistributionUI implements Runnable {
                 .max()
                 .orElse(0), "Nº Caminhos mínimos".length());
 
-        String formatString = "| %" + maxIdLength + "s | %" + maxDegreeLength + "d | %" + maxNumPathsLength + "d |\n";
+        int maxLength = Math.max(maxIdLength, Math.max(maxDegreeLength, maxNumPathsLength));
 
         for (Map.Entry<String, Criteria> entry : idealVertices.entrySet()) {
-            System.out.println("-------------------------------------------------");
-            System.out.printf(formatString, "\t" + entry.getKey() + "\t", entry.getValue().getDegree(),
-                    entry.getValue().getNumberMinimumPaths());
-            printPaths(entry.getKey(), entry.getValue().getPaths(), entry.getValue().getDistances());
+            System.out.println("-----------------------------------------------------------------");
+            String formatString = "| ID: %" + maxLength/3 + "s | Degree: %" + maxLength/3 + "d | Number of Minimum Paths: %" + maxLength/3 + "d |\n";
+
+            System.out.printf(formatString, entry.getKey(), entry.getValue().getDegree(), entry.getValue().getNumberMinimumPaths());
+            printPaths(entry.getKey(), entry.getValue().getPaths(), entry.getValue().getDistances(), maxLength);
         }
     }
 
-    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances) {
+    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances, int maxLength) {
         if (arrayList.size() != (distances.size())) {
             throw new IllegalArgumentException("The two lists must be the same size");
         }
@@ -89,9 +90,13 @@ public class BasketDistributionUI implements Runnable {
         for (int i = 0; i < arrayList.size(); i++) {
             LinkedList<Location> path = arrayList.get(i);
             Integer distance = distances.get(i);
-            System.out.println("-------------------------------------------------");
-            System.out.println("|     ID Destino: " + path.getLast().getId() + "   Distância: " + distance + "m    |");
+            String formatString = "| ID Destino: %" + (maxLength-1) + "s | Distância: %" + (maxLength-4) + "d m |\n";
+            System.out.println("-----------------------------------------------------------------");
+            System.out.printf(formatString, path.getLast().getId(), distance);
+
         }
+        System.out.println("-----------------------------------------------------------------");
+
     }
 
     private void getMinimal() {
