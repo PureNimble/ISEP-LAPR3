@@ -47,7 +47,11 @@ public class FarmManagerUI implements Runnable {
 
         scanner.close();
         try {
-            farmManagerController.registerOperation(operationType, value, parcelaID, plantacaoID, dataOperacao);
+            try {
+                farmManagerController.registerOperation(operationType, value, parcelaID, plantacaoID, dataOperacao);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

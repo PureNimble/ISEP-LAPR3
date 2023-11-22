@@ -24,7 +24,7 @@ public class IrrigationSectorRepository {
         return null;
     }
 
-    public Optional<IrrigationSector> createIrrigationSectors(char sector, int duracao, char periocidade) {
+    public Optional<IrrigationSector> createIrrigationSectors(int sector, int duracao, char periocidade) {
 
         Optional<IrrigationSector> optionalValue = Optional.empty();
         IrrigationSector irrigationSector = new IrrigationSector(sector, duracao, periocidade);
@@ -42,6 +42,10 @@ public class IrrigationSectorRepository {
             success = irrigationSectors.add(irrigationSector);
         }
         return success;
+    }
+
+    public void clear() {
+        irrigationSectors.clear();
     }
 
     private boolean validateIrrigationSector(IrrigationSector irrigationSector) {

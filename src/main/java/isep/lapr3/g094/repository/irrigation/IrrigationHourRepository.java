@@ -43,6 +43,10 @@ public class IrrigationHourRepository {
         return success;
     }
 
+    public void clear() {
+        irrigationHours.clear();
+    }
+
     private boolean validateIrrigationHour(IrrigationHour irrigationHour) {
         return !irrigationHours.contains(irrigationHour);
     }

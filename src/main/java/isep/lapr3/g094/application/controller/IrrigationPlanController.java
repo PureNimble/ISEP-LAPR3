@@ -1,5 +1,6 @@
 package isep.lapr3.g094.application.controller;
 
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.Map;
 import isep.lapr3.g094.domain.irrigation.IrrigationDate;
 import isep.lapr3.g094.domain.irrigation.IrrigationHour;
 import isep.lapr3.g094.domain.irrigation.IrrigationSector;
+import isep.lapr3.g094.repository.FarmManagerRepository;
 import isep.lapr3.g094.repository.Repositories;
 import isep.lapr3.g094.repository.irrigation.IrrigationDateRepository;
 import isep.lapr3.g094.repository.irrigation.IrrigationHourRepository;
@@ -17,6 +19,7 @@ import isep.lapr3.g094.repository.irrigation.IrrigationSectorRepository;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.time.LocalTime;
 
 public class IrrigationPlanController {
 
@@ -24,11 +27,13 @@ public class IrrigationPlanController {
     private IrrigationSectorRepository irrigationSectorRepository;
     private IrrigationDateRepository irrigationDateRepository;
     private IrrigationHourRepository irrigationHourRepository;
+    private FarmManagerRepository farmManagerRepository;
 
     public IrrigationPlanController() {
         getIrrigationSectorRepository();
         getIrrigationDateRepository();
         getIrrigationHourRepository();
+        getFarmManagerRepository();
     }
 
     private IrrigationSectorRepository getIrrigationSectorRepository() {
@@ -56,6 +61,15 @@ public class IrrigationPlanController {
             irrigationHourRepository = repositories.getIrrigationHourRepository();
         }
         return irrigationHourRepository;
+    }
+
+    private FarmManagerRepository getFarmManagerRepository() {
+        if (farmManagerRepository == null) {
+            Repositories repositories = Repositories.getInstance();
+
+            farmManagerRepository = repositories.getGestorAgricolaRepository();
+        }
+        return farmManagerRepository;
     }
 
     public boolean createPlan(String date) {
@@ -159,6 +173,33 @@ public class IrrigationPlanController {
         int index = str.indexOf('/');
         String numbers = str.substring(0, index);
         return numbers.replaceAll("[^\\d]", "");
+    }
+
+    public boolean executeWatering() {
+        for (IrrigationDate date : irrigationDateRepository.getIrrigationDates()) {
+            for (IrrigationHour hour : irrigationHourRepository.getIrrigationHours()) {
+                for (IrrigationSector sector : irrigationSectorRepository.getIrrigationSectors()) {
+                    try {
+                        java.sql.Date operationDate = new java.sql.Date(date.getDate().getTime());
+                        java.sql.Time operationTime = java.sql.Time.valueOf(LocalTime.parse(hour.getHour()));
+                        try {
+                            farmManagerRepository.registerRega(sector.getDuracao(), sector.getSector(), operationDate,
+                                    operationTime);
+                            System.out.println(
+                                    "Rega: " + sector.getSector() + " " + operationDate + " registada com sucesso!");
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                            System.out.println(
+                                    "Rega: " + sector.getSector() + " " + operationDate + " não foi registada!");
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     public List<IrrigationSector> getIrrigationSectors() {

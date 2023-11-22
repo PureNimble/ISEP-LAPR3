@@ -53,6 +53,8 @@ public class ImportController {
     }
 
     public boolean importIrrigationPlan() {
+        irrigationHourRepository.clear();
+        irrigationSectorRepository.clear();
 
         List<String> plan = importClass.importTxtFile("lapr3/PlanoDeRega.txt", false);
         if (plan.isEmpty())
@@ -73,8 +75,10 @@ public class ImportController {
         while (iterator.hasNext()) {
             String[] line = iterator.next().split(",");
             try {
-                if (irrigationSectorRepository.createIrrigationSectors(line[0].charAt(0), Integer.parseInt(line[1]),
-                        line[2].charAt(0)).isEmpty()) {
+                if (irrigationSectorRepository
+                        .createIrrigationSectors(Integer.parseInt(line[0]), Integer.parseInt(line[1]),
+                                line[2].charAt(0))
+                        .isEmpty()) {
                     return false;
                 }
             } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
@@ -88,7 +92,7 @@ public class ImportController {
         return importClass.importXlsxFile("bddad/Legacy_Data_v2a.xlsx");
     }
 
-     public List<String> importBddadNewData() {
+    public List<String> importBddadNewData() {
         return importClass.importTxtFile("bddad/NovosDados.txt", false);
     }
 
@@ -98,8 +102,9 @@ public class ImportController {
         List<String> distances = importClass.importTxtFile("esinf/distancias_big.csv", true);
         if (locations.isEmpty() || distances.isEmpty())
             return false;
-        if(!service.createLocation(locations) || !service.addDistance(distances)) check = false;
+        if (!service.createLocation(locations) || !service.addDistance(distances))
+            check = false;
         return check;
     }
-    
+
 }

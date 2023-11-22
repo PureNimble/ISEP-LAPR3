@@ -2,17 +2,17 @@ package isep.lapr3.g094.domain.irrigation;
 
 public class IrrigationSector {
 
-    private char sector;
+    private int sector;
     private int duracao;
     private char periodicidade;
 
-    public IrrigationSector(char sector, int duracao, char periodicidade) {
+    public IrrigationSector(int sector, int duracao, char periodicidade) {
         this.sector = sector;
         this.duracao = duracao;
         this.periodicidade = periodicidade;
     }
 
-    public char getSector() {
+    public int getSector() {
         return sector;
     }
 
@@ -48,7 +48,7 @@ public class IrrigationSector {
 
     @Override
     public String toString() {
-        return "Setor= " + sector + ", Duracao= " + duracao + ", Periodicidade= " + periodicidade;
+        return "sector=" + sector + ", duracao=" + duracao + ", periodicidade=" + periodicidade;
     }
 
 }

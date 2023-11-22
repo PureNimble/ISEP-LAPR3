@@ -24,23 +24,30 @@ public class IrrigationUI implements Runnable {
     private static final Scanner scanner = new Scanner(System.in);
 
     public void run() {
-
-        List<MenuItem> options = new ArrayList<MenuItem>();
-        options.add(new MenuItem("Criar plano de rega", this::createPlan));
-        options.add(new MenuItem("Ver plano de rega atual", this::printPlan));
-        options.add(new MenuItem("Ver regas em execução", () -> {
-            try {
-                searchWatering();
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }));
-        int option = 0;
+        List<MenuItem> options = new ArrayList<>();
+        int option;
         do {
-            option = Utils.showAndSelectIndex(options,
-                    "\n=========Interface do Controlador De Rega=========");
-            if (option != -1)
+            options.clear();
+
+            options.add(new MenuItem("Importar plano de rega", this::createPlan));
+            if (!irrigationPlanController.getIrrigationSectors().isEmpty()
+                    || !irrigationPlanController.getIrrigationHours().isEmpty()) {
+                options.add(new MenuItem("Ver plano de rega atual", this::printPlan));
+                options.add(new MenuItem("Ver regas em execução", () -> {
+                    try {
+                        searchWatering();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                }));
+                options.add(new MenuItem("Executar regas", this::executeWatering));
+            }
+
+            option = Utils.showAndSelectIndex(options, "\n=========Interface do Controlador de Rega=========");
+
+            if (option != -1) {
                 options.get(option).run();
+            }
 
         } while (option != -1);
 
@@ -61,21 +68,17 @@ public class IrrigationUI implements Runnable {
 
     private void searchWatering() throws ParseException {
 
-        if (!irrigationPlanController.getIrrigationSectors().isEmpty()) {
-            String data = getValidatedInput(PATTERN_DATA, "\nFormato: dia/mes/ano\n\nInsira a data: ",
-                    "Formato de data invalido. Por favor insira uma data no formato dd/mm/yyyy");
-            String hora = getValidatedInput(PATTERN_HORA, "\nFormato: hh:mm\n\nInsira a hora: ",
-                    "Formato de hora invalido. Por favor insira uma hora no formato hh:mm");
+        String data = getValidatedInput(PATTERN_DATA, "\nFormato: dia/mes/ano\n\nInsira a data: ",
+                "Formato de data invalido. Por favor insira uma data no formato dd/mm/yyyy");
+        String hora = getValidatedInput(PATTERN_HORA, "\nFormato: hh:mm\n\nInsira a hora: ",
+                "Formato de hora invalido. Por favor insira uma hora no formato hh:mm");
 
-            Map<IrrigationSector, Integer> lista = irrigationPlanController.searchIrrigation(data, hora);
-            if (lista != null)
-                printResults(lista);
-            else
-                System.out.println(
-                        "Não existem regas para essa data no plano de rega atual, por favor insira uma data válida. (30 dias a partir da data de criação do plano)");
-
-        } else
-            System.out.println("Ainda não existe um plano criado");
+        Map<IrrigationSector, Integer> lista = irrigationPlanController.searchIrrigation(data, hora);
+        if (lista != null)
+            printResults(lista);
+        else
+            System.out.println(
+                    "Não existem regas para essa data no plano de rega atual, por favor insira uma data válida. (30 dias a partir da data de criação do plano)");
     }
 
     private String getValidatedInput(Pattern pattern, String prompt, String errorMessage) {
@@ -97,23 +100,25 @@ public class IrrigationUI implements Runnable {
 
     }
 
+    private void executeWatering() {
+        if (irrigationPlanController.executeWatering())
+            System.out.println("Regas registadas com sucesso");
+        else
+            System.out.println("Não foi possivel registar todas as regas");
+    }
+
     private void printPlan() {
         List<IrrigationSector> irrigationSectors = irrigationPlanController.getIrrigationSectors();
         List<IrrigationHour> irrigationHours = irrigationPlanController.getIrrigationHours();
         List<IrrigationDate> irrigationDates = irrigationPlanController.getIrrigationDates();
-        if (irrigationSectors.isEmpty() || irrigationHours.isEmpty())
-            System.out.println("Ainda não existe um plano criado");
-
-        else {
-            System.out.println("\n=============Plano de Rega=============");
-            System.out.println("Datas de rega:");
-            System.out.println(irrigationDates.get(0) + " a " + irrigationDates.get(irrigationDates.size() - 1));
-            System.out.println("\nHoras de rega:");
-            irrigationHours.forEach(System.out::println);
-            System.out.println("\nSetores a regar:");
-            irrigationSectors.forEach(System.out::println);
-            System.out.println("=======================================");
-        }
+        System.out.println("\n=============Plano de Rega=============");
+        System.out.println("Datas de rega:");
+        System.out.println(irrigationDates.get(0) + " a " + irrigationDates.get(irrigationDates.size() - 1));
+        System.out.println("\nHoras de rega:");
+        irrigationHours.forEach(System.out::println);
+        System.out.println("\nSetores a regar:");
+        irrigationSectors.forEach(System.out::println);
+        System.out.println("=======================================");
     }
 
     private void printResults(Map<IrrigationSector, Integer> lista) {
