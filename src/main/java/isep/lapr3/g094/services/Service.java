@@ -108,38 +108,42 @@ public class Service {
 
     public Map<String, Criteria> getVerticesIdeais() {
         Map<String, Criteria> map = new HashMap<>();
-        int i = 0;
-        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+        int numberMinimumPaths = 0;
+        int i;
+        for (Location location : getBasketDistribution().vertices()) {
             int degree = graphRepository.getBasketDistribution().inDegree(location);
-            i++;
-            List<String> paths = new ArrayList<>();
-            paths.add("Path1");
-            paths.add("Path2");
-            paths.add("Path3");
-            paths.add("Path3");
-            Criteria criteria = new Criteria(degree, paths, i);
+            ArrayList<LinkedList<Location>> locationPaths = new ArrayList<>();
+            ArrayList<Integer> locationDistance = new ArrayList<>();
+            Algorithms.shortestPaths(graphRepository.getBasketDistribution(), location, Integer::compare, Integer::sum,
+                    0, locationPaths, locationDistance);
+            Criteria criteria = new Criteria(degree, locationPaths, numberMinimumPaths, locationDistance);
             map.put(location.getId(), criteria);
+        }
+        for (Map.Entry<String, Criteria> entry : map.entrySet()) {
+            numberMinimumPaths = 0;
+            String id = entry.getKey();
+            for (Map.Entry<String, Criteria> entry2 : map.entrySet()) {
+                if (!entry.getKey().equals(entry2.getKey())) {
+                    for (i = 0; i < entry2.getValue().getPaths().size(); i++) {
+                        if (entry2.getValue().getPaths().get(i).contains(new Location(id))) {
+                            numberMinimumPaths++;
+                        }
+                    }
+                }
+            }
+            entry.getValue().setNumberMinimumPaths(numberMinimumPaths);
         }
         map = sortByValue(map);
         return map;
     }
+
     public static Map<String, Criteria> sortByValue(Map<String, Criteria> map) {
         // Convert the map to a list of entries
         List<Map.Entry<String, Criteria>> list = new ArrayList<>(map.entrySet());
 
         // Sort the list using a custom comparator
-        Collections.sort(list, new Comparator<Map.Entry<String, Criteria>>() {
-            public int compare(Map.Entry<String, Criteria> o1, Map.Entry<String, Criteria> o2) {
-                // Compare by degree in descending order
-                int degreeComparison = Integer.compare(o2.getValue().getDegree(), o1.getValue().getDegree());
-                if (degreeComparison != 0) {
-                    return degreeComparison;
-                } else {
-                    // If degrees are equal, compare by number of minimum paths in descending order
-                    return Integer.compare(o2.getValue().getNumberMinimumPaths(), o1.getValue().getNumberMinimumPaths());
-                }
-            }
-        });
+        list.sort(Comparator.comparing((Map.Entry<String, Criteria> entry) -> entry.getValue().getDegree())
+                .thenComparing(entry -> entry.getValue().getNumberMinimumPaths()).reversed());
 
         // Convert the sorted list back to a map
         Map<String, Criteria> sortedMap = new LinkedHashMap<>();

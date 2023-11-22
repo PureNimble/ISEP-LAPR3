@@ -79,7 +79,7 @@ public class GraphController {
         return service.getLocationDegree(id);
     }
 
-    public Map<String, Criteria> getEveryLocationDegree() {
+    public Map<String, Criteria> getVerticesIdeais() {
         return service.getVerticesIdeais();
     }
 

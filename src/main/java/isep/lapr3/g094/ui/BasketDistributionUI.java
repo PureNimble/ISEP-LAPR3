@@ -3,9 +3,11 @@ package isep.lapr3.g094.ui;
 import isep.lapr3.g094.application.controller.GraphController;
 import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.domain.type.Criteria;
+import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +51,7 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void getIdealVertices() {
-        Map<String, Criteria> idealVertices = graphController.getEveryLocationDegree();
+        Map<String, Criteria> idealVertices = graphController.getVerticesIdeais();
 
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
@@ -63,35 +65,33 @@ public class BasketDistributionUI implements Runnable {
                 .max()
                 .orElse(0), "Grau".length());
 
-        // Calculate the maximum length of the paths
-        int maxPathLength = Math.max(idealVertices.values().stream()
-                .mapToInt(criteria -> criteria.getPaths().toString().length())
-                .max()
-                .orElse(0), "Caminhos mínimos (origem)".length());
-
         // Calculate the maximum length of the number of minimum paths
         int maxNumPathsLength = Math.max(idealVertices.values().stream()
                 .mapToInt(criteria -> Integer.toString(criteria.getNumberMinimumPaths()).length())
                 .max()
                 .orElse(0), "Nº Caminhos mínimos".length());
 
-        String formatString = "| %-" + maxIdLength + "s | %" + maxDegreeLength + "d | %-" + maxPathLength + "s | %"
-                + maxNumPathsLength + "d |\n";
+        String formatString = "| %" + maxIdLength + "s | %" + maxDegreeLength + "d | %" + maxNumPathsLength + "d |\n";
 
-        printLine(maxIdLength, maxDegreeLength, maxPathLength, maxNumPathsLength);
-        System.out.printf("| %" + maxIdLength + "s | %" + maxDegreeLength + "s | %" + maxPathLength + "s | %"
-                + maxNumPathsLength + "s |\n", "ID", "Grau", "Caminhos mínimos (origem)", "Nº Caminhos mínimos");
-        printLine(maxIdLength, maxDegreeLength, maxPathLength, maxNumPathsLength);
         for (Map.Entry<String, Criteria> entry : idealVertices.entrySet()) {
-            System.out.printf(formatString, entry.getKey(), entry.getValue().getDegree(), entry.getValue().getPaths(),
+            System.out.println("-------------------------------------------------");
+            System.out.printf(formatString, "\t" + entry.getKey() + "\t", entry.getValue().getDegree(),
                     entry.getValue().getNumberMinimumPaths());
-            printLine(maxIdLength, maxDegreeLength, maxPathLength, maxNumPathsLength); // print a line after each entry
+            printPaths(entry.getKey(), entry.getValue().getPaths(), entry.getValue().getDistances());
         }
     }
 
-    private void printLine(int idLength, int degreeLength, int pathLength, int numPathsLength) {
-        System.out.println("|" + "-".repeat(idLength + 2) + "|" + "-".repeat(degreeLength + 2) + "|"
-                + "-".repeat(pathLength + 2) + "|" + "-".repeat(numPathsLength + 2) + "|");
+    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances) {
+        if (arrayList.size() != (distances.size())) {
+            throw new IllegalArgumentException("The two lists must be the same size");
+        }
+
+        for (int i = 0; i < arrayList.size(); i++) {
+            LinkedList<Location> path = arrayList.get(i);
+            Integer distance = distances.get(i);
+            System.out.println("-------------------------------------------------");
+            System.out.println("|     ID Destino: " + path.getLast().getId() + "   Distância: " + distance + "m    |");
+        }
     }
 
     private void getMinimal() {
