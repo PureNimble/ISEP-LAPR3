@@ -1,19 +1,23 @@
 package isep.lapr3.g094.domain.type;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Criteria {
 
     private int degree;
 
-    private List<String> paths;
+    private ArrayList<LinkedList<Location>> paths;
 
     private int numberMinimumPaths;
 
-    public Criteria(int degree, List<String> paths, int numberMinimumPaths) {
+    private ArrayList<Integer> distances;
+
+    public Criteria(int degree, ArrayList<LinkedList<Location>> paths, int numberMinimumPaths, ArrayList<Integer> distances) {
         this.degree = degree;
         this.paths = paths;
         this.numberMinimumPaths = numberMinimumPaths;
+        this.distances = distances;
     }
 
     public int getDegree() {
@@ -24,11 +28,11 @@ public class Criteria {
         this.degree = degree;
     }
 
-    public List<String> getPaths() {
+    public ArrayList<LinkedList<Location>> getPaths() {
         return paths;
     }
 
-    public void setPaths(List<String> paths) {
+    public void setPaths(ArrayList<LinkedList<Location>> paths) {
         this.paths = paths;
     }
 
@@ -40,4 +44,11 @@ public class Criteria {
         this.numberMinimumPaths = numberMinimumPaths;
     }
 
+    public ArrayList<Integer> getDistances() {
+        return distances;
+    }
+
+    public void setDistances(ArrayList<Integer> distances) {
+        this.distances = distances;
+    }
 }
