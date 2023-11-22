@@ -88,6 +88,10 @@ public class ImportController {
         return importClass.importXlsxFile("bddad/Legacy_Data_v2a.xlsx");
     }
 
+     public List<String> importBddadNewData() {
+        return importClass.importTxtFile("bddad/NovosDados.txt", false);
+    }
+
     public boolean importToGraph() {
         boolean check = true;
         List<String> locations = importClass.importTxtFile("esinf/locais_big.csv", true);

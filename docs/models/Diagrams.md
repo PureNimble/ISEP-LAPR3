@@ -27,6 +27,14 @@
     garante que os valores na coluna "AREA" só podem ser superiores a zero.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
 
+ - A função "**__CHECK(QUANTIDADE > 0 AND QUANTIDADE <= 100)__**"
+    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero e inferiores ou iguais a 100.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+ - A função "**__CHECK(MATERIAORGANICA >= 0 AND MATERIAORGANICA <= 100)__**"
+    garante que os valores na coluna "MATERIAORGANICA" só podem ser iguais ou superiores a 0 e inferiores ou iguais a 100.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
 -  A função "**__CHECK(PH >= 0 AND PH <= 14)__**"
     garante que os valores na coluna "PH" só podem ser iguais ou superiores a 0 e inferiores ou iguais a 14.
     Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.

@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.sql.Date;
@@ -52,6 +53,8 @@ public class TransformXlsxController {
                     continue;
             }
         }
+
+        importNewData(conn);
 
         conn.close();
         return true;
@@ -132,8 +135,8 @@ public class TransformXlsxController {
     private List<String> insertFatorDeProducao(LinkedHashSet<List<String>> pageList, Connection conn)
             throws IOException, ClassNotFoundException, SQLException {
         List<List<String>> insertedDataIndex = new ArrayList<>();
-        int tipoProducaoID = 1, aplicacaoID = 1, elementoID = 1, fatorProducaoID = 1;
-        for (int i = 0; i < 4; i++)
+        int tipoProducaoID = 1, aplicacaoID = 1, elementoID = 1, fatorProducaoID = 1, formatoID = 1;
+        for (int i = 0; i < 5; i++)
             insertedDataIndex.add(new ArrayList<>());
         try {
             conn.setAutoCommit(false);
@@ -141,8 +144,9 @@ public class TransformXlsxController {
             try (PreparedStatement pstmtTipoProduto = conn.prepareStatement("INSERT INTO TIPOPRODUTO VALUES (?, ?)");
                     PreparedStatement pstmtAplicacao = conn.prepareStatement("INSERT INTO APLICACAO VALUES (?,?)");
                     PreparedStatement pstmtElemento = conn.prepareStatement("INSERT INTO ELEMENTO VALUES (?,?)");
+                    PreparedStatement pstmtFormato = conn.prepareStatement("INSERT INTO FORMATOPRODUTO VALUES (?,?)");
                     PreparedStatement pstmtFatorProducao = conn
-                            .prepareStatement("INSERT INTO FatorProducao VALUES (?, ?, ?, ?, ?, ?)");
+                            .prepareStatement("INSERT INTO FatorProducao VALUES (?, ?, ?, ?, ?, ?, ?)");
                     PreparedStatement pstmtAplicacaoProduto = conn
                             .prepareStatement("INSERT INTO AplicacaoProduto VALUES (?, ?)");
                     PreparedStatement pstmtElementoFicha = conn
@@ -152,6 +156,7 @@ public class TransformXlsxController {
                     String tipoProduto = rowData.get(3);
                     String[] aplicacao = rowData.get(4).split("\\+");
                     String fatorProducao = rowData.get(0);
+                    String formato = rowData.get(2);
 
                     if (!insertedDataIndex.get(0).contains(tipoProduto)) { // TipoProduto
                         pstmtTipoProduto.setInt(1, tipoProducaoID); // ID
@@ -185,14 +190,24 @@ public class TransformXlsxController {
                         }
                         i += 2;
                     }
+
+                    if (!insertedDataIndex.get(3).contains(formato)) { // Formato
+                        pstmtFormato.setInt(1, formatoID); // ID
+                        pstmtFormato.setString(2, formato); // Designação
+                        pstmtFormato.addBatch();
+                        insertedDataIndex.get(3).add(formato);
+                        formatoID++;
+                    }
+
                     pstmtFatorProducao.setInt(1, fatorProducaoID); // ID
                     pstmtFatorProducao.setString(2, rowData.get(0)); // Designacao
                     pstmtFatorProducao.setString(3, rowData.get(1)); // Fabricante
-                    pstmtFatorProducao.setString(4, rowData.get(2)); // Formato
+                    pstmtFatorProducao.setNull(4, java.sql.Types.DOUBLE); // MateriaOrganica
                     pstmtFatorProducao.setNull(5, java.sql.Types.DOUBLE); // PH
-                    pstmtFatorProducao.setInt(6, (insertedDataIndex.get(0).indexOf(tipoProduto)) + 1); // TipoProduto
+                    pstmtFatorProducao.setInt(6, (insertedDataIndex.get(3).indexOf(formato)) + 1); // Formato
+                    pstmtFatorProducao.setInt(7, (insertedDataIndex.get(0).indexOf(tipoProduto)) + 1); // TipoProduto
                     pstmtFatorProducao.addBatch();
-                    insertedDataIndex.get(3).add(fatorProducao);
+                    insertedDataIndex.get(4).add(fatorProducao);
                     // AplicacaoProduto
                     i = 0;
                     while (i < aplicacao.length) {
@@ -216,6 +231,7 @@ public class TransformXlsxController {
                 pstmtTipoProduto.executeBatch();
                 pstmtAplicacao.executeBatch();
                 pstmtElemento.executeBatch();
+                pstmtFormato.executeBatch();
                 pstmtFatorProducao.executeBatch();
                 pstmtAplicacaoProduto.executeBatch();
                 pstmtElementoFicha.executeBatch();
@@ -235,7 +251,7 @@ public class TransformXlsxController {
                 }
             }
         }
-        return insertedDataIndex.get(3);
+        return insertedDataIndex.get(4);
     }
 
     private void insertEspaco(LinkedHashSet<List<String>> pageList, Connection conn) throws SQLException {
@@ -243,7 +259,7 @@ public class TransformXlsxController {
             conn.setAutoCommit(false);
 
             try (PreparedStatement pstmtQuinta = conn.prepareStatement("INSERT INTO Quinta VALUES (?,?)");
-                    PreparedStatement pstmtEspaco = conn.prepareStatement("INSERT INTO Espaco VALUES (?,?,?,?,?)");
+                    PreparedStatement pstmtEspaco = conn.prepareStatement("INSERT INTO Espaco VALUES (?,?,?,?,?,?)");
                     PreparedStatement pstmtParcela = conn.prepareStatement("INSERT INTO Parcela VALUES (?)");
                     PreparedStatement pstmtRega = conn.prepareStatement("INSERT INTO Rega VALUES (?)");
                     PreparedStatement pstmtArmazem = conn.prepareStatement("INSERT INTO ARMAZEM (ESPACOID) VALUES (?)");
@@ -266,7 +282,8 @@ public class TransformXlsxController {
                     pstmtEspaco.setString(2, designacao); // Designação
                     pstmtEspaco.setDouble(3, dimensao); // Dimensao
                     pstmtEspaco.setString(4, unidade); // Unidade
-                    pstmtEspaco.setInt(5, 1); // QuintaID
+                    pstmtEspaco.setNull(5, java.sql.Types.DATE);
+                    pstmtEspaco.setInt(6, 1); // QuintaID
                     pstmtEspaco.addBatch();
 
                     switch (tipoEspaco.toLowerCase().charAt(0)) {
@@ -444,7 +461,7 @@ public class TransformXlsxController {
                     if (tipoOperacao.charAt(0) == 'F') {
                         if (!insertedDataIndex.get(1).contains(modoOperacao)) {
                             pstmtModoFertilizacao.setInt(1, ModoFertilizacaoID);
-                            pstmtModoFertilizacao.setInt(2, operacaoID);
+                            pstmtModoFertilizacao.setString(2, modoOperacao);
                             pstmtModoFertilizacao.addBatch();
                             insertedDataIndex.get(1).add(modoOperacao);
                             ModoFertilizacaoID++;
@@ -475,6 +492,37 @@ public class TransformXlsxController {
         } finally
 
         {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException e) {
+                    throw new RuntimeException("Erro ao dar reset ao auto-commit", e);
+                }
+            }
+        }
+    }
+
+    private void importNewData(Connection conn) {
+        List<String> newData = importController.importBddadNewData();
+        try {
+            conn.setAutoCommit(false);
+            Statement stmt = conn.createStatement();
+
+            for (String sql : newData) {
+                stmt.addBatch(sql);
+            }
+
+            stmt.executeBatch();
+
+            conn.commit();
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            throw new RuntimeException("Erro ao inserir na base de dados", e);
+        } finally {
             if (conn != null) {
                 try {
                     conn.setAutoCommit(true);

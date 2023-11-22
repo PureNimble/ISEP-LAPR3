@@ -2,7 +2,9 @@ package isep.lapr3.g094.application.controller;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Map;
 
+import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.services.Service;
 import isep.lapr3.g094.services.Services;
@@ -75,6 +77,10 @@ public class GraphController {
 
     public int getLocationDegree(String id) {
         return service.getLocationDegree(id);
+    }
+
+    public Map<String, Criteria> getVerticesIdeais() {
+        return service.getVerticesIdeais();
     }
 
 

@@ -1,8 +1,8 @@
 package isep.lapr3.g094.services;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+
+import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.repository.GraphRepository;
 import isep.lapr3.g094.repository.Repositories;
@@ -104,5 +104,53 @@ public class Service {
 
     public MapGraph<Location, Integer> getBasketDistribution() {
         return graphRepository.getBasketDistribution();
+    }
+
+    public Map<String, Criteria> getVerticesIdeais() {
+        Map<String, Criteria> map = new HashMap<>();
+        int numberMinimumPaths = 0;
+        int i;
+        for (Location location : getBasketDistribution().vertices()) {
+            int degree = graphRepository.getBasketDistribution().inDegree(location);
+            ArrayList<LinkedList<Location>> locationPaths = new ArrayList<>();
+            ArrayList<Integer> locationDistance = new ArrayList<>();
+            Algorithms.shortestPaths(graphRepository.getBasketDistribution(), location, Integer::compare, Integer::sum,
+                    0, locationPaths, locationDistance);
+            Criteria criteria = new Criteria(degree, locationPaths, numberMinimumPaths, locationDistance);
+            map.put(location.getId(), criteria);
+        }
+        for (Map.Entry<String, Criteria> entry : map.entrySet()) {
+            numberMinimumPaths = 0;
+            String id = entry.getKey();
+            for (Map.Entry<String, Criteria> entry2 : map.entrySet()) {
+                if (!entry.getKey().equals(entry2.getKey())) {
+                    for (i = 0; i < entry2.getValue().getPaths().size(); i++) {
+                        if (entry2.getValue().getPaths().get(i).contains(new Location(id))) {
+                            numberMinimumPaths++;
+                        }
+                    }
+                }
+            }
+            entry.getValue().setNumberMinimumPaths(numberMinimumPaths);
+        }
+        map = sortByValue(map);
+        return map;
+    }
+
+    public static Map<String, Criteria> sortByValue(Map<String, Criteria> map) {
+        // Convert the map to a list of entries
+        List<Map.Entry<String, Criteria>> list = new ArrayList<>(map.entrySet());
+
+        // Sort the list using a custom comparator
+        list.sort(Comparator.comparing((Map.Entry<String, Criteria> entry) -> entry.getValue().getDegree())
+                .thenComparing(entry -> entry.getValue().getNumberMinimumPaths()).reversed());
+
+        // Convert the sorted list back to a map
+        Map<String, Criteria> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<String, Criteria> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
     }
 }
