@@ -33,8 +33,9 @@ mvn clean verify
 
 ## Lista de conteúdos 
 
-* [Modelos Relacionais](docs/models/Diagrams.md)
+* [Modelos Relacionais](docs/bddad/models/Diagrams.md)
 * [Glossário](docs/Glossary.md)
+* [Estrura do Armazém (fsiap)](docs/fsiap/readme.md)
 
 ## Elementos do grupo 
 
