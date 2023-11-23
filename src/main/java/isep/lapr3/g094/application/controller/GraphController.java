@@ -2,9 +2,12 @@ package isep.lapr3.g094.application.controller;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
+import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
+import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.services.Service;
 import isep.lapr3.g094.services.Services;
@@ -75,6 +78,10 @@ public class GraphController {
         return service.shortestPaths(id);
     }
 
+    public <V> Pair<Location, Location> furthestPoints() {
+        return service.furthestPoints();
+    }
+
     public int getLocationDegree(String id) {
         return service.getLocationDegree(id);
     }
@@ -83,5 +90,7 @@ public class GraphController {
         return service.getVerticesIdeais();
     }
 
-
+    public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy) {
+        return service.getMinimal(autonomy);
+    }
 }

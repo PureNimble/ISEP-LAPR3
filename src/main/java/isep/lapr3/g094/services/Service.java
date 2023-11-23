@@ -2,7 +2,9 @@ package isep.lapr3.g094.services;
 
 import java.util.*;
 
+import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
+import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.repository.GraphRepository;
 import isep.lapr3.g094.repository.Repositories;
@@ -87,19 +89,26 @@ public class Service {
     }
 
     public <V, E> ArrayList<LinkedList<Location>> allPaths(String idOrigin, String idDest) {
-        return Algorithms.allPaths(graphRepository.getBasketDistribution(), new Location(idOrigin), new Location(idDest));
+        return Algorithms.allPaths(graphRepository.getBasketDistribution(), new Location(idOrigin),
+                new Location(idDest));
     }
 
     public <V, E> Integer shortestPath(String idOrigin, String idDest, LinkedList<Location> shortPath) {
-        return Algorithms.shortestPath(graphRepository.getBasketDistribution(), new Location(idOrigin), new Location(idDest), Integer::compare, Integer::sum, 0, shortPath);
+        return Algorithms.shortestPath(graphRepository.getBasketDistribution(), new Location(idOrigin),
+                new Location(idDest), Integer::compare, Integer::sum, 0, shortPath);
     }
 
     public <V, E> boolean shortestPaths(String id) {
-        return Algorithms.shortestPaths(graphRepository.getBasketDistribution(), new Location(id), Integer::compare, Integer::sum, 0, new ArrayList<LinkedList<Location>>(), new ArrayList<Integer>());
+        return Algorithms.shortestPaths(graphRepository.getBasketDistribution(), new Location(id), Integer::compare,
+                Integer::sum, 0, new ArrayList<LinkedList<Location>>(), new ArrayList<Integer>());
     }
 
     public int getLocationDegree(String id) {
         return graphRepository.getBasketDistribution().inDegree(new Location(id));
+    }
+
+    public <V> Pair<Location, Location> furthestPoints() {
+        return Algorithms.furthestPoints(graphRepository.getBasketDistribution(), Integer::compare, Integer::sum, 0);
     }
 
     public MapGraph<Location, Integer> getBasketDistribution() {
@@ -152,5 +161,38 @@ public class Service {
         }
 
         return sortedMap;
+    }
+
+    public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy) {
+        // distribution graph
+        MapGraph<Location, Integer> distributionGraph = graphRepository.getBasketDistribution();
+        // furthest points
+        Pair<Location, Location> furthestPoints = Algorithms.furthestPoints(distributionGraph,
+                Integer::compare, Integer::sum, 0);
+        LinkedList<Location> shortPath = new LinkedList<>();
+        int distance = Algorithms.shortestPath(distributionGraph, furthestPoints.getFirst(),
+                furthestPoints.getSecond(), Integer::compare, Integer::sum, 0, shortPath);
+        int distanceAutonomy = 0;
+        List<Location> rechargeLocations = new ArrayList<>();
+        List<Integer> distances = new ArrayList<>();
+        rechargeLocations.add(shortPath.getFirst());
+        for (int i = 0; i < shortPath.size() - 1; i++) {
+            Location location1 = shortPath.get(i);
+            Location location2 = shortPath.get(i + 1);
+            int distanceBetweenPoints = distributionGraph.edge(location1, location2).getWeight();
+            distances.add(distanceBetweenPoints);
+            if (distanceBetweenPoints > autonomy) {
+                rechargeLocations.add(null);
+            }
+            distanceAutonomy += distanceBetweenPoints;
+            if (distanceAutonomy > autonomy) {
+                rechargeLocations.add(location1);
+                distanceAutonomy = 0;
+            }
+        }
+
+        Pair<FurthestPoints, Pair<List<Location>, Integer>> output = new Pair<>(
+                new FurthestPoints(furthestPoints, shortPath, distances), new Pair<>(rechargeLocations, distance));
+        return output;
     }
 }

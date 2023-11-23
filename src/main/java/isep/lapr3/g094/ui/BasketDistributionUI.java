@@ -2,10 +2,13 @@ package isep.lapr3.g094.ui;
 
 import isep.lapr3.g094.application.controller.GraphController;
 import isep.lapr3.g094.application.controller.ImportController;
+import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
+import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -71,18 +74,17 @@ public class BasketDistributionUI implements Runnable {
                 .max()
                 .orElse(0), "Nº Caminhos mínimos".length());
 
-        int maxLength = Math.max(maxIdLength, Math.max(maxDegreeLength, maxNumPathsLength));
+        String formatString = "| %" + maxIdLength + "s | %" + maxDegreeLength + "d | %" + maxNumPathsLength + "d |\n";
 
         for (Map.Entry<String, Criteria> entry : idealVertices.entrySet()) {
-            System.out.println("-----------------------------------------------------------------");
-            String formatString = "| ID: %" + maxLength/3 + "s | Degree: %" + maxLength/3 + "d | Number of Minimum Paths: %" + maxLength/3 + "d |\n";
-
-            System.out.printf(formatString, entry.getKey(), entry.getValue().getDegree(), entry.getValue().getNumberMinimumPaths());
-            printPaths(entry.getKey(), entry.getValue().getPaths(), entry.getValue().getDistances(), maxLength);
+            System.out.println("-------------------------------------------------");
+            System.out.printf(formatString, "\t" + entry.getKey() + "\t", entry.getValue().getDegree(),
+                    entry.getValue().getNumberMinimumPaths());
+            printPaths(entry.getKey(), entry.getValue().getPaths(), entry.getValue().getDistances());
         }
     }
 
-    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances, int maxLength) {
+    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances) {
         if (arrayList.size() != (distances.size())) {
             throw new IllegalArgumentException("The two lists must be the same size");
         }
@@ -90,16 +92,38 @@ public class BasketDistributionUI implements Runnable {
         for (int i = 0; i < arrayList.size(); i++) {
             LinkedList<Location> path = arrayList.get(i);
             Integer distance = distances.get(i);
-            String formatString = "| ID Destino: %" + (maxLength-1) + "s | Distância: %" + (maxLength-4) + "d m |\n";
-            System.out.println("-----------------------------------------------------------------");
-            System.out.printf(formatString, path.getLast().getId(), distance);
-
+            System.out.println("-------------------------------------------------");
+            System.out.println("|     ID Destino: " + path.getLast().getId() + "   Distância: " + distance + "m    |");
         }
-        System.out.println("-----------------------------------------------------------------");
-
     }
 
     private void getMinimal() {
+        int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
+        autonomy *= 1000;
+        Pair<FurthestPoints, Pair<List<Location>, Integer>> result = graphController.getMinimal(autonomy);
+        System.out.println("Localização de Origem: " + result.getFirst().getPair().getFirst().getId());
+        System.out.println("Localização de Destino: " + result.getFirst().getPair().getSecond().getId());
+        System.out.println("Pontos De Passagem: ");
+        int locationsSize = result.getFirst().getLocations().size();
+        for (int i = 0; i < locationsSize; i++) {
+            System.out.print(result.getFirst().getLocations().get(i).getId());
+            if (i < result.getFirst().getDistances().size()) {
+                System.out.print("--" + result.getFirst().getDistances().get(i) + "m");
+            }
+            if (i != locationsSize - 1) {
+                System.out.print("-->");
+            }
+        }
+        System.out.println("\nDistância Total: " + result.getSecond().getSecond() + "m");
+
+        if (result.getSecond().getFirst().contains(null)) {
+            System.out.println("O veículo ficou sem bateria a meio do percurso");
+        } else {
+            System.out.println("Locais de Carregamento: ");
+            for (int i = 0; i < result.getSecond().getFirst().size(); i++) {
+                System.out.println(result.getSecond().getFirst().get(i).getId());
+            }
+        }
     }
 
     private void getMinimalPaths() {

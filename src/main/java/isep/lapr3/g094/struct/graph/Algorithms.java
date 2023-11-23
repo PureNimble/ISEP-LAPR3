@@ -1,5 +1,6 @@
 package isep.lapr3.g094.struct.graph;
 
+import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -250,6 +251,60 @@ public class Algorithms {
         }
 
         return minDistGraph;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <V, E> E[][] floydWarshall(Graph<V, E> g, Comparator<E> ce, BinaryOperator<E> sum, E zero) {
+        int vertices = g.numVertices();
+        E[][] dist = (E[][]) new Object[vertices][vertices];
+
+        for (int i = 0; i < vertices; i++) {
+            for (int j = 0; j < vertices; j++) {
+                if (i == j) {
+                    dist[i][j] = zero;
+                } else {
+                    Edge<V, E> edge = g.edge(g.vertices().get(i), g.vertices().get(j));
+                    if (edge != null) {
+                        dist[i][j] = edge.getWeight();
+                    } else {
+                        dist[i][j] = zero;
+                    }
+                }
+            }
+        }
+
+        for (int k = 0; k < vertices; k++) {
+            for (int i = 0; i < vertices; i++) {
+                for (int j = 0; j < vertices; j++) {
+                    E alternativePathDist = sum.apply(dist[i][k], dist[k][j]);
+                    if (ce.compare(alternativePathDist, zero) > 0) {
+                        dist[i][j] = alternativePathDist;
+                    }
+                }
+            }
+        }
+
+        return dist;
+    }
+
+    public static <V, E> Pair<V, V> furthestPoints(Graph<V, E> g, Comparator<E> ce, BinaryOperator<E> sum, E zero) {
+        E[][] dist = floydWarshall(g, ce, sum, zero);
+
+        int vertices = g.numVertices();
+        E maxDist = zero;
+        Pair<V, V> furthestPoints = null;
+        for (int i = 0; i < vertices; i++) {
+            for (int j = 0; j < vertices; j++) {
+                if (i == j)
+                    continue;
+                if (ce.compare(dist[i][j], maxDist) > 0) {
+                    maxDist = dist[i][j];
+                    furthestPoints = new Pair<>(g.vertices().get(i), g.vertices().get(j));
+                }
+            }
+        }
+
+        return furthestPoints;
     }
 
 }
