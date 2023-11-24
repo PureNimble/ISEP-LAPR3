@@ -57,10 +57,24 @@ public class FarmManagerRepository {
 		}
 	}
 
-	public boolean registerSemeadura(int quantidade, int parcelaID, int plantacaoID, Date dataOperacao) throws ClassNotFoundException, SQLException {
+	public boolean registerSemeadura(int quantidade, int parcelaID, int culturaID, Date dataOperacao, int area) throws ClassNotFoundException, SQLException {
+		CallableStatement callStmt = null;
+        try {
         	Connection connection = createConnection();
-
-		return false;
+			callStmt = connection.prepareCall("{ call registerSemeadura(?,?,?,?,?) }");
+			callStmt.setInt(1, culturaID);
+			callStmt.setInt(2, parcelaID);
+			callStmt.setDate(3, dataOperacao);
+			callStmt.setInt(4, quantidade);
+			callStmt.setInt(5, area);
+			return callStmt.execute();
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			if (callStmt != null) {
+				callStmt.close();
+			}
+		}
 	}
 
 	public boolean registerMonda(int quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
