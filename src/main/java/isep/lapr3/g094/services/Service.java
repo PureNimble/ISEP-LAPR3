@@ -9,6 +9,8 @@ import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.repository.GraphRepository;
 import isep.lapr3.g094.repository.Repositories;
 import isep.lapr3.g094.struct.graph.Algorithms;
+import isep.lapr3.g094.struct.graph.Graph;
+import isep.lapr3.g094.struct.graph.Edge;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
@@ -195,6 +197,37 @@ public class Service {
         Pair<FurthestPoints, Pair<List<Location>, Integer>> output = new Pair<>(
                 new FurthestPoints(furthestPoints, shortPath, distances), new Pair<>(rechargeLocations, distance));
         return output;
+    }
+
+    public Map<Location, Map<Location, Integer>> getMinimalPaths() {
+        Map<Location, Map<Location, Integer>> map = new HashMap<>();
+        MapGraph<Location, Integer> graph = graphRepository.getBasketDistribution();
+        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graph);
+        for (Edge<Location, Integer> edge : minDistGraph.edges()) {
+            Location location = edge.getVDest();
+            Location location1 = edge.getVOrig();
+            String locationId = location.getId();
+            String location1Id = location1.getId();
+            int distance = edge.getWeight();
+            if(locationId.compareTo(location1Id) < 0) {
+                if(map.containsKey(location)) {
+                    map.get(location).put(location1, distance);
+                } else {
+                    Map<Location, Integer> map1 = new HashMap<>();
+                    map1.put(location1, distance);
+                    map.put(location, map1);
+                }
+            } else {
+                if(map.containsKey(location1)) {
+                    map.get(location1).put(location, distance);
+                } else {
+                    Map<Location, Integer> map1 = new HashMap<>();
+                    map1.put(location, distance);
+                    map.put(location1, map1);
+                }
+            }
+        }
+        return map;
     }
 
     public List<MatrixGraph<Location, Integer>> divideIntoClusters(List<String> idsSelected){

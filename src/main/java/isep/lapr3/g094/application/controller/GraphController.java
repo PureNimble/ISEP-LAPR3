@@ -95,6 +95,10 @@ public class GraphController {
         return service.getMinimal(autonomy);
     }
 
+    public Map<Location, Map<Location, Integer>> getMinimalPaths() {
+        return service.getMinimalPaths();
+    }
+
     public List<MatrixGraph<Location, Integer>> divideIntoClusters(List<String> idsSelected){
         return service.divideIntoClusters(idsSelected);
     }

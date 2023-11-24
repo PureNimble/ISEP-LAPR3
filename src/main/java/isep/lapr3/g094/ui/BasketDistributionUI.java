@@ -6,6 +6,11 @@ import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
+import isep.lapr3.g094.struct.graph.Algorithms;
+import isep.lapr3.g094.struct.graph.Edge;
+import isep.lapr3.g094.struct.graph.Graph;
+import isep.lapr3.g094.struct.graph.map.MapGraph;
+import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
@@ -75,13 +80,14 @@ public class BasketDistributionUI implements Runnable {
             String formatString = "| ID: %" + maxLength/3 + "s | Degree: %" + maxLength/3 + "d | Número de Caminhos Mínimos: %" + maxLength/3 + "d |\n";
             System.out.printf(formatString, entry.getKey(), entry.getValue().getDegree(), entry.getValue().getNumberMinimumPaths());
             printPaths(entry.getKey(), entry.getValue().getPaths(), entry.getValue().getDistances(), maxLength);
-        }   
+        }
     }
 
     private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances, int maxLength) {
         if (arrayList.size() != (distances.size())) {
             throw new IllegalArgumentException("As duas listas têm de ter o mesmo tamanho");
         }
+
         for (int i = 0; i < arrayList.size(); i++) {
             LinkedList<Location> path = arrayList.get(i);
             Integer distance = distances.get(i);
@@ -121,8 +127,43 @@ public class BasketDistributionUI implements Runnable {
         }
     }
 
-    private void getMinimalPaths() {
+    /*Determinar a rede que liga todas as localidades com uma distância total mínima.
+    Critério de Aceitação: Devolver a rede de ligação mínima: locais, distância entre os locais e
+    distância total da rede.
+     */
 
+    private void getMinimalPaths() {
+        Map<Location, Map<Location, Integer>> map = graphController.getMinimalPaths();
+        Integer sumDistance = 0;
+        System.out.println("Map size: " + map.size());
+        for (Map.Entry<Location, Map<Location, Integer>> entry : map.entrySet()) {
+            String locationId = entry.getKey().getId();
+            for (Map.Entry<Location, Integer> entry2 : entry.getValue().entrySet()) {
+                String location1Id = entry2.getKey().getId();
+                int distance = entry2.getValue();
+                System.out.println(locationId + " -> " + location1Id + "; Distância: " + distance);
+                sumDistance = sumDistance + distance;
+            }
+        }
+        System.out.print("\n");
+        System.out.println("Distância total: " + sumDistance);
+        /*
+        MapGraph<Location, Integer> graph = graphController.getBasketDistribution();
+        Integer sumDistance = 0;
+        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graph);
+        for (Edge<Location, Integer> edge : minDistGraph.edges()) {
+            Location location = edge.getVOrig();
+            Location location1 = edge.getVDest();
+            String locationId = location.getId();
+            String location1Id = location1.getId();
+            int distance = edge.getWeight();
+            if (locationId.compareTo(location1Id) < 0) {
+                sumDistance = sumDistance + distance;
+                System.out.println(locationId + " -> " + location1Id + " Distância: " + distance);
+            }
+        }
+        System.out.println("\n");
+        System.out.println("Distância total: " + sumDistance);*/
     }
 
     private void divideDistribution() {

@@ -357,6 +357,35 @@ public class Algorithms {
         }
     }
 
+    public static <V, E extends Comparable<E>> Graph<V, E> minSpanningTree(Graph<V, E> g) {
+        PriorityQueue<Edge<V, E>> pq = new PriorityQueue<>(Comparator.comparing(Edge::getWeight));
+        Set<V> visited = new HashSet<>();
+        Graph<V, E> mst = new MatrixGraph<>(false, g.numVertices());
+
+        V start = g.vertices().get(0);
+        visited.add(start);
+
+        for (Edge<V, E> edge : g.outgoingEdges(start)) {
+            pq.add(edge);
+        }
+
+        while (!pq.isEmpty()) {
+            Edge<V, E> edge = pq.poll();
+            V v = edge.getVDest();
+            if (!visited.contains(v)) {
+                visited.add(v);
+                mst.addEdge(edge.getVOrig(), v, edge.getWeight());
+                for (Edge<V, E> e : g.outgoingEdges(v)) {
+                    if (!visited.contains(e.getVDest())) {
+                        pq.add(e);
+                    }
+                }
+            }
+        }
+
+        return mst;
+    }
+
     @SuppressWarnings("unchecked")
     public static <V, E> E[][] floydWarshall(Graph<V, E> g, Comparator<E> ce, BinaryOperator<E> sum, E zero) {
         int vertices = g.numVertices();
