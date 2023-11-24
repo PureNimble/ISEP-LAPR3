@@ -1,12 +1,12 @@
 package isep.lapr3.g094.ui.utils;
 
 import java.io.*;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public class Utils {
 
@@ -53,19 +53,20 @@ public class Utils {
     }
 
     static public Date readDateFromConsole(String prompt) {
-        do {
+        String errorMessage = "Invalid date format. Please enter date in dd/MM/yyyy format.";
+        Pattern pattern = Pattern.compile("^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/((19|20)\\d\\d)$");
+        while (true) {
             try {
                 String strDate = readLineFromConsole(prompt);
-
-                SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
-
-                Date date = new Date(df.parse(strDate).getTime());
-
-                return date;
-            } catch (ParseException ex) {
-                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                if (!pattern.matcher(strDate).matches()) {
+                    throw new Exception(errorMessage);
+                }
+                SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+                return df.parse(strDate);
+            } catch (Exception ex) {
+                System.out.println(ex.getMessage());
             }
-        } while (true);
+        }
     }
 
     static public boolean confirm(String message) {

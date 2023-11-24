@@ -2,9 +2,9 @@ package isep.lapr3.g094.ui;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.regex.Pattern;
 import isep.lapr3.g094.application.controller.IrrigationPlanController;
 import isep.lapr3.g094.application.controller.ImportController;
@@ -18,10 +18,7 @@ public class IrrigationUI implements Runnable {
 
     private IrrigationPlanController irrigationPlanController = new IrrigationPlanController();
     private ImportController importController = new ImportController();
-    private static final Pattern PATTERN_DATA = Pattern
-            .compile("^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/((19|20)\\d\\d)$");
     private static final Pattern PATTERN_HORA = Pattern.compile("^(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9])$");
-    private static final Scanner scanner = new Scanner(System.in);
 
     public void run() {
         List<MenuItem> options = new ArrayList<>();
@@ -55,8 +52,7 @@ public class IrrigationUI implements Runnable {
 
     private void createPlan() {
 
-        String data = getValidatedInput(PATTERN_DATA, "\nFormato: dia/mes/ano\n\nInsira a data: ",
-                "Formato de data invalido. Por favor insira uma data no formato dd/mm/yyyy");
+        Date data = Utils.readDateFromConsole("Insira a data de inicio do plano de rega: (dd/mm/yyyy)");
 
         if (importController.importIrrigationPlan() && irrigationPlanController.createPlan(data)) {
             System.out.println("Plano de rega criado com sucesso");
@@ -68,9 +64,8 @@ public class IrrigationUI implements Runnable {
 
     private void searchWatering() throws ParseException {
 
-        String data = getValidatedInput(PATTERN_DATA, "\nFormato: dia/mes/ano\n\nInsira a data: ",
-                "Formato de data invalido. Por favor insira uma data no formato dd/mm/yyyy");
-        String hora = getValidatedInput(PATTERN_HORA, "\nFormato: hh:mm\n\nInsira a hora: ",
+        Date data = Utils.readDateFromConsole("Insira a data da rega que deseja procurar: (dd/mm/yyyy)");
+        String hora = getValidatedHour("\nFormato: hh:mm\n\nInsira a hora: ",
                 "Formato de hora invalido. Por favor insira uma hora no formato hh:mm");
 
         Map<IrrigationSector, Integer> lista = irrigationPlanController.searchIrrigation(data, hora);
@@ -81,14 +76,13 @@ public class IrrigationUI implements Runnable {
                     "Não existem regas para essa data no plano de rega atual, por favor insira uma data válida. (30 dias a partir da data de criação do plano)");
     }
 
-    private String getValidatedInput(Pattern pattern, String prompt, String errorMessage) {
+    private String getValidatedHour(String prompt, String errorMessage) {
 
         String input;
         do {
             try {
-                System.out.print(prompt);
-                input = scanner.nextLine();
-                if (!pattern.matcher(input).matches()) {
+                input = Utils.readLineFromConsole(prompt);
+                if (!PATTERN_HORA.matcher(input).matches()) {
                     throw new Exception(errorMessage);
                 }
             } catch (Exception e) {
@@ -104,7 +98,8 @@ public class IrrigationUI implements Runnable {
         if (irrigationPlanController.executeWatering())
             System.out.println("Regas registadas com sucesso");
         else
-            System.out.println("Não foi possivel registar todas as regas");
+            System.out.println("Não foi possível registar todas as regas");
+
     }
 
     private void printPlan() {

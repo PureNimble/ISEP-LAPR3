@@ -2,7 +2,6 @@ package isep.lapr3.g094.application.controller;
 
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,13 +16,13 @@ import isep.lapr3.g094.repository.irrigation.IrrigationHourRepository;
 import isep.lapr3.g094.repository.irrigation.IrrigationSectorRepository;
 
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.time.LocalTime;
 
 public class IrrigationPlanController {
 
-    private final static SimpleDateFormat DATA_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
     private IrrigationSectorRepository irrigationSectorRepository;
     private IrrigationDateRepository irrigationDateRepository;
     private IrrigationHourRepository irrigationHourRepository;
@@ -67,23 +66,16 @@ public class IrrigationPlanController {
         if (farmManagerRepository == null) {
             Repositories repositories = Repositories.getInstance();
 
-            farmManagerRepository = repositories.getGestorAgricolaRepository();
+            farmManagerRepository = repositories.getFarmManagerRepository();
         }
         return farmManagerRepository;
     }
 
-    public boolean createPlan(String date) {
+    public boolean createPlan(Date date) {
 
         irrigationDateRepository.clearDate();
-        Date startDate = null;
 
-        try {
-            startDate = DATA_FORMAT.parse(date);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-        List<Date> dates = getDatesBetween(startDate);
+        List<Date> dates = getDatesBetween(date);
 
         for (Date data : dates) {
             if (irrigationDateRepository.createIrrigationDate(data).isEmpty())
@@ -92,13 +84,13 @@ public class IrrigationPlanController {
         return true;
     }
 
-    public Map<IrrigationSector, Integer> searchIrrigation(String dataString, String hora) throws ParseException {
-
-        Date dataPesquisa = DATA_FORMAT.parse(dataString);
+    public Map<IrrigationSector, Integer> searchIrrigation(Date dataPesquisa, String hora) throws ParseException {
 
         if (checkIfDateExists(dataPesquisa)) {
 
-            int dia = Integer.parseInt(getNumbersBeforeSlash(dataString.toString()));
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(dataPesquisa);
+            int dia = calendar.get(Calendar.DAY_OF_MONTH);
             List<IrrigationSector> planoDeRega = irrigationSectorRepository.getIrrigationSectors();
             List<IrrigationHour> horarioDeRega = irrigationHourRepository.getIrrigationHours();
             List<IrrigationSector> listaFinal = new ArrayList<>();
@@ -169,31 +161,24 @@ public class IrrigationPlanController {
         return false;
     }
 
-    public static String getNumbersBeforeSlash(String str) {
-        int index = str.indexOf('/');
-        String numbers = str.substring(0, index);
-        return numbers.replaceAll("[^\\d]", "");
-    }
-
     public boolean executeWatering() {
+        List<IrrigationSector> sectors = irrigationSectorRepository.getIrrigationSectors();
+        sectors.sort(Comparator.comparingInt(IrrigationSector::getDuracao));
         for (IrrigationDate date : irrigationDateRepository.getIrrigationDates()) {
             for (IrrigationHour hour : irrigationHourRepository.getIrrigationHours()) {
-                for (IrrigationSector sector : irrigationSectorRepository.getIrrigationSectors()) {
+                for (IrrigationSector sector : sectors) {
+                    java.sql.Date operationDate = new java.sql.Date(date.getDate().getTime());
+                    java.sql.Time operationTime = java.sql.Time.valueOf(LocalTime.parse(hour.getHour()));
                     try {
-                        java.sql.Date operationDate = new java.sql.Date(date.getDate().getTime());
-                        java.sql.Time operationTime = java.sql.Time.valueOf(LocalTime.parse(hour.getHour()));
-                        try {
-                            farmManagerRepository.registerRega(sector.getDuracao(), sector.getSector(), operationDate,
-                                    operationTime);
-                            System.out.println(
-                                    "Rega: " + sector.getSector() + " " + operationDate + " registada com sucesso!");
-                        } catch (ClassNotFoundException e) {
-                            e.printStackTrace();
-                            System.out.println(
-                                    "Rega: " + sector.getSector() + " " + operationDate + " não foi registada!");
-                        }
+                        farmManagerRepository.registerRega(sector.getDuracao(), sector.getSector(),
+                                operationDate,
+                                operationTime);
+                        System.out.println("Rega registada com sucesso. \nDetalhes: Setor: " + sector.getSector()
+                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: " + sector.getDuracao() + "min\n");
                     } catch (SQLException e) {
-                        e.printStackTrace();
+                        System.out.println("Não foi possível registar a rega. \nDetalhes: Setor: " + sector.getSector()
+                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: " + sector.getDuracao() + "min\n");
+                        System.out.println("Motivo: " + e.getMessage());
                         return false;
                     }
                 }
