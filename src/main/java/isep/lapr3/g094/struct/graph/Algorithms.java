@@ -307,7 +307,7 @@ public class Algorithms {
         }
     }
 
-    private static <V, E> float getSC(List<MatrixGraph<V, E>> clusterList, Comparator<E> ce, BinaryOperator<E> sum, E zero,
+    public static <V, E> float getSC(List<MatrixGraph<V, E>> clusterList, Comparator<E> ce, BinaryOperator<E> sum, E zero,
                                       LinkedList<V> shortPath, MatrixGraph<V, E> g){
         List<Float> sillouetteAverages = new ArrayList<>();
         for (MatrixGraph<V, E> cluster : clusterList){

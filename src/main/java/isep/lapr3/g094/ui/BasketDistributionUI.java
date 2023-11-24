@@ -6,13 +6,11 @@ import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
+import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class BasketDistributionUI implements Runnable {
 
@@ -128,13 +126,50 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void divideDistribution() {
+        Map<String, Criteria> idealVertices = graphController.getVerticesIdeais();
+        // Calculate the maximum length of the IDs
+        int maxIdLength = Math.max(idealVertices.keySet().stream()
+                .mapToInt(String::length)
+                .max()
+                .orElse(0), "ID".length());
+        // Calculate the maximum length of the degrees
+        int maxDegreeLength = Math.max(idealVertices.values().stream()
+                .mapToInt(criteria -> Integer.toString(criteria.getDegree()).length())
+                .max()
+                .orElse(0), "Grau".length());
+        // Calculate the maximum length of the number of minimum paths
+        int maxNumPathsLength = Math.max(idealVertices.values().stream()
+                .mapToInt(criteria -> Integer.toString(criteria.getNumberMinimumPaths()).length())
+                .max()
+                .orElse(0), "Nº Caminhos mínimos".length());
 
+        int maxLength = Math.max(maxIdLength, Math.max(maxDegreeLength, maxNumPathsLength));
+        for (Map.Entry<String, Criteria> entry : idealVertices.entrySet()) {
+            System.out.println("--------------------------------------------------------------------");
+            String formatString = "| ID: %" + maxLength / 3 + "s | Degree: %" + maxLength / 3 + "d | Número de Caminhos Mínimos: %" + maxLength / 3 + "d |\n";
+            System.out.printf(formatString, entry.getKey(), entry.getValue().getDegree(), entry.getValue().getNumberMinimumPaths());
+        }
+        String idSelected;
+        List<String> idsSelected = new ArrayList<>();
+        do{
+            idSelected = Utils.readLineFromConsole("Type in ID of desired vertice to add (Press enter without answer to continue): ");
+            if(!idSelected.isEmpty()){
+                idsSelected.add(idSelected);
+            }
+        } while ((!idSelected.isEmpty()));
+        printClusters(idsSelected);
     }
 
     private void printBasketDistribution() {
         System.out.println(graphController.getBasketDistribution().toString());
         System.out.println(graphController.getNumLocations() + " Localizações existentes");
         System.out.println(graphController.getNumDistances() + " Distâncias existentes");
+    }
+
+    private void printClusters(List<String> idsSelected) {
+        List<MatrixGraph<Location, Integer>> newList = graphController.divideIntoClusters(idsSelected);
+        System.out.println("Coeficiente de silhouette: " + graphController.getCoefSil(newList));
+        System.out.println(newList.toString());
     }
 
 }

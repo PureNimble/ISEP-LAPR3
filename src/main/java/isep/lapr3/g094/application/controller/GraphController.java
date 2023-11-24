@@ -12,6 +12,7 @@ import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.services.Service;
 import isep.lapr3.g094.services.Services;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
+import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
 public class GraphController {
 
@@ -92,5 +93,13 @@ public class GraphController {
 
     public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy) {
         return service.getMinimal(autonomy);
+    }
+
+    public List<MatrixGraph<Location, Integer>> divideIntoClusters(List<String> idsSelected){
+        return service.divideIntoClusters(idsSelected);
+    }
+
+    public float getCoefSil(List<MatrixGraph<Location, Integer>> clusters){
+        return service.getCoefSil(clusters);
     }
 }
