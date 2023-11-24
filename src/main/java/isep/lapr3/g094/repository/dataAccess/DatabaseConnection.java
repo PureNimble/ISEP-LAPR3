@@ -1,6 +1,7 @@
 package isep.lapr3.g094.repository.dataAccess;
 
 import oracle.jdbc.pool.OracleDataSource;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
@@ -13,6 +14,7 @@ public class DatabaseConnection {
     private static DatabaseConnection instance;
     private OracleDataSource oracleDataSource;
     private Connection connection;
+    private SQLException error;
 
     public DatabaseConnection() throws SQLException {
         oracleDataSource = new OracleDataSource();
@@ -57,5 +59,4 @@ public class DatabaseConnection {
             instance = new DatabaseConnection();
         return instance;
     }
-
 }

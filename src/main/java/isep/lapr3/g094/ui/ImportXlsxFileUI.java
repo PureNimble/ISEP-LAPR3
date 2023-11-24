@@ -1,6 +1,5 @@
 package isep.lapr3.g094.ui;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 
@@ -11,15 +10,12 @@ public class ImportXlsxFileUI implements Runnable {
     private TransformXlsxController transformXlsxController = new TransformXlsxController();
 
     public void run() {
-
         try {
-            if (transformXlsxController.createInserts())
-                System.out.println("\n-> Ficheiro .Xlsx importado com sucesso");
-            else
-                System.out.println("\n-> Erro ao importar ficheiro .Xlsx");
-        } catch (ClassNotFoundException | IOException | SQLException | ParseException e) {
+            transformXlsxController.createInserts();
+            System.out.println("\n-> Ficheiro .Xlsx importado com sucesso");
+        } catch (SQLException | ParseException e) {
+            System.out.println("\n-> Erro ao importar ficheiro .Xlsx");
             e.printStackTrace();
         }
-
     }
 }

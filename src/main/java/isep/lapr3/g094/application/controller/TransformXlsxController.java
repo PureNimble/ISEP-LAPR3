@@ -1,9 +1,6 @@
 package isep.lapr3.g094.application.controller;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -12,7 +9,10 @@ import java.text.SimpleDateFormat;
 import java.sql.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Properties;
+import java.util.Objects;
+
+import isep.lapr3.g094.repository.dataAccess.DatabaseConnection;
+
 import java.util.ArrayList;
 
 public class TransformXlsxController {
@@ -20,14 +20,9 @@ public class TransformXlsxController {
     private ImportController importController = new ImportController();
     private SimpleDateFormat format = new SimpleDateFormat("MM-dd-yyyy");
 
-    public boolean createInserts() throws ClassNotFoundException, IOException, SQLException, ParseException {
+    public void createInserts() throws SQLException, ParseException {
 
-        // Load the properties file
-        Properties properties = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("bddad/config.properties")) {
-            properties.load(input);
-        }
-        Connection conn = createConnection(properties);
+        Connection conn = DatabaseConnection.getInstance().getConnection();
 
         List<LinkedHashSet<List<String>>> xlsxList = importController.importXlsx();
         List<String> culturaList = new ArrayList<>();
@@ -55,26 +50,23 @@ public class TransformXlsxController {
         }
 
         importNewData(conn);
-
-        conn.close();
-        return true;
     }
 
-    private List<String> insertCultura(LinkedHashSet<List<String>> pageList, Connection conn)
-            throws IOException, ClassNotFoundException, SQLException {
+    private List<String> insertCultura(LinkedHashSet<List<String>> pageList, Connection conn) throws SQLException {
 
         List<List<String>> insertedDataIndex = new ArrayList<>();
         int tipoCulturaID = 1, nomeEspecieID = 1, culturaID = 1;
         for (int i = 0; i < 3; i++)
             insertedDataIndex.add(new ArrayList<>());
-        try {
-            conn.setAutoCommit(false);
 
-            try (PreparedStatement pstmtTipoCultura = conn.prepareStatement("INSERT INTO TipoCultura VALUES (?,?)");
-                    PreparedStatement pstmtNomeEspecie = conn
-                            .prepareStatement("INSERT INTO NomeEspecie VALUES (?,?,?)");
-                    PreparedStatement pstmtCultura = conn
-                            .prepareStatement("INSERT INTO Cultura VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+        PreparedStatement pstmtTipoCultura = conn.prepareStatement("INSERT INTO TipoCultura VALUES (?,?)");
+        PreparedStatement pstmtNomeEspecie = conn
+                .prepareStatement("INSERT INTO NomeEspecie VALUES (?,?,?)");
+        PreparedStatement pstmtCultura = conn
+                .prepareStatement("INSERT INTO Cultura VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        try {
+
+            try {
 
                 for (List<String> rowData : pageList) {
                     String tipoCultura = rowData.get(3); // tipo Cultura
@@ -121,36 +113,39 @@ public class TransformXlsxController {
                 throw new RuntimeException("Erro ao inserir na base de dados", e);
             }
         } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException e) {
-                    throw new RuntimeException("Erro ao dar reset ao auto-commit", e);
-                }
+            if(!Objects.isNull(pstmtTipoCultura)) {
+                pstmtTipoCultura.close();
+            }
+            if(!Objects.isNull(pstmtNomeEspecie)) {
+                pstmtNomeEspecie.close();
+            }
+            if(!Objects.isNull(pstmtCultura)) {
+                pstmtCultura.close();
             }
         }
         return insertedDataIndex.get(2);
     }
 
     private List<String> insertFatorDeProducao(LinkedHashSet<List<String>> pageList, Connection conn)
-            throws IOException, ClassNotFoundException, SQLException {
+            throws SQLException {
         List<List<String>> insertedDataIndex = new ArrayList<>();
         int tipoProducaoID = 1, aplicacaoID = 1, elementoID = 1, fatorProducaoID = 1, formatoID = 1;
         for (int i = 0; i < 5; i++)
             insertedDataIndex.add(new ArrayList<>());
-        try {
-            conn.setAutoCommit(false);
 
-            try (PreparedStatement pstmtTipoProduto = conn.prepareStatement("INSERT INTO TIPOPRODUTO VALUES (?, ?)");
-                    PreparedStatement pstmtAplicacao = conn.prepareStatement("INSERT INTO APLICACAO VALUES (?,?)");
-                    PreparedStatement pstmtElemento = conn.prepareStatement("INSERT INTO ELEMENTO VALUES (?,?)");
-                    PreparedStatement pstmtFormato = conn.prepareStatement("INSERT INTO FORMATOPRODUTO VALUES (?,?)");
-                    PreparedStatement pstmtFatorProducao = conn
-                            .prepareStatement("INSERT INTO FatorProducao VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    PreparedStatement pstmtAplicacaoProduto = conn
-                            .prepareStatement("INSERT INTO AplicacaoProduto VALUES (?, ?)");
-                    PreparedStatement pstmtElementoFicha = conn
-                            .prepareStatement("INSERT INTO ElementoFicha VALUES (?, ?, ?)")) {
+        PreparedStatement pstmtTipoProduto = conn.prepareStatement("INSERT INTO TIPOPRODUTO VALUES (?, ?)");
+        PreparedStatement pstmtAplicacao = conn.prepareStatement("INSERT INTO APLICACAO VALUES (?,?)");
+        PreparedStatement pstmtElemento = conn.prepareStatement("INSERT INTO ELEMENTO VALUES (?,?)");
+        PreparedStatement pstmtFormato = conn.prepareStatement("INSERT INTO FORMATOPRODUTO VALUES (?,?)");
+        PreparedStatement pstmtFatorProducao = conn
+                .prepareStatement("INSERT INTO FatorProducao VALUES (?, ?, ?, ?, ?, ?, ?)");
+        PreparedStatement pstmtAplicacaoProduto = conn
+                .prepareStatement("INSERT INTO AplicacaoProduto VALUES (?, ?)");
+        PreparedStatement pstmtElementoFicha = conn
+                .prepareStatement("INSERT INTO ElementoFicha VALUES (?, ?, ?)");
+        try {
+
+            try {
 
                 for (List<String> rowData : pageList) {
                     String tipoProduto = rowData.get(3);
@@ -243,28 +238,41 @@ public class TransformXlsxController {
                 throw new RuntimeException("Erro ao inserir na base de dados", e);
             }
         } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException e) {
-                    throw new RuntimeException("Erro ao dar reset ao auto-commit", e);
-                }
+            if (!Objects.isNull(pstmtTipoProduto)) {
+                pstmtTipoProduto.close();
+            }
+            if (!Objects.isNull(pstmtAplicacao)) {
+                pstmtAplicacao.close();
+            }
+            if (!Objects.isNull(pstmtElemento)) {
+                pstmtElemento.close();
+            }
+            if (!Objects.isNull(pstmtFormato)) {
+                pstmtFormato.close();
+            }
+            if (!Objects.isNull(pstmtFatorProducao)) {
+                pstmtFatorProducao.close();
+            }
+            if (!Objects.isNull(pstmtAplicacaoProduto)) {
+                pstmtAplicacaoProduto.close();
+            }
+            if (!Objects.isNull(pstmtElementoFicha)) {
+                pstmtElementoFicha.close();
             }
         }
         return insertedDataIndex.get(4);
     }
 
     private void insertEspaco(LinkedHashSet<List<String>> pageList, Connection conn) throws SQLException {
+        PreparedStatement pstmtQuinta = conn.prepareStatement("INSERT INTO Quinta VALUES (?,?)");
+        PreparedStatement pstmtEspaco = conn.prepareStatement("INSERT INTO Espaco VALUES (?,?,?,?,?,?)");
+        PreparedStatement pstmtParcela = conn.prepareStatement("INSERT INTO Parcela VALUES (?)");
+        PreparedStatement pstmtRega = conn.prepareStatement("INSERT INTO Rega VALUES (?)");
+        PreparedStatement pstmtArmazem = conn.prepareStatement("INSERT INTO ARMAZEM (ESPACOID) VALUES (?)");
+        PreparedStatement pstmtGaragem = conn.prepareStatement("INSERT INTO Garagem VALUES (?)");
         try {
-            conn.setAutoCommit(false);
 
-            try (PreparedStatement pstmtQuinta = conn.prepareStatement("INSERT INTO Quinta VALUES (?,?)");
-                    PreparedStatement pstmtEspaco = conn.prepareStatement("INSERT INTO Espaco VALUES (?,?,?,?,?,?)");
-                    PreparedStatement pstmtParcela = conn.prepareStatement("INSERT INTO Parcela VALUES (?)");
-                    PreparedStatement pstmtRega = conn.prepareStatement("INSERT INTO Rega VALUES (?)");
-                    PreparedStatement pstmtArmazem = conn.prepareStatement("INSERT INTO ARMAZEM (ESPACOID) VALUES (?)");
-                    PreparedStatement pstmtEstabulo = conn.prepareStatement("INSERT INTO Estabulo VALUES (?)");
-                    PreparedStatement pstmtGaragem = conn.prepareStatement("INSERT INTO Garagem VALUES (?)");) {
+            try {
 
                 pstmtQuinta.setInt(1, 1); // QuintaID
                 pstmtQuinta.setString(2, "Quinta Do Ângelo v1.2"); // Designação
@@ -321,13 +329,25 @@ public class TransformXlsxController {
                 throw new RuntimeException("Erro ao inserir na base de dados", e);
             }
         } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException e) {
-                    throw new RuntimeException("Erro ao dar reset ao auto-commit", e);
-                }
+            if (!Objects.isNull(pstmtQuinta)) {
+                pstmtQuinta.close();
             }
+            if (!Objects.isNull(pstmtEspaco)) {
+                pstmtEspaco.close();
+            }
+            if (!Objects.isNull(pstmtParcela)) {
+                pstmtParcela.close();
+            }
+            if (!Objects.isNull(pstmtArmazem)) {
+                pstmtArmazem.close();
+            }
+            if (!Objects.isNull(pstmtGaragem)) {
+                pstmtGaragem.close();
+            }
+            if (!Objects.isNull(pstmtRega)) {
+                pstmtRega.close();
+            }
+
         }
     }
 
@@ -336,11 +356,11 @@ public class TransformXlsxController {
             throws SQLException, ParseException {
 
         int plantacaoID = 1;
+        PreparedStatement pstmtPlantacao = conn
+                .prepareStatement("INSERT INTO Plantacao VALUES (?,?,?,?,?,?,?,?)");
         try {
-            conn.setAutoCommit(false);
 
-            try (PreparedStatement pstmtPlantacao = conn
-                    .prepareStatement("INSERT INTO Plantacao VALUES (?,?,?,?,?,?,?,?)")) {
+            try {
 
                 for (List<String> rowData : pageList) {
                     int parcelaID = Integer.parseInt(rowData.get(0)); // ParcelaID
@@ -370,17 +390,13 @@ public class TransformXlsxController {
 
                 conn.commit();
 
-            } catch (SQLException e) {
+            } catch (SQLException | ParseException e) {
                 conn.rollback();
                 throw new RuntimeException("Erro ao inserir na base de dados", e);
             }
         } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException e) {
-                    throw new RuntimeException("Erro ao dar reset ao auto-commit", e);
-                }
+            if (!Objects.isNull(pstmtPlantacao)) {
+                pstmtPlantacao.close();
             }
         }
     }
@@ -392,25 +408,24 @@ public class TransformXlsxController {
         int tipoOperacaoID = 1, operacaoID = 1, ModoFertilizacaoID = 1;
         for (int i = 0; i < 2; i++)
             insertedDataIndex.add(new ArrayList<>());
+        PreparedStatement pstmtTipoOperacao = conn.prepareStatement("INSERT INTO TipoOperacao VALUES (?,?)");
+        PreparedStatement pstmtModoFertilizacao = conn
+                .prepareStatement("INSERT INTO ModoFertilizacao VALUES (?,?)");
+        PreparedStatement pstmtOperacao = conn
+                .prepareStatement("INSERT INTO Operacao VALUES (?,?,?,?,?,?)");
+        PreparedStatement pstmtOperacaoFator = conn
+                .prepareStatement("INSERT INTO OperacaoFator VALUES (?, ?)");
+        PreparedStatement pstmtFertilizacao = conn
+                .prepareStatement("INSERT INTO Fertilizacao VALUES (?, ?)");
+        PreparedStatement pstmtOperacaoParcela = conn
+                .prepareStatement("INSERT INTO OperacaoParcela VALUES (?, ?)");
+        PreparedStatement pstmtOperacaoPlantacao = conn
+                .prepareStatement(
+                        "INSERT INTO OperacaoPlantacao VALUES (?, (SELECT ID FROM PLANTACAO WHERE CULTURAID = ? AND PARCELAESPACOID = ? AND ROWNUM = 1))");
+        PreparedStatement pstmtCadernoCampo = conn
+                .prepareStatement("INSERT INTO CadernoCampo VALUES (?, ?)");
         try {
-            conn.setAutoCommit(false);
-
-            try (PreparedStatement pstmtTipoOperacao = conn.prepareStatement("INSERT INTO TipoOperacao VALUES (?,?)");
-                    PreparedStatement pstmtModoFertilizacao = conn
-                            .prepareStatement("INSERT INTO ModoFertilizacao VALUES (?,?)");
-                    PreparedStatement pstmtOperacao = conn
-                            .prepareStatement("INSERT INTO Operacao VALUES (?,?,?,?,?,?)");
-                    PreparedStatement pstmtOperacaoFator = conn
-                            .prepareStatement("INSERT INTO OperacaoFator VALUES (?, ?)");
-                    PreparedStatement pstmtFertilizacao = conn
-                            .prepareStatement("INSERT INTO Fertilizacao VALUES (?, ?)");
-                    PreparedStatement pstmtOperacaoParcela = conn
-                            .prepareStatement("INSERT INTO OperacaoParcela VALUES (?, ?)");
-                    PreparedStatement pstmtOperacaoPlantacao = conn
-                            .prepareStatement(
-                                    "INSERT INTO OperacaoPlantacao VALUES (?, (SELECT ID FROM PLANTACAO WHERE CULTURAID = ? AND PARCELAESPACOID = ? AND ROWNUM = 1))");
-                    PreparedStatement pstmtCadernoCampo = conn
-                            .prepareStatement("INSERT INTO CadernoCampo VALUES (?, ?)");) {
+            try {
                 pstmtCadernoCampo.setInt(1, 1);
                 pstmtCadernoCampo.setInt(2, 1);
                 for (List<String> rowData : pageList) {
@@ -485,28 +500,42 @@ public class TransformXlsxController {
 
                 conn.commit();
 
-            } catch (SQLException e) {
+            } catch (SQLException | ParseException e) {
                 conn.rollback();
                 throw new RuntimeException("Erro ao inserir na base de dados", e);
             }
-        } finally
-
-        {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException e) {
-                    throw new RuntimeException("Erro ao dar reset ao auto-commit", e);
-                }
+        } finally {
+            if (!Objects.isNull(pstmtCadernoCampo)) {
+                pstmtCadernoCampo.close();
+            }
+            if (!Objects.isNull(pstmtTipoOperacao)) {
+                pstmtTipoOperacao.close();
+            }
+            if (!Objects.isNull(pstmtOperacao)) {
+                pstmtOperacao.close();
+            }
+            if (!Objects.isNull(pstmtOperacaoFator)) {
+                pstmtOperacaoFator.close();
+            }
+            if (!Objects.isNull(pstmtModoFertilizacao)) {
+                pstmtModoFertilizacao.close();
+            }
+            if (!Objects.isNull(pstmtFertilizacao)) {
+                pstmtFertilizacao.close();
+            }
+            if (!Objects.isNull(pstmtOperacaoParcela)) {
+                pstmtOperacaoParcela.close();
+            }
+            if (!Objects.isNull(pstmtOperacaoPlantacao)) {
+                pstmtOperacaoPlantacao.close();
             }
         }
     }
 
-    private void importNewData(Connection conn) {
+    private void importNewData(Connection conn) throws SQLException {
         List<String> newData = importController.importBddadNewData();
+        Statement stmt = conn.createStatement();
         try {
-            conn.setAutoCommit(false);
-            Statement stmt = conn.createStatement();
 
             for (String sql : newData) {
                 stmt.addBatch(sql);
@@ -523,23 +552,10 @@ public class TransformXlsxController {
             }
             throw new RuntimeException("Erro ao inserir na base de dados", e);
         } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException e) {
-                    throw new RuntimeException("Erro ao dar reset ao auto-commit", e);
-                }
+            if (!Objects.isNull(stmt)) {
+                stmt.close();
             }
         }
-    }
-
-    private Connection createConnection(Properties properties) throws ClassNotFoundException, SQLException {
-        // Load the Oracle JDBC driver
-        Class.forName("oracle.jdbc.driver.OracleDriver");
-
-        // Connect to the database
-        return DriverManager.getConnection(properties.getProperty("database.url"),
-                properties.getProperty("database.user"), properties.getProperty("database.password"));
     }
 
 }
