@@ -110,16 +110,17 @@ public class TransformXlsxController {
 
             } catch (SQLException e) {
                 conn.rollback();
-                throw new RuntimeException("Erro ao inserir na base de dados", e);
+                System.err.println("Erro ao inserir na base de dados: " + e.getMessage());
+                throw e;
             }
         } finally {
-            if(!Objects.isNull(pstmtTipoCultura)) {
+            if (!Objects.isNull(pstmtTipoCultura)) {
                 pstmtTipoCultura.close();
             }
-            if(!Objects.isNull(pstmtNomeEspecie)) {
+            if (!Objects.isNull(pstmtNomeEspecie)) {
                 pstmtNomeEspecie.close();
             }
-            if(!Objects.isNull(pstmtCultura)) {
+            if (!Objects.isNull(pstmtCultura)) {
                 pstmtCultura.close();
             }
         }
@@ -235,7 +236,8 @@ public class TransformXlsxController {
 
             } catch (SQLException e) {
                 conn.rollback();
-                throw new RuntimeException("Erro ao inserir na base de dados", e);
+                System.err.println("Erro ao inserir na base de dados: " + e.getMessage());
+                throw e;
             }
         } finally {
             if (!Objects.isNull(pstmtTipoProduto)) {
@@ -326,7 +328,8 @@ public class TransformXlsxController {
 
             } catch (SQLException e) {
                 conn.rollback();
-                throw new RuntimeException("Erro ao inserir na base de dados", e);
+                System.err.println("Erro ao inserir na base de dados: " + e.getMessage());
+                throw e;
             }
         } finally {
             if (!Objects.isNull(pstmtQuinta)) {
@@ -392,7 +395,8 @@ public class TransformXlsxController {
 
             } catch (SQLException | ParseException e) {
                 conn.rollback();
-                throw new RuntimeException("Erro ao inserir na base de dados", e);
+                System.err.println("Erro ao inserir na base de dados: " + e.getMessage());
+                throw e;
             }
         } finally {
             if (!Objects.isNull(pstmtPlantacao)) {
@@ -502,7 +506,8 @@ public class TransformXlsxController {
 
             } catch (SQLException | ParseException e) {
                 conn.rollback();
-                throw new RuntimeException("Erro ao inserir na base de dados", e);
+                System.err.println("Erro ao inserir na base de dados: " + e.getMessage());
+                throw e;
             }
         } finally {
             if (!Objects.isNull(pstmtCadernoCampo)) {
@@ -550,7 +555,8 @@ public class TransformXlsxController {
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-            throw new RuntimeException("Erro ao inserir na base de dados", e);
+            System.err.println("Erro ao inserir na base de dados: " + e.getMessage());
+            throw e;
         } finally {
             if (!Objects.isNull(stmt)) {
                 stmt.close();

@@ -15,7 +15,7 @@ public class ImportXlsxFileUI implements Runnable {
             System.out.println("\n-> Ficheiro .Xlsx importado com sucesso");
         } catch (SQLException | ParseException e) {
             System.out.println("\n-> Erro ao importar ficheiro .Xlsx");
-            e.printStackTrace();
+            e.getMessage();
         }
     }
 }
