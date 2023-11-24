@@ -2,13 +2,8 @@ package isep.lapr3.g094.struct.graph;
 
 import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Set;
+
+import java.util.*;
 import java.util.function.BinaryOperator;
 
 public class Algorithms {
@@ -251,6 +246,115 @@ public class Algorithms {
         }
 
         return minDistGraph;
+    }
+
+    public static <V, E> List<MatrixGraph<V, E>> divideGraph(MatrixGraph<V, E> g, Set<V> verticeList){
+        int numVertices = g.numVertices();
+        List<MatrixGraph<V, E>> clusterList = new ArrayList<>();
+        for (V vertice : verticeList){
+            MatrixGraph<V, E> matrixGraph = new MatrixGraph<>(false, numVertices);
+            matrixGraph.addVertex(vertice);
+            clusterList.add(matrixGraph);
+        }
+        boolean changed = true;
+        while(changed){
+            changed = false;
+            for (V vertice : g.vertices){
+                int maxClusterIndex = -1;
+                int maxNeighborCount = -1;
+                for (int i = 0; i < clusterList.size(); i++){
+                    int neighborCount = countCommonNeighbors(vertice, clusterList.get(i), g);
+                    if(maxNeighborCount < neighborCount){
+                        maxNeighborCount = neighborCount;
+                        maxClusterIndex = i;
+                    }
+                }
+                if (!clusterList.get(maxClusterIndex).vertices.contains(vertice)){
+                    for (MatrixGraph<V, E> veMatrixGraph : clusterList) {
+                        veMatrixGraph.removeVertex(vertice);
+                    }
+                    clusterList.get(maxClusterIndex).addVertex(vertice);
+                    changed = true;
+                }
+            }
+        }
+        fillEdges(clusterList, g);
+        return clusterList;
+    }
+
+    private static <V, E> int countCommonNeighbors(V vertex, MatrixGraph<V, E> cluster, MatrixGraph<V, E> graph){
+        int count = 0;
+        for (V neighbor : graph.adjVertices(vertex)){
+            if (cluster.vertices.contains(neighbor)){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static <V, E> void fillEdges(List<MatrixGraph<V, E>> clusterList, MatrixGraph<V, E> graph){
+        for (MatrixGraph<V, E> cluster : clusterList) {
+            for (V vertice : cluster.vertices){
+                for (V dest : graph.adjVertices(vertice)){
+                    if(cluster.validVertex(dest)){
+                        if (cluster.edge(dest, vertice) == null && cluster.edge(vertice, dest) == null){
+                            E weight = graph.edge(vertice, dest).getWeight();
+                            cluster.addEdge(vertice, dest, weight);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static <V, E> float getSC(List<MatrixGraph<V, E>> clusterList, Comparator<E> ce, BinaryOperator<E> sum, E zero,
+                                      LinkedList<V> shortPath, MatrixGraph<V, E> g){
+        List<Float> sillouetteAverages = new ArrayList<>();
+        for (MatrixGraph<V, E> cluster : clusterList){
+            float sillouetteSum = 0;
+            float numSillouettes = 0;
+            float lowAvgDistOut = Float.MAX_VALUE;
+            float sumDistIn = 0;
+            for(V vertice : cluster.vertices){
+                for(V verticeIn : cluster.vertices){
+                    if (!vertice.equals(verticeIn)){
+                        sumDistIn += (Float) shortestPath(cluster, vertice, verticeIn, ce, sum, zero, shortPath);
+                    }
+                }
+                float avgDistIn = sumDistIn/(cluster.numVerts - 1);
+                for (MatrixGraph<V, E> clusterout : clusterList){
+                    float sumDistOut = 0;
+                    if (!cluster.equals(clusterout)){
+                        for (V outVert : clusterout.vertices){
+                            sumDistOut += (Float) shortestPath(g, vertice, outVert, ce, sum, zero, shortPath);
+                        }
+                    }
+                    float avgDistOut = sumDistOut/clusterout.numVerts;
+                    if (avgDistOut < lowAvgDistOut){
+                        lowAvgDistOut = avgDistOut;
+                    }
+                }
+                sillouetteSum += calculateSillouette(lowAvgDistOut, avgDistIn);
+                numSillouettes++;
+
+            }
+            sillouetteAverages.add(sillouetteSum/numSillouettes);
+        }
+        if(sillouetteAverages.stream().max(Float::compareTo).isPresent()){
+            return sillouetteAverages.stream().max(Float::compareTo).get();
+        } else {
+            return 0;
+        }
+    }
+
+    private static float calculateSillouette(float lowAvgDistOut, float avgDistIn){
+        if (avgDistIn < lowAvgDistOut){
+            return (1 - (avgDistIn/lowAvgDistOut));
+        } else if (avgDistIn > lowAvgDistOut){
+            return ((lowAvgDistOut/avgDistIn) - 1);
+        } else {
+            return 0;
+        }
     }
 
     @SuppressWarnings("unchecked")
