@@ -7,7 +7,7 @@ CREATE OR REPLACE PROCEDURE registerPoda(quantidade NUMBER,parcelaID NUMBER,plan
 
 BEGIN
     verifyParcelaInfo(parcelaID);
-    verifyPlantacaoInfo(plantacaoID, parcelaID);
+    verifyPlantacaoInfo(plantacaoID, parcelaID,dataOperacao);
     verifyQuantityInfo(plantacaoID, parcelaID, quantidade, UNIDADE);
     verifyDateInfo(dataOperacao);
     --Obter o ID da operação

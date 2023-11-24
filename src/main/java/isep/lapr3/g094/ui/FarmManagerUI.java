@@ -42,9 +42,14 @@ public class FarmManagerUI implements Runnable {
             if (operationType == 'S') {
                 int culturaID = Utils.readIntegerFromConsole("Cultura ID: ");
                 double area = Utils.readDoubleFromConsole("Area: ");
-                farmManagerController.registerSemeadura(operationType, quantidade, parcelaID, culturaID, dataOperacao,
+                farmManagerController.registerSemeadura(quantidade, parcelaID, culturaID, dataOperacao,
                         area);
-            } else{
+            } else if (operationType == 'A') {
+                int fatorProducaoID = Utils.readIntegerFromConsole("Fator de produção ID: ");
+                int modoFertilizacaoID = Utils.readIntegerFromConsole("Modo de fertilização ID: ");
+                farmManagerController.registerFatorDeProducao(quantidade, parcelaID, dataOperacao,
+                        fatorProducaoID, modoFertilizacaoID);
+            } else {
                 int plantacaoID = Utils.readIntegerFromConsole("Plantação ID: ");
                 farmManagerController.registerOperation(operationType, quantidade, parcelaID, plantacaoID, dataOperacao);
             }

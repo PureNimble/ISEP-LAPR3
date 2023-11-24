@@ -32,13 +32,17 @@ END verifyParcelaInfo;
 /
 
 --Check if plantação exists
-CREATE OR REPLACE PROCEDURE verifyPlantacaoInfo(plantacaoID NUMBER, parcelaID NUMBER) IS
+CREATE OR REPLACE PROCEDURE verifyPlantacaoInfo(plantacaoID NUMBER, parcelaID NUMBER, dataOperacao DATE) IS
     plantacaoExists NUMBER;
 
 BEGIN
     
-    SELECT 1 INTO plantacaoExists FROM PLANTACAO WHERE ID = plantacaoID AND ParcelaEspacoID = parcelaID;
-    
+    SELECT 1 INTO plantacaoExists 
+    FROM PLANTACAO 
+    WHERE ID = plantacaoID 
+    AND ParcelaEspacoID = parcelaID 
+    AND dataOperacao BETWEEN DataIniciaL AND NVL(DataFinal, TO_DATE('9999-12-31','YYYY-MM-DD'));
+
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RAISE_APPLICATION_ERROR(-20001,'Plantação não existe.');
@@ -108,4 +112,30 @@ EXCEPTION
     WHEN invalidQuantidade THEN 
         RAISE_APPLICATION_ERROR(-20001,'Area fornecida superior à disponivel.');
 END verifyAvailableAreaInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifyFatorDeProducaoInfo(fatorProducaoID NUMBER) IS
+    fatorProducaoExists NUMBER;
+
+BEGIN
+        
+    SELECT 1 INTO fatorProducaoExists FROM FatorProducao WHERE ID = fatorProducaoID;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'Fator de Produção não existe.');
+END verifyFatorDeProducaoInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifyModoFertilizacaoInfo(modoAplicacaoID NUMBER) IS
+    modoAplicacaoExists NUMBER;
+
+BEGIN
+        
+    SELECT 1 INTO modoAplicacaoExists FROM ModoFertilizacao WHERE ID = modoAplicacaoID;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'Modo de Aplicação não existe.');
+END verifyModoFertilizacaoInfo;
 /
