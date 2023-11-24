@@ -26,13 +26,12 @@ public class Pair<T, U> {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
+        if (obj == null || !(obj instanceof Pair<?, ?>))
             return false;
         Pair<T, U> other = (Pair<T, U>) obj;
         if (first == null) {

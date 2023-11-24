@@ -1,10 +1,9 @@
 package isep.lapr3.g094.ui;
 
 import java.sql.SQLException;
-import java.sql.Date;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import isep.lapr3.g094.application.controller.FarmManagerController;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
@@ -32,28 +31,24 @@ public class FarmManagerUI implements Runnable {
     }
 
     private void createOperation(char operationType) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Valor: ");
-        int value = scanner.nextInt();
 
-        System.out.println("Parcela ID: ");
-        int parcelaID = scanner.nextInt();
+        int parcelaID = Utils.readIntegerFromConsole("Parcela ID: ");
+        int plantacaoID = Utils.readIntegerFromConsole("Plantação ID: ");
+        int quantidade = Utils.readIntegerFromConsole("Quantidade: ");
+        java.util.Date utilDate = Utils.readDateFromConsole("Data da operação: ");
+        java.sql.Date dataOperacao = java.sql.Date
+                .valueOf(utilDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
-        System.out.println("Plantação ID: ");
-        int plantacaoID = scanner.nextInt();
-
-        System.out.println("Data da operação: ");
-        Date dataOperacao = Date.valueOf(scanner.nextLine());
-
-        scanner.close();
         try {
-            try {
-                farmManagerController.registerOperation(operationType, value, parcelaID, plantacaoID, dataOperacao);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+            if (operationType == 'S') {
+                double area = Utils.readDoubleFromConsole("Area: ");
+                farmManagerController.registerSemeadura(operationType, quantidade, parcelaID, plantacaoID, dataOperacao,
+                        area);
+            } else
+                farmManagerController.registerOperation(operationType, quantidade, parcelaID, plantacaoID, dataOperacao);
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("\nErro ao registar operação");
+            System.out.println("Motivo: " + e.getMessage());
         }
     }
 }

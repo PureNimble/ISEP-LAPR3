@@ -38,7 +38,7 @@ public class Repositories {
         return irrigationHourRepository;
     }
 
-    public FarmManagerRepository getGestorAgricolaRepository() {
+    public FarmManagerRepository getFarmManagerRepository() {
         return farmManagerRepository;
     }
 

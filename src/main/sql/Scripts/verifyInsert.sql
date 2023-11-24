@@ -62,6 +62,7 @@ END verifySetorInfo;
 --Check quantity
 CREATE OR REPLACE PROCEDURE verifyQuantityInfo(plantacaoID NUMBER, parcelaID NUMBER, quantidade NUMBER, unidade VARCHAR2) IS
     areaParcela NUMBER;
+    quantidadePlantacao NUMBER;
     quantidadeParcela NUMBER;
     invalidQuantidade EXCEPTION;
     culturaID NUMBER;
@@ -73,19 +74,21 @@ BEGIN
         IF quantidade > areaParcela THEN 
             RAISE invalidQuantidade;
         END IF;
+        SELECT SUM(Quantidade) INTO quantidadeParcela FROM Plantacao WHERE ParcelaEspacoID = parcelaID AND DataFinal IS NULL;
+            IF quantidade > (areaParcela - quantidadeParcela) THEN 
+                RAISE invalidQuantidade;
+            END IF;
     ELSE
-        BEGIN
-            SELECT CulturaID INTO culturaID FROM PLANTACAO WHERE ID = plantacaoID;
-            SELECT SUM(QUANTIDADE)
-            INTO quantidadeParcela
-            FROM PLANTACAO
-            WHERE CulturaID = culturaID AND ParcelaEspacoID = parcelaID;
-        END;
+
+        SELECT QUANTIDADE INTO quantidadePlantacao FROM PLANTACAO WHERE ID = plantacaoID;
+        IF quantidade > quantidadePlantacao THEN 
+            RAISE invalidQuantidade;
+        END IF;
         
     END IF;
 
 EXCEPTION
     WHEN invalidQuantidade THEN 
-        RAISE_APPLICATION_ERROR(-20001,'Quantidade fornecida superior à existente.');
+        RAISE_APPLICATION_ERROR(-20001,'Quantidade fornecida superior à disponivel.');
 END verifyQuantityInfo;
 /

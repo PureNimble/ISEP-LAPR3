@@ -608,6 +608,7 @@ END verifySetorInfo;
 --Check quantity
 CREATE OR REPLACE PROCEDURE verifyQuantityInfo(plantacaoID NUMBER, parcelaID NUMBER, quantidade NUMBER, unidade VARCHAR2) IS
     areaParcela NUMBER;
+    quantidadePlantacao NUMBER;
     quantidadeParcela NUMBER;
     invalidQuantidade EXCEPTION;
     culturaID NUMBER;
@@ -619,20 +620,22 @@ BEGIN
         IF quantidade > areaParcela THEN 
             RAISE invalidQuantidade;
         END IF;
+        SELECT SUM(Quantidade) INTO quantidadeParcela FROM Plantacao WHERE ParcelaEspacoID = parcelaID AND DataFinal IS NULL;
+            IF quantidade > (areaParcela - quantidadeParcela) THEN 
+                RAISE invalidQuantidade;
+            END IF;
     ELSE
-        BEGIN
-            SELECT CulturaID INTO culturaID FROM PLANTACAO WHERE ID = plantacaoID;
-            SELECT SUM(QUANTIDADE)
-            INTO quantidadeParcela
-            FROM PLANTACAO
-            WHERE CulturaID = culturaID AND ParcelaEspacoID = parcelaID;
-        END;
+
+        SELECT QUANTIDADE INTO quantidadePlantacao FROM PLANTACAO WHERE ID = plantacaoID;
+        IF quantidade > quantidadePlantacao THEN 
+            RAISE invalidQuantidade;
+        END IF;
         
     END IF;
 
 EXCEPTION
     WHEN invalidQuantidade THEN 
-        RAISE_APPLICATION_ERROR(-20001,'Quantidade fornecida superior à existente.');
+        RAISE_APPLICATION_ERROR(-20001,'Quantidade fornecida superior à disponivel.');
 END verifyQuantityInfo;
 /
 
@@ -653,6 +656,97 @@ BEGIN
     VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
 
     INSERT INTO OperacaoSetor(OperacaoID, HoraInicial, SetorID) VALUES (idOperacao, hora, setorID);
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerPoda(quantidade NUMBER,parcelaID NUMBER,plantacaoID NUMBER,dataOperacao DATE) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 3;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'un';
+    idOperacao NUMBER;
+
+BEGIN
+    verifyParcelaInfo(parcelaID);
+    verifyPlantacaoInfo(plantacaoID, parcelaID);
+    verifyQuantityInfo(plantacaoID, parcelaID, quantidade, UNIDADE);
+    verifyDateInfo(dataOperacao);
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+
+    INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerSemeadura(culturaID NUMBER,parcelaID NUMBER,dataOperacao DATE,quantidade NUMBER, area NUMBER) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 6;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'kg';
+    UNIDADE2 CONSTANT VARCHAR2(10) := 'ha';
+    idOperacao NUMBER;
+    idPlantacao NUMBER;
+
+BEGIN
+    verifyDateInfo(dataOperacao);
+    verifyParcelaInfo(parcelaID);
+    verifyQuantityInfo(idPlantacao, parcelaID, area, UNIDADE2);
+    
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+    SELECT NVL(MAX(ID),0) + 1 INTO idPlantacao FROM Plantacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+    INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) 
+    VALUES (idOperacao, parcelaID);
+    INSERT INTO Plantacao(ID, DataInicial, DataFinal, Quantidade, Unidade, EstadoFenologico, CulturaID, ParcelaEspacoID) 
+    VALUES (idPlantacao, dataOperacao, NULL, area, UNIDADE2, NULL, culturaID, parcelaID);
+    
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerMonda(plantacaoID NUMBER,parcelaID NUMBER,dataOperacao DATE,quantidade NUMBER) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 9;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'ha';
+    idOperacao NUMBER;
+
+BEGIN
+    verifyDateInfo(dataOperacao);
+    verifyParcelaInfo(parcelaID);
+    verifyPlantacaoInfo(plantacaoID,parcelaID);
+    verifyQuantityInfo(plantacaoID,parcelaID,quantidade, UNIDADE);
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+
+    IF plantacaoID IS NULL THEN 
+        INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) VALUES (idOperacao, parcelaID);
+    ELSE
+        INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
+    END IF;
     COMMIT;
 EXCEPTION
     WHEN OTHERS THEN
