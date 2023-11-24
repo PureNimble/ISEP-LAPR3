@@ -544,7 +544,6 @@ BEGIN
 END;
 /
 
---Check if date is in the future.
 CREATE OR REPLACE PROCEDURE verifyDateInfo(dataOperacao DATE) IS
     dataAtual DATE;
     invalidDate EXCEPTION;
@@ -563,7 +562,6 @@ EXCEPTION
 END verifyDateInfo;
 /
 
---Check if parcela exists
 CREATE OR REPLACE PROCEDURE verifyParcelaInfo(parcelaID NUMBER) IS
     parcelaExists NUMBER;
 
@@ -577,21 +575,23 @@ EXCEPTION
 END verifyParcelaInfo;
 /
 
---Check if plantação exists
-CREATE OR REPLACE PROCEDURE verifyPlantacaoInfo(plantacaoID NUMBER, parcelaID NUMBER) IS
+CREATE OR REPLACE PROCEDURE verifyPlantacaoInfo(plantacaoID NUMBER, parcelaID NUMBER, dataOperacao DATE) IS
     plantacaoExists NUMBER;
 
 BEGIN
     
-    SELECT 1 INTO plantacaoExists FROM PLANTACAO WHERE ID = plantacaoID AND ParcelaEspacoID = parcelaID;
-    
+    SELECT 1 INTO plantacaoExists 
+    FROM PLANTACAO 
+    WHERE ID = plantacaoID 
+    AND ParcelaEspacoID = parcelaID 
+    AND dataOperacao BETWEEN DataIniciaL AND NVL(DataFinal, TO_DATE('9999-12-31','YYYY-MM-DD'));
+       
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RAISE_APPLICATION_ERROR(-20001,'Plantação não existe.');
 END verifyPlantacaoInfo;
 /
 
---Check if setor exists
 CREATE OR REPLACE PROCEDURE verifySetorInfo(setorID NUMBER) IS
     setorExists NUMBER;
 
@@ -654,6 +654,32 @@ EXCEPTION
 END verifyAvailableAreaInfo;
 /
 
+CREATE OR REPLACE PROCEDURE verifyFatorDeProducaoInfo(fatorProducaoID NUMBER) IS
+    fatorProducaoExists NUMBER;
+
+BEGIN
+        
+    SELECT 1 INTO fatorProducaoExists FROM FatorProducao WHERE ID = fatorProducaoID;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'Fator de Produção não existe.');
+END verifyFatorDeProducaoInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifyModoFertilizacaoInfo(modoAplicacaoID NUMBER) IS
+    modoAplicacaoExists NUMBER;
+
+BEGIN
+        
+    SELECT 1 INTO modoAplicacaoExists FROM ModoFertilizacao WHERE ID = modoAplicacaoID;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'Modo de Aplicação não existe.');
+END verifyModoFertilizacaoInfo;
+/
+
 CREATE OR REPLACE PROCEDURE registerRega(quantidade NUMBER,setorID NUMBER,dataOperacao DATE,hora TIMESTAMP) IS
 
     TIPO_OPERACAO CONSTANT NUMBER := 2;
@@ -688,7 +714,7 @@ CREATE OR REPLACE PROCEDURE registerPoda(quantidade NUMBER,parcelaID NUMBER,plan
 
 BEGIN
     verifyParcelaInfo(parcelaID);
-    verifyPlantacaoInfo(plantacaoID, parcelaID);
+    verifyPlantacaoInfo(plantacaoID, parcelaID,dataOperacao);
     verifyQuantityInfo(plantacaoID, parcelaID, quantidade, UNIDADE);
     verifyDateInfo(dataOperacao);
     --Obter o ID da operação
@@ -750,7 +776,7 @@ CREATE OR REPLACE PROCEDURE registerMonda(plantacaoID NUMBER,parcelaID NUMBER,da
 BEGIN
     verifyDateInfo(dataOperacao);
     verifyParcelaInfo(parcelaID);
-    verifyPlantacaoInfo(plantacaoID,parcelaID);
+    verifyPlantacaoInfo(plantacaoID,parcelaID,dataOperacao);
     verifyQuantityInfo(plantacaoID,parcelaID,quantidade, UNIDADE);
     --Obter o ID da operação
     SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
@@ -780,7 +806,7 @@ CREATE OR REPLACE PROCEDURE registerColheita(plantacaoID NUMBER,parcelaID NUMBER
 
 BEGIN
     verifyParcelaInfo(parcelaID);
-    verifyPlantacaoInfo(plantacaoID, parcelaID);
+    verifyPlantacaoInfo(plantacaoID, parcelaID, dataOperacao);
     verifyDateInfo(dataOperacao);
     --Obter o ID da operação
     SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
@@ -789,6 +815,35 @@ BEGIN
     VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
 
     INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerFatorDeProducao(quantidade NUMBER,parcelaID NUMBER,dataOperacao DATE, fatorProducaoID NUMBER, modoFertilizacaoID NUMBER) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 4;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'kg';
+    idOperacao NUMBER;
+
+BEGIN
+    verifyParcelaInfo(parcelaID);
+    verifyDateInfo(dataOperacao);
+    verifyFatorDeProducaoInfo(fatorProducaoID);
+    verifyModoFertilizacaoInfo(modoFertilizacaoID);
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+    INSERT INTO OperacaoFator(OperacaoID, FatorProducaoID) VALUES(idOperacao, fatorProducaoID);
+    INSERT INTO Fertilizacao(OperacaoID, ModoFertilizacaoID) VALUES(idOperacao, modoFertilizacaoID);
+    INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) VALUES (idOperacao, parcelaID);
+
     COMMIT;
 EXCEPTION
     WHEN OTHERS THEN

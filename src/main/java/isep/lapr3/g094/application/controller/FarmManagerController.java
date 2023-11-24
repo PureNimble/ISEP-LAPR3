@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import isep.lapr3.g094.repository.FarmManagerRepository;
 import isep.lapr3.g094.repository.Repositories;
 
-
 public class FarmManagerController {
 
     private FarmManagerRepository farmManagerRepository;
@@ -25,26 +24,30 @@ public class FarmManagerController {
     }
 
     // Your code here
-    public boolean registerOperation(char operationType, double quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
+    public void registerOperation(char operationType, double quantidade, int parcelaID, int plantacaoID,
+            Date dataOperacao)
             throws SQLException {
         switch (Character.toUpperCase(operationType)) {
             case 'M':
-                return farmManagerRepository.registerMonda(quantidade, parcelaID, plantacaoID, dataOperacao);
+                farmManagerRepository.registerMonda(quantidade, parcelaID, plantacaoID, dataOperacao);
             case 'C':
-                return farmManagerRepository.registerColheita(quantidade, parcelaID, plantacaoID, dataOperacao);
-            case 'F':
-                return farmManagerRepository.registerFatorDeProducao(quantidade, parcelaID, plantacaoID, dataOperacao);
+                farmManagerRepository.registerColheita(quantidade, parcelaID, plantacaoID, dataOperacao);
             case 'P':
-                return farmManagerRepository.registerPoda(quantidade, parcelaID, plantacaoID, dataOperacao);
-            default:
-                return false;
+                farmManagerRepository.registerPoda(quantidade, parcelaID, plantacaoID, dataOperacao);
         }
     }
 
-    public boolean registerSemeadura(char operationType, double quantidade, int parcelaID, int plantacaoID, Date dataOperacao,
+    public void registerSemeadura(double quantidade, int parcelaID, int plantacaoID, Date dataOperacao,
             double area)
             throws SQLException {
-        return farmManagerRepository.registerSemeadura(quantidade, parcelaID, plantacaoID, dataOperacao, area);
+        farmManagerRepository.registerSemeadura(quantidade, parcelaID, plantacaoID, dataOperacao, area);
+    }
+
+    public void registerFatorDeProducao(double quantidade, int parcelaID, Date dataOperacao,
+            int fatorProducaoID, int modoFertilizacaoID)
+            throws SQLException {
+        farmManagerRepository.registerFatorDeProducao(quantidade, parcelaID, dataOperacao,
+                fatorProducaoID, modoFertilizacaoID);
     }
 
 }

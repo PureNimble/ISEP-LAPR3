@@ -8,7 +8,7 @@ CREATE OR REPLACE PROCEDURE registerMonda(plantacaoID NUMBER,parcelaID NUMBER,da
 BEGIN
     verifyDateInfo(dataOperacao);
     verifyParcelaInfo(parcelaID);
-    verifyPlantacaoInfo(plantacaoID,parcelaID);
+    verifyPlantacaoInfo(plantacaoID,parcelaID,dataOperacao);
     verifyQuantityInfo(plantacaoID,parcelaID,quantidade, UNIDADE);
     --Obter o ID da operação
     SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
