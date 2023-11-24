@@ -55,46 +55,43 @@ public class BasketDistributionUI implements Runnable {
 
     private void getIdealVertices() {
         Map<String, Criteria> idealVertices = graphController.getVerticesIdeais();
-
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
                 .mapToInt(String::length)
                 .max()
                 .orElse(0), "ID".length());
-
         // Calculate the maximum length of the degrees
         int maxDegreeLength = Math.max(idealVertices.values().stream()
                 .mapToInt(criteria -> Integer.toString(criteria.getDegree()).length())
                 .max()
                 .orElse(0), "Grau".length());
-
         // Calculate the maximum length of the number of minimum paths
         int maxNumPathsLength = Math.max(idealVertices.values().stream()
                 .mapToInt(criteria -> Integer.toString(criteria.getNumberMinimumPaths()).length())
                 .max()
                 .orElse(0), "Nº Caminhos mínimos".length());
 
-        String formatString = "| %" + maxIdLength + "s | %" + maxDegreeLength + "d | %" + maxNumPathsLength + "d |\n";
-
+        int maxLength = Math.max(maxIdLength, Math.max(maxDegreeLength, maxNumPathsLength));
         for (Map.Entry<String, Criteria> entry : idealVertices.entrySet()) {
-            System.out.println("-------------------------------------------------");
-            System.out.printf(formatString, "\t" + entry.getKey() + "\t", entry.getValue().getDegree(),
-                    entry.getValue().getNumberMinimumPaths());
-            printPaths(entry.getKey(), entry.getValue().getPaths(), entry.getValue().getDistances());
-        }
+            System.out.println("--------------------------------------------------------------------");
+            String formatString = "| ID: %" + maxLength/3 + "s | Degree: %" + maxLength/3 + "d | Número de Caminhos Mínimos: %" + maxLength/3 + "d |\n";
+            System.out.printf(formatString, entry.getKey(), entry.getValue().getDegree(), entry.getValue().getNumberMinimumPaths());
+            printPaths(entry.getKey(), entry.getValue().getPaths(), entry.getValue().getDistances(), maxLength);
+        }   
     }
 
-    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances) {
+    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances, int maxLength) {
         if (arrayList.size() != (distances.size())) {
-            throw new IllegalArgumentException("The two lists must be the same size");
+            throw new IllegalArgumentException("As duas listas têm de ter o mesmo tamanho");
         }
-
         for (int i = 0; i < arrayList.size(); i++) {
             LinkedList<Location> path = arrayList.get(i);
             Integer distance = distances.get(i);
-            System.out.println("-------------------------------------------------");
-            System.out.println("|     ID Destino: " + path.getLast().getId() + "   Distância: " + distance + "m    |");
+            String formatString = "| ID Destino: %" + (maxLength-1) + "s | Distância: %" + (maxLength-1) + "d m |\n";
+            System.out.println("--------------------------------------------------------------------");
+            System.out.printf(formatString, path.getLast().getId(), distance);
         }
+        System.out.println("--------------------------------------------------------------------");
     }
 
     private void getMinimal() {

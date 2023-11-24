@@ -25,7 +25,7 @@ public class FarmManagerController {
     }
 
     // Your code here
-    public boolean registerOperation(char operationType, int quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
+    public boolean registerOperation(char operationType, double quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
             throws SQLException {
         switch (Character.toUpperCase(operationType)) {
             case 'M':
@@ -41,7 +41,7 @@ public class FarmManagerController {
         }
     }
 
-    public boolean registerSemeadura(char operationType, int quantidade, int parcelaID, int plantacaoID, Date dataOperacao,
+    public boolean registerSemeadura(char operationType, double quantidade, int parcelaID, int plantacaoID, Date dataOperacao,
             double area)
             throws SQLException {
         return farmManagerRepository.registerSemeadura(quantidade, parcelaID, plantacaoID, dataOperacao, area);

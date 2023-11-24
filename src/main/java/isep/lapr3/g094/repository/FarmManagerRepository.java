@@ -11,14 +11,14 @@ import java.sql.SQLException;
 
 public class FarmManagerRepository {
 
-	public boolean registerPoda(int quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
+	public boolean registerPoda(double quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
 			throws SQLException {
 
 		CallableStatement callStmt = null;
 		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
 			callStmt = connection.prepareCall("{ call registerPoda(?,?,?,?) }");
-			callStmt.setInt(1, quantidade);
+			callStmt.setDouble(1, quantidade);
 			callStmt.setInt(2, parcelaID);
 			callStmt.setInt(3, plantacaoID);
 			callStmt.setDate(4, dataOperacao);
@@ -30,14 +30,14 @@ public class FarmManagerRepository {
 		}
 	}
 
-	public boolean registerFatorDeProducao(int quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
+	public boolean registerFatorDeProducao(double quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
 			throws SQLException {
 		Connection connection = DatabaseConnection.getInstance().getConnection();
 
 		return false;
 	}
 
-	public boolean registerColheita(int quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
+	public boolean registerColheita(double quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
 			throws SQLException {
 		CallableStatement callStmt = null;
 		try {
@@ -46,7 +46,7 @@ public class FarmManagerRepository {
 			callStmt.setInt(1, plantacaoID);
 			callStmt.setInt(2, parcelaID);
 			callStmt.setDate(3, dataOperacao);
-			callStmt.setInt(4, quantidade);
+			callStmt.setDouble(4, quantidade);
 			return callStmt.execute();
 		} finally {
 			if (callStmt != null) {
@@ -55,7 +55,7 @@ public class FarmManagerRepository {
 		}
 	}
 
-	public boolean registerSemeadura(int quantidade, int parcelaID, int culturaID, Date dataOperacao, double area)
+	public boolean registerSemeadura(double quantidade, int parcelaID, int culturaID, Date dataOperacao, double area)
 			throws SQLException {
 		CallableStatement callStmt = null;
 		try {
@@ -64,7 +64,7 @@ public class FarmManagerRepository {
 			callStmt.setInt(1, culturaID);
 			callStmt.setInt(2, parcelaID);
 			callStmt.setDate(3, dataOperacao);
-			callStmt.setInt(4, quantidade);
+			callStmt.setDouble(4, quantidade);
 			callStmt.setDouble(5, area);
 			return callStmt.execute();
 		} finally {
@@ -74,7 +74,7 @@ public class FarmManagerRepository {
 		}
 	}
 
-	public boolean registerMonda(int quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
+	public boolean registerMonda(double quantidade, int parcelaID, int plantacaoID, Date dataOperacao)
 			throws SQLException {
 
 		CallableStatement callStmt = null;
@@ -84,7 +84,7 @@ public class FarmManagerRepository {
 			callStmt.setInt(1, plantacaoID);
 			callStmt.setInt(2, parcelaID);
 			callStmt.setDate(3, dataOperacao);
-			callStmt.setInt(4, quantidade);
+			callStmt.setDouble(4, quantidade);
 			return callStmt.execute();
 		} finally {
 			if (callStmt != null) {
@@ -93,14 +93,14 @@ public class FarmManagerRepository {
 		}
 	}
 
-	public void registerRega(int quantidade, int setorID, Date dataOperacao, Time hora)
+	public void registerRega(double quantidade, int setorID, Date dataOperacao, Time hora)
 			throws SQLException {
 
 		CallableStatement callStmt = null;
 		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
 			callStmt = connection.prepareCall("{ call registerRega(?,?,?,?) }");
-			callStmt.setInt(1, quantidade);
+			callStmt.setDouble(1, quantidade);
 			callStmt.setInt(2, setorID);
 			callStmt.setDate(3, dataOperacao);
 			callStmt.setTime(4, hora);

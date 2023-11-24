@@ -50,3 +50,6 @@ Thumbs.db
 *.wmv
 *.lck
 *.bak_000f
+
+# Oracle properties files
+*.properties

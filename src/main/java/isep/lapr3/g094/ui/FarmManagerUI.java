@@ -33,19 +33,21 @@ public class FarmManagerUI implements Runnable {
     private void createOperation(char operationType) {
 
         int parcelaID = Utils.readIntegerFromConsole("Parcela ID: ");
-        int plantacaoID = Utils.readIntegerFromConsole("Plantação ID: ");
-        int quantidade = Utils.readIntegerFromConsole("Quantidade: ");
+        double quantidade = Utils.readDoubleFromConsole("Quantidade: ");
         java.util.Date utilDate = Utils.readDateFromConsole("Data da operação: ");
         java.sql.Date dataOperacao = java.sql.Date
                 .valueOf(utilDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
         try {
             if (operationType == 'S') {
+                int culturaID = Utils.readIntegerFromConsole("Cultura ID: ");
                 double area = Utils.readDoubleFromConsole("Area: ");
-                farmManagerController.registerSemeadura(operationType, quantidade, parcelaID, plantacaoID, dataOperacao,
+                farmManagerController.registerSemeadura(operationType, quantidade, parcelaID, culturaID, dataOperacao,
                         area);
-            } else
+            } else{
+                int plantacaoID = Utils.readIntegerFromConsole("Plantação ID: ");
                 farmManagerController.registerOperation(operationType, quantidade, parcelaID, plantacaoID, dataOperacao);
+            }
         } catch (SQLException e) {
             System.out.println("\nErro ao registar operação");
             System.out.println("Motivo: " + e.getMessage());

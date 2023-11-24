@@ -18,9 +18,9 @@ BEGIN
 
     INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
     VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
-    INSERT INTO OperacaoParcela(OperacaoID, ParcelaID) 
+    INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) 
     VALUES (idOperacao, parcelaID);
-    INSERT INTO Plantacao(PlantacaoID, DataInicial, DataFinal, Quantidade, Unidade, EstadoFenologico, CulturaID, ParcelaEspacoID) 
+    INSERT INTO Plantacao(ID, DataInicial, DataFinal, Quantidade, Unidade, EstadoFenologico, CulturaID, ParcelaEspacoID) 
     VALUES (idPlantacao, dataOperacao, NULL, area, UNIDADE2, NULL, culturaID, parcelaID);
     
     COMMIT;
