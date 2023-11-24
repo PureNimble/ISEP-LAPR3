@@ -1,12 +1,15 @@
 CREATE OR REPLACE PROCEDURE registerMonda(plantacaoID NUMBER,parcelaID NUMBER,dataOperacao DATE,quantidade NUMBER) IS
 
-    TIPO_OPERACAO CONSTANT NUMBER := 7;
+    TIPO_OPERACAO CONSTANT NUMBER := 9;
     CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
     UNIDADE CONSTANT VARCHAR2(10) := 'ha';
     idOperacao NUMBER;
 
 BEGIN
-    verifyOperacaoInfo(plantacaoID,parcelaID,dataOperacao,quantidade,UNIDADE);
+    verifyDateInfo(dataOperacao);
+    verifyParcelaInfo(parcelaID);
+    verifyPlantacaoInfo(plantacaoID,parcelaID);
+    verifyQuantityInfo(plantacaoID,parcelaID,quantidade, UNIDADE);
     --Obter o ID da operação
     SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
 
@@ -14,7 +17,7 @@ BEGIN
     VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
 
     IF plantacaoID IS NULL THEN 
-        INSERT INTO OperacaoParcela(OperacaoID, ParcelaID) VALUES (idOperacao, parcelaID);
+        INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) VALUES (idOperacao, parcelaID);
     ELSE
         INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
     END IF;
