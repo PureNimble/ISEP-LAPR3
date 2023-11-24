@@ -10,6 +10,7 @@ import isep.lapr3.g094.repository.GraphRepository;
 import isep.lapr3.g094.repository.Repositories;
 import isep.lapr3.g094.struct.graph.Algorithms;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
+import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
 public class Service {
 
@@ -194,5 +195,25 @@ public class Service {
         Pair<FurthestPoints, Pair<List<Location>, Integer>> output = new Pair<>(
                 new FurthestPoints(furthestPoints, shortPath, distances), new Pair<>(rechargeLocations, distance));
         return output;
+    }
+
+    public List<MatrixGraph<Location, Integer>> divideIntoClusters(List<String> idsSelected){
+        Set<Location> listHubs = new LinkedHashSet<>();
+        for (String id : idsSelected){
+            for(Location location : graphRepository.getBasketDistribution().vertices()){
+                if(id.equals(location.getId())){
+                    listHubs.add(location);
+                    break;
+                }
+            }
+        }
+        MatrixGraph<Location, Integer> minDistGraph = Algorithms.minDistGraph(graphRepository.getBasketDistribution(), Integer::compare, Integer::sum);
+        return  Algorithms.divideGraph(minDistGraph, listHubs);
+    }
+
+    public float getCoefSil(List<MatrixGraph<Location, Integer>> clusters){
+        LinkedList<Location> shortPath = new LinkedList<>();
+        MatrixGraph<Location, Integer> minDistGraph = Algorithms.minDistGraph(graphRepository.getBasketDistribution(), Integer::compare, Integer::sum);
+        return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
 }
