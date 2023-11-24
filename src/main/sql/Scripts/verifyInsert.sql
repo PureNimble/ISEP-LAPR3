@@ -74,10 +74,7 @@ BEGIN
         IF quantidade > areaParcela THEN 
             RAISE invalidQuantidade;
         END IF;
-        SELECT SUM(Quantidade) INTO quantidadeParcela FROM Plantacao WHERE ParcelaEspacoID = parcelaID AND DataFinal IS NULL;
-            IF quantidade > (areaParcela - quantidadeParcela) THEN 
-                RAISE invalidQuantidade;
-            END IF;
+
     ELSE
 
         SELECT QUANTIDADE INTO quantidadePlantacao FROM PLANTACAO WHERE ID = plantacaoID;
@@ -91,4 +88,24 @@ EXCEPTION
     WHEN invalidQuantidade THEN 
         RAISE_APPLICATION_ERROR(-20001,'Quantidade fornecida superior à disponivel.');
 END verifyQuantityInfo;
+/
+
+--Check verifyAvailableQuantity
+CREATE OR REPLACE PROCEDURE verifyAvailableAreaInfo(parcelaID NUMBER, quantidade NUMBER) IS
+    areaParcela NUMBER;
+    quantidadeParcela NUMBER;
+    invalidQuantidade EXCEPTION;
+
+BEGIN
+        
+    SELECT Area INTO areaParcela FROM Espaco WHERE ID = parcelaID;
+    SELECT SUM(Quantidade) INTO quantidadeParcela FROM Plantacao WHERE ParcelaEspacoID = parcelaID AND DataFinal IS NULL;
+        IF quantidade > (areaParcela - quantidadeParcela) THEN 
+            RAISE invalidQuantidade;
+        END IF;
+
+EXCEPTION
+    WHEN invalidQuantidade THEN 
+        RAISE_APPLICATION_ERROR(-20001,'Area fornecida superior à disponivel.');
+END verifyAvailableAreaInfo;
 /

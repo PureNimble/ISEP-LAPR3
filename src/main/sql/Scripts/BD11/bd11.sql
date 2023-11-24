@@ -11,6 +11,7 @@ BEGIN
     verifyDateInfo(dataOperacao);
     verifyParcelaInfo(parcelaID);
     verifyQuantityInfo(idPlantacao, parcelaID, area, UNIDADE2);
+    verifyAvailableAreaInfo(parcelaID, quantidade);
     
     --Obter o ID da operação
     SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;

@@ -93,14 +93,14 @@ public class FarmManagerRepository {
 		}
 	}
 
-	public void registerRega(double quantidade, int setorID, Date dataOperacao, Time hora)
+	public void registerRega(int quantidade, int setorID, Date dataOperacao, Time hora)
 			throws SQLException {
 
 		CallableStatement callStmt = null;
 		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
 			callStmt = connection.prepareCall("{ call registerRega(?,?,?,?) }");
-			callStmt.setDouble(1, quantidade);
+			callStmt.setInt(1, quantidade);
 			callStmt.setInt(2, setorID);
 			callStmt.setDate(3, dataOperacao);
 			callStmt.setTime(4, hora);

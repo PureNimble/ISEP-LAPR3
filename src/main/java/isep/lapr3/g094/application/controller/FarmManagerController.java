@@ -30,7 +30,7 @@ public class FarmManagerController {
         switch (Character.toUpperCase(operationType)) {
             case 'M':
                 return farmManagerRepository.registerMonda(quantidade, parcelaID, plantacaoID, dataOperacao);
-            case 'R':
+            case 'C':
                 return farmManagerRepository.registerColheita(quantidade, parcelaID, plantacaoID, dataOperacao);
             case 'F':
                 return farmManagerRepository.registerFatorDeProducao(quantidade, parcelaID, plantacaoID, dataOperacao);
