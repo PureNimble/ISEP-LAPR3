@@ -7,7 +7,6 @@ import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.struct.graph.Graph;
-import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
 
@@ -53,7 +52,7 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void getIdealVertices() {
-        
+
         Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais();
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()

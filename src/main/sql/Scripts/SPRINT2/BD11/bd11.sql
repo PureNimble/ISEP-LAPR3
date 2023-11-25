@@ -25,6 +25,7 @@ BEGIN
     VALUES (idPlantacao, dataOperacao, NULL, area, UNIDADE2, NULL, culturaID, parcelaID);
     
     COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Operação registada com sucesso!');
 EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;

@@ -21,7 +21,9 @@ BEGIN
     ELSE
         INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
     END IF;
+    
     COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Operação registada com sucesso!');
 EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;

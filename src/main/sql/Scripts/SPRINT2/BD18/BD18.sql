@@ -12,6 +12,7 @@ BEGIN
     AND Operacao.DataOperacao BETWEEN p_StartDate AND p_EndDate
     AND OP.ParcelaEspacoID = parcelaID
     GROUP BY OP.Designacao
+    
 END;
 /
 
