@@ -26,8 +26,8 @@ check_token:
     incq %rsi               # token[i++]
     movb (%rdi), %bl
     movb (%rsi), %cl
-    cmpb $0, %cl           # if token reaches end
-    je extract_value_prologue
+    cmpb $58, %cl           # if token reaches end
+    je final_check
     cmpb %bl, %cl           # if input[i] != token[i]
     jne check_token_epilogue
     jmp check_token         # loop check_token
@@ -35,27 +35,38 @@ check_token:
 check_token_epilogue:
     popq %rsi
     jmp token_loop
-
+    
+final_check:
+	cmpb $58, %bl           # if token in string also ends
+    je extract_value_prologue
+    jmp check_token
+	
+	
 extract_value_prologue:
     popq %rsi
+    movl $0, %ecx
 
 extract_value:
     incq %rdi
     movb (%rdi), %bl
     cmpb $46, %bl
-    je end
+    je extract_value
     cmpb $35, %bl
     je end
     cmpb $0, %bl
     je end
-    movl (%rdx), %ecx
     imul $10, %ecx
     movsbl %bl, %eax
     subl $48, %eax
     addl %eax, %ecx
-    movl %ecx, (%rdx)
     jmp extract_value
 
 end:
+	cmp $0, %ecx
+	je skip
+	movl %ecx, (%rdx)
+    
+skip:
     popq %rbx
 	ret
+
