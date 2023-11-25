@@ -153,25 +153,39 @@ public class Service {
         // furthest points
         Pair<Location, Location> furthestPoints = Algorithms.furthestPoints(distributionGraph,
                 Integer::compare, Integer::sum, 0);
+        // create shortest path
         LinkedList<Location> shortPath = new LinkedList<>();
+        // get shortest path
         int distance = Algorithms.shortestPath(distributionGraph, furthestPoints.getFirst(),
                 furthestPoints.getSecond(), Integer::compare, Integer::sum, 0, shortPath);
-        int distanceAutonomy = 0;
+        // nao alterar
+        int distanceAutonomy = autonomy;
         List<Location> rechargeLocations = new ArrayList<>();
         List<Integer> distances = new ArrayList<>();
         rechargeLocations.add(shortPath.getFirst());
+        // get recharge locations
         for (int i = 0; i < shortPath.size() - 1; i++) {
             Location location1 = shortPath.get(i);
             Location location2 = shortPath.get(i + 1);
             int distanceBetweenPoints = distributionGraph.edge(location1, location2).getWeight();
             distances.add(distanceBetweenPoints);
-            if (distanceBetweenPoints > autonomy) {
-                rechargeLocations.add(null);
-            }
-            distanceAutonomy += distanceBetweenPoints;
-            if (distanceAutonomy > autonomy) {
-                rechargeLocations.add(location1);
-                distanceAutonomy = 0;
+            try {
+                // if distance between points is greater than autonomy
+                if (distanceBetweenPoints > autonomy) {
+                    throw new RuntimeException("\nO veiculo ficou sem bateria na viagem entre local: "
+                            + location1.getId() + " e " + location2.getId() + "\n");
+                }
+
+                distanceAutonomy -= distanceBetweenPoints;
+                // if distance autonomy is greater than autonomy
+                if (distanceAutonomy < distanceBetweenPoints && rechargeLocations.get(0) != location1) {
+                    rechargeLocations.add(location1);
+                    distanceAutonomy = autonomy;
+                }
+            } catch (RuntimeException e) {
+                // Declaring ANSI_RESET so that we can reset the color 
+                System.err.println(e.getMessage());
+                break;
             }
         }
 
@@ -211,7 +225,13 @@ public class Service {
         return map;
     }
 
+    <<<<<<<HEAD
+
     public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected){
+=======
+
+    public List<MatrixGraph<Location, Integer>> divideIntoClusters(List<String> idsSelected) {
+>>>>>>> 82ee079 (ISSUE-17 ISSUE-66 #time 1h30m #Resolução-em-análise)
         Set<Location> listHubs = new LinkedHashSet<>();
         for (String id : idsSelected) {
             for (Location location : graphRepository.getBasketDistribution().vertices()) {
@@ -226,9 +246,10 @@ public class Service {
         return  Algorithms.divideGraph(minDistGraph, listHubs, Integer::compare, Integer::sum, 0, shortPath);
     }
 
-    public float getCoefSil(List<Graph<Location, Integer>> clusters){
+    public float getCoefSil(List<Graph<Location, Integer>> clusters) {
         LinkedList<Location> shortPath = new LinkedList<>();
         Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getBasketDistribution());
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
+
 }
