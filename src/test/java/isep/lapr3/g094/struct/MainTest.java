@@ -1,5 +1,6 @@
 package isep.lapr3.g094.struct;
 
+import isep.lapr3.g094.struct.graph.Graph;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -375,4 +376,89 @@ public class MainTest {
             assertTrue(expected.contains(location.getId()));
         }
     }
+    @Test
+    void testGetMinimalPathsPathExistsBetweenLocalizations() {
+        System.out.println("Testing GetMinimalPathsPathExistsBetweenLocalizations...");
+
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(BASKET_DISTRIBUTION);
+
+        for (Location location1 : testMap.keySet()) {
+            location1 = service.locationById(location1.getId());
+            for (Location location2 : testMap.get(location1).keySet()) {
+                location2 = service.locationById(location2.getId());
+                assertTrue(minDistGraph.edge(location1, location2) != null);
+            }
+        }
+    }
+
+    @Test
+    void testGetMinimalPathsDistanceBetweenLocalizations() {
+        System.out.println("Testing GetMinimalPathsDistanceBetweenLocalizations...");
+
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(BASKET_DISTRIBUTION);
+
+        for (Location location1 : testMap.keySet()) {
+            location1 = service.locationById(location1.getId());
+            for (Location location2 : testMap.get(location1).keySet()) {
+                location2 = service.locationById(location2.getId());
+                //verificar se a distancia entre dois locais está correta
+                assertEquals(minDistGraph.edge(location1, location2).getWeight(), testMap.get(location1).get(location2));
+            }
+        }
+    }
+
+    @Test
+    void testGetMinimalPathsMinimalDistanceBetweenLocalizations() {
+        System.out.println("Testing GetMinimalPathsMinimalDistanceBetweenLocalizations...");
+
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(BASKET_DISTRIBUTION);
+
+        for (Location location1 : testMap.keySet()) {
+            location1 = service.locationById(location1.getId());
+            for (Location location2 : testMap.get(location1).keySet()) {
+                location2 = service.locationById(location2.getId());
+                assertTrue(minDistGraph.edge(location1, location2).getWeight() <= testMap.get(location1).
+                        get(location2));
+            }
+        }
+    }
+
+    @Test
+    void testGetMinimalPathsDistanceBetweenLocalizationsNotNegative() {
+        System.out.println("Testing GetMinimalPathsDistanceBetweenLocalizationsNotNegative...");
+
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+
+        for (Location location1 : testMap.keySet()) {
+            location1 = service.locationById(location1.getId());
+            for (Location location2 : testMap.get(location1).keySet()) {
+                location2 = service.locationById(location2.getId());
+                assertTrue(testMap.get(location1).get(location2) >= 0);
+            }
+        }
+    }
+
+    @Test
+    void testGetMinimalPathsPrint() {
+        System.out.println("Testing GetMinimalPathsPrint...");
+
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+        int totalDistance = 0;
+
+        for (Location location1 : testMap.keySet()) {
+            location1 = service.locationById(location1.getId());
+            for (Location location2 : testMap.get(location1).keySet()) {
+                location2 = service.locationById(location2.getId());
+                System.out.println(location1.getId() + " -> " + location2.getId() + "; Distância: "
+                        + testMap.get(location1).get(location2));
+
+                totalDistance += testMap.get(location1).get(location2);
+            }
+        }
+        System.out.println("Distância total: " + totalDistance);
+    }
+
 }

@@ -142,7 +142,6 @@ public class BasketDistributionUI implements Runnable {
     private void getMinimalPaths() {
         Map<Location, Map<Location, Integer>> map = graphController.getMinimalPaths();
         Integer sumDistance = 0;
-        System.out.println("Map size: " + map.size());
         for (Map.Entry<Location, Map<Location, Integer>> entry : map.entrySet()) {
             String locationId = entry.getKey().getId();
             for (Map.Entry<Location, Integer> entry2 : entry.getValue().entrySet()) {
@@ -154,23 +153,6 @@ public class BasketDistributionUI implements Runnable {
         }
         System.out.print("\n");
         System.out.println("Distância total: " + sumDistance);
-        /*
-        MapGraph<Location, Integer> graph = graphController.getBasketDistribution();
-        Integer sumDistance = 0;
-        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graph);
-        for (Edge<Location, Integer> edge : minDistGraph.edges()) {
-            Location location = edge.getVOrig();
-            Location location1 = edge.getVDest();
-            String locationId = location.getId();
-            String location1Id = location1.getId();
-            int distance = edge.getWeight();
-            if (locationId.compareTo(location1Id) < 0) {
-                sumDistance = sumDistance + distance;
-                System.out.println(locationId + " -> " + location1Id + " Distância: " + distance);
-            }
-        }
-        System.out.println("\n");
-        System.out.println("Distância total: " + sumDistance);*/
     }
 
     private void divideDistribution() {
