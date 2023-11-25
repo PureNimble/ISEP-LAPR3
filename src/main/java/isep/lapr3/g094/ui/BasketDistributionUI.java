@@ -6,6 +6,7 @@ import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
+import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
@@ -203,7 +204,7 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void printClusters(List<String> idsSelected) {
-        List<MatrixGraph<Location, Integer>> newList = graphController.divideIntoClusters(idsSelected);
+        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(idsSelected);
         System.out.println("Coeficiente de silhouette: " + graphController.getCoefSil(newList));
         System.out.println(newList.toString());
     }

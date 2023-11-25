@@ -230,7 +230,9 @@ public class Service {
         return map;
     }
 
-    public List<MatrixGraph<Location, Integer>> divideIntoClusters(List<String> idsSelected){
+
+
+    public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected){
         Set<Location> listHubs = new LinkedHashSet<>();
         for (String id : idsSelected){
             for(Location location : graphRepository.getBasketDistribution().vertices()){
@@ -240,13 +242,14 @@ public class Service {
                 }
             }
         }
-        MatrixGraph<Location, Integer> minDistGraph = Algorithms.minDistGraph(graphRepository.getBasketDistribution(), Integer::compare, Integer::sum);
-        return  Algorithms.divideGraph(minDistGraph, listHubs);
+        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getBasketDistribution());
+        LinkedList<Location> shortPath = new LinkedList<>();
+        return  Algorithms.divideGraph(minDistGraph, listHubs, Integer::compare, Integer::sum, 0, shortPath);
     }
 
-    public float getCoefSil(List<MatrixGraph<Location, Integer>> clusters){
+    public float getCoefSil(List<Graph<Location, Integer>> clusters){
         LinkedList<Location> shortPath = new LinkedList<>();
-        MatrixGraph<Location, Integer> minDistGraph = Algorithms.minDistGraph(graphRepository.getBasketDistribution(), Integer::compare, Integer::sum);
+        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getBasketDistribution());
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
 }
