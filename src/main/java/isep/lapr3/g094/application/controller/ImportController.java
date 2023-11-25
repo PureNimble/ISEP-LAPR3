@@ -98,8 +98,8 @@ public class ImportController {
 
     public boolean importToGraph() {
         boolean check = true;
-        List<String> locations = importClass.importTxtFile("esinf/locais_small.csv", true);
-        List<String> distances = importClass.importTxtFile("esinf/distancias_small.csv", true);
+        List<String> locations = importClass.importTxtFile("esinf/locais_big.csv", true);
+        List<String> distances = importClass.importTxtFile("esinf/distancias_big.csv", true);
         if (locations.isEmpty() || distances.isEmpty())
             return false;
         if (!service.createLocation(locations) || !service.addDistance(distances))

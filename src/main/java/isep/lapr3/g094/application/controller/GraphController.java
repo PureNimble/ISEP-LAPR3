@@ -1,7 +1,5 @@
 package isep.lapr3.g094.application.controller;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,14 +42,6 @@ public class GraphController {
         return service.getNumDistances();
     }
 
-    public int keyLocation(String id) {
-        return service.keyLocation(id);
-    }
-
-    public Location locationByKey(int key) {
-        return service.locationByKey(key);
-    }
-
     public Location locationById(String id) {
         return service.locationById(id);
     }
@@ -60,35 +50,7 @@ public class GraphController {
         return service.distanceLocations(id1, id2);
     }
 
-    public <V, E> LinkedList<Location> BreadthFirstSearch(String id) {
-        return service.BreadthFirstSearch(id);
-    }
-
-    public <V, E> LinkedList<Location> DepthFirstSearch(String id) {
-        return service.DepthFirstSearch(id);
-    }
-
-    public <V, E> ArrayList<LinkedList<Location>> allPaths(String idOrigin, String idDest) {
-        return service.allPaths(idOrigin, idDest);
-    }
-
-    public <V, E> Integer shortestPath(String idOrigin, String idDest, LinkedList<Location> shortPath) {
-        return service.shortestPath(idOrigin, idDest, shortPath);
-    }
-
-    public <V, E> boolean shortestPaths(String id) {
-        return service.shortestPaths(id);
-    }
-
-    public <V> Pair<Location, Location> furthestPoints() {
-        return service.furthestPoints();
-    }
-
-    public int getLocationDegree(String id) {
-        return service.getLocationDegree(id);
-    }
-
-    public Map<String, Criteria> getVerticesIdeais() {
+    public Map<Location, Criteria> getVerticesIdeais() {
         return service.getVerticesIdeais();
     }
 

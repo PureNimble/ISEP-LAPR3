@@ -53,6 +53,7 @@ public class FarmManagerUI implements Runnable {
                 int plantacaoID = Utils.readIntegerFromConsole("Plantação ID: ");
                 farmManagerController.registerOperation(operationType, quantidade, parcelaID, plantacaoID, dataOperacao);
             }
+            System.out.println("\nOperação registada com sucesso!");
         } catch (SQLException e) {
             System.out.println("\nErro ao registar operação");
             System.out.println("Motivo: " + e.getMessage());

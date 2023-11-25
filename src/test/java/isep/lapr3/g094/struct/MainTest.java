@@ -1,30 +1,38 @@
 package isep.lapr3.g094.struct;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import isep.lapr3.g094.application.controller.GraphController;
 import isep.lapr3.g094.application.controller.ImportController;
+import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.repository.GraphRepository;
 import isep.lapr3.g094.repository.Repositories;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import isep.lapr3.g094.services.Service;
+import isep.lapr3.g094.services.Services;
+import isep.lapr3.g094.struct.graph.Algorithms;
+import isep.lapr3.g094.struct.graph.map.MapGraph;
 
 public class MainTest {
 
     private GraphController graphController;
     private GraphRepository graphRepository;
+    private Service service;
+    private MapGraph<Location, Integer> BASKET_DISTRIBUTION = new MapGraph<>(false);
 
     @BeforeEach
     void setUp() {
         Repositories repositories = Repositories.getInstance();
+        Services services = Services.getInstance();
         graphRepository = repositories.getGraphRepository();
+        service = services.getService();
         ImportController importController = new ImportController();
         importController.importToGraph();
         graphController = new GraphController();
+        BASKET_DISTRIBUTION = graphRepository.getBasketDistribution();
     }
 
     @Test
@@ -53,24 +61,40 @@ public class MainTest {
     void testBasketDistributionLocationByKey() {
         System.out.println("Testing BasketDistributionLocationByKey...");
 
-        assertEquals("CT43", graphController.locationByKey(0).getId());
-        assertEquals("CT268", graphController.locationByKey(12).getId());
-        assertEquals("CT137", graphController.locationByKey(232).getId());
-        assertEquals("CT159", graphController.locationByKey(322).getId());
-        assertNull(graphController.locationByKey(999));
+        assertNull(service.locationByKey(1000000));
+        assertEquals("CT43", service.locationByKey(0).getId());
+        assertEquals("CT211", service.locationByKey(69).getId());
+        assertEquals("CT305", service.locationByKey(123).getId());
+        assertEquals("CT253", service.locationByKey(265).getId());
+        assertEquals("CT46", service.locationByKey(321).getId());
+        assertEquals("CT159", service.locationByKey(322).getId());
+        assertNull(service.locationByKey(999));
     }
 
     @Test
-    void testBasketDistributionKeyByLocation() {
+    void testBasketDistributionLocationById() {
+        System.out.println("Testing BasketDistributionLocationById...");
+
+        assertNull(service.locationById("CT999"));
+        assertEquals(new Location("CT43"), service.locationById("CT43"));
+        assertEquals(new Location("CT211"), service.locationById("CT211"));
+        assertEquals(new Location("CT305"), service.locationById("CT305"));
+        assertEquals(new Location("CT253"), service.locationById("CT253"));
+        assertEquals(new Location("CT46"), service.locationById("CT46"));
+        assertEquals(new Location("CT159"), service.locationById("CT159"));
+    }
+
+    @Test
+    void testBasketDistributionKeyLocation() {
         System.out.println("Testing BasketDistributionKeyLocation...");
 
-        assertEquals(0, graphController.keyLocation("CT43"));
-        assertEquals(123, graphController.keyLocation("CT305"));
-        assertEquals(169, graphController.keyLocation("CT195"));
-        assertEquals(222, graphController.keyLocation("CT201"));
-        assertEquals(269, graphController.keyLocation("CT318"));
-        assertEquals(322, graphController.keyLocation("CT159"));
-
+        assertEquals(-1, service.keyLocation(new Location("CT999")));
+        assertEquals(0, service.keyLocation(new Location("CT43")));
+        assertEquals(69, service.keyLocation(new Location("CT211")));
+        assertEquals(123, service.keyLocation(new Location("CT305")));
+        assertEquals(265, service.keyLocation(new Location("CT253")));
+        assertEquals(321, service.keyLocation(new Location("CT46")));
+        assertEquals(322, service.keyLocation(new Location("CT159")));
     }
 
     @Test
@@ -88,11 +112,118 @@ public class MainTest {
     }
 
     @Test
+    void testBasketDistributionBreadthFirstSearch() {
+        System.out.println("Testing BasketDistributionBreadthFirstSearch...");
+
+        Assertions.assertNull(Algorithms.BreadthFirstSearch(BASKET_DISTRIBUTION, new Location("CT999")));
+
+        LinkedList<Location> path = Algorithms.BreadthFirstSearch(BASKET_DISTRIBUTION, new Location("CT1"));
+        assertEquals(323, path.size());
+
+        assertEquals(new Location("CT1"), path.peekFirst());
+        assertEquals(new Location("CT172"), path.peekLast());
+
+        path = Algorithms.BreadthFirstSearch(BASKET_DISTRIBUTION, new Location("CT69"));
+        assertEquals(new Location("CT69"), path.peekFirst());
+        assertEquals(new Location("CT7"), path.peekLast());
+
+        path = Algorithms.BreadthFirstSearch(BASKET_DISTRIBUTION, new Location("CT180"));
+        assertEquals(new Location("CT180"), path.peekFirst());
+        assertEquals(new Location("CT172"), path.peekLast());
+
+        path = Algorithms.BreadthFirstSearch(BASKET_DISTRIBUTION, new Location("CT269"));
+        assertEquals(new Location("CT269"), path.peekFirst());
+        assertEquals(new Location("CT172"), path.peekLast());
+
+        path = Algorithms.BreadthFirstSearch(BASKET_DISTRIBUTION, new Location("CT322"));
+        assertEquals(new Location("CT322"), path.peekFirst());
+        assertEquals(new Location("CT75"), path.peekLast());
+    }
+
+    @Test
+    void testBasketDistributionDepthFirstSearch() {
+        System.out.println("Testing BasketDistributionDepthFirstSearch...");
+
+        assertNull(Algorithms.DepthFirstSearch(BASKET_DISTRIBUTION, new Location("CT999")));
+
+        LinkedList<Location> path = Algorithms.DepthFirstSearch(BASKET_DISTRIBUTION, new Location("CT120"));
+        assertEquals(323, path.size());
+
+        assertEquals(new Location("CT120"), path.peekFirst());
+        assertEquals(new Location("CT178"), path.peekLast());
+
+        path = Algorithms.DepthFirstSearch(BASKET_DISTRIBUTION, new Location("CT69"));
+        assertEquals(new Location("CT69"), path.peekFirst());
+        assertEquals(new Location("CT265"), path.peekLast());
+
+        path = Algorithms.DepthFirstSearch(BASKET_DISTRIBUTION, new Location("CT180"));
+        assertEquals(new Location("CT180"), path.peekFirst());
+        assertEquals(new Location("CT18"), path.peekLast());
+
+        path = Algorithms.DepthFirstSearch(BASKET_DISTRIBUTION, new Location("CT269"));
+        assertEquals(new Location("CT269"), path.peekFirst());
+        assertEquals(new Location("CT186"), path.peekLast());
+
+        path = Algorithms.DepthFirstSearch(BASKET_DISTRIBUTION, new Location("CT322"));
+        assertEquals(new Location("CT322"), path.peekFirst());
+        assertEquals(new Location("CT14"), path.peekLast());
+    }
+
+    @Test
+    void testBasketDistributionAllPaths() {
+        System.out.println("Testing BasketDistributionAllPaths...");
+
+        MapGraph<Location, Integer> testGraph = new MapGraph<>(false);
+        testGraph.addVertex(new Location("CT1"));
+        testGraph.addVertex(new Location("CT2"));
+        testGraph.addVertex(new Location("CT3"));
+        testGraph.addVertex(new Location("CT4"));
+        testGraph.addVertex(new Location("CT5"));
+
+        testGraph.addEdge(new Location("CT1"), new Location("CT2"), 1);
+        testGraph.addEdge(new Location("CT1"), new Location("CT3"), 1);
+        testGraph.addEdge(new Location("CT2"), new Location("CT3"), 1);
+        testGraph.addEdge(new Location("CT2"), new Location("CT4"), 1);
+        testGraph.addEdge(new Location("CT3"), new Location("CT4"), 1);
+        testGraph.addEdge(new Location("CT3"), new Location("CT5"), 1);
+        testGraph.addEdge(new Location("CT4"), new Location("CT5"), 1);
+
+        ArrayList<LinkedList<Location>> paths = Algorithms.allPaths(testGraph, new Location("CT1"), new Location("CT5"));
+        assertEquals(7, paths.size());
+
+        List<String> expected1 = Arrays.asList("CT1", "CT2", "CT3", "CT4", "CT5");
+        for (int i = 0; i < expected1.size(); i++) {
+            assertEquals(expected1.get(i), paths.get(0).get(i).getId());
+        }
+
+        List<String> expected2 = Arrays.asList("CT1", "CT2", "CT3", "CT5");
+        for (int i = 0; i < expected2.size(); i++) {
+            assertEquals(expected2.get(i), paths.get(1).get(i).getId());
+        }
+
+        List<String> expected3 = Arrays.asList("CT1", "CT2", "CT4", "CT3");
+        for (int i = 0; i < expected3.size(); i++) {
+            assertEquals(expected3.get(i), paths.get(2).get(i).getId());
+        }
+
+        List<String> expected4 = Arrays.asList("CT1", "CT2", "CT4", "CT5");
+        for (int i = 0; i < expected4.size(); i++) {
+            assertEquals(expected4.get(i), paths.get(3).get(i).getId());
+        }
+
+        List<String> expected5 = Arrays.asList("CT1", "CT3", "CT2", "CT4", "CT5");
+        for (int i = 0; i < expected5.size(); i++) {
+            assertEquals(expected5.get(i), paths.get(4).get(i).getId());
+        }
+    }
+
+    @Test
     void testShortestPath() {
         System.out.println("Testing ShortestPath...");
 
         LinkedList<Location> shortPath = new LinkedList<>();
-        assertEquals(147618, graphController.shortestPath("CT1", "CT3", shortPath));
+        assertEquals(147618, Algorithms.shortestPath(BASKET_DISTRIBUTION, new Location("CT1"), new Location("CT3"),
+                Integer::compare, Integer::sum, 0, shortPath));
         List<String> expected1 = Arrays.asList("CT1", "CT256", "CT301", "CT262", "CT208", "CT76", "CT166", "CT90",
                 "CT288", "CT160", "CT32", "CT3");
         for (Location location : shortPath) {
@@ -100,29 +231,36 @@ public class MainTest {
         }
 
         shortPath.clear();
-        assertEquals(45417, graphController.shortestPath("CT13", "CT232", shortPath));
+        assertEquals(45417, Algorithms.shortestPath(BASKET_DISTRIBUTION, new Location("CT13"), new Location("CT232"),
+                Integer::compare, Integer::sum, 0, shortPath));
         List<String> expected2 = Arrays.asList("CT13", "CT44", "CT144", "CT191", "CT109", "CT28", "CT232");
         for (Location location : shortPath) {
             assertTrue(expected2.contains(location.getId()));
         }
 
         shortPath.clear();
-        assertEquals(255582, graphController.shortestPath("CT16", "CT200", shortPath));
+        assertEquals(255582, Algorithms.shortestPath(BASKET_DISTRIBUTION, new Location("CT16"), new Location("CT200"),
+                Integer::compare, Integer::sum, 0, shortPath));
         List<String> expected3 = Arrays.asList("CT16", "CT273", "CT170", "CT311", "CT257", "CT153", "CT68", "CT72",
                 "CT246", "CT181", "CT142", "CT90", "CT91", "CT270", "CT219", "CT70", "CT200");
         for (Location location : shortPath) {
             assertTrue(expected3.contains(location.getId()));
         }
+        for (Location location : shortPath) {
+            assertTrue(expected3.contains(location.getId()));
+        }
 
         shortPath.clear();
-        assertEquals(27700, graphController.shortestPath("CT100", "CT200", shortPath));
+        assertEquals(27700, Algorithms.shortestPath(BASKET_DISTRIBUTION, new Location("CT100"), new Location("CT200"),
+                Integer::compare, Integer::sum, 0, shortPath));
         List<String> expected4 = Arrays.asList("CT100", "CT281", "CT200");
         for (Location location : shortPath) {
             assertTrue(expected4.contains(location.getId()));
         }
 
         shortPath.clear();
-        assertEquals(265601, graphController.shortestPath("CT1", "CT322", shortPath));
+        assertEquals(265601, Algorithms.shortestPath(BASKET_DISTRIBUTION, new Location("CT1"), new Location("CT322"),
+                Integer::compare, Integer::sum, 0, shortPath));
         List<String> expected5 = Arrays.asList("CT1", "CT256", "CT301", "CT262", "CT208", "CT76", "CT166", "CT90",
                 "CT288", "CT160", "CT32", "CT3", "CT286", "CT265", "CT292", "CT41", "CT78", "CT210", "CT147", "CT113",
                 "CT322");
@@ -133,18 +271,82 @@ public class MainTest {
 
     @Test
     void testLocationDegree() {
-        System.out.println("Testing LocationDegree...");
+        System.out.println("Testing LocationInDegree and LocationoutDegree...");
 
-        assertEquals(5, graphController.getLocationDegree("CT1"));
-        assertEquals(6, graphController.getLocationDegree("CT132"));
-        assertEquals(7, graphController.getLocationDegree("CT154"));
-        assertEquals(3, graphController.getLocationDegree("CT321"));
+        assertEquals(BASKET_DISTRIBUTION.outDegree(new Location("CT1")),
+                BASKET_DISTRIBUTION.inDegree(new Location("CT1")));
+        assertEquals(BASKET_DISTRIBUTION.outDegree(new Location("CT132")),
+                BASKET_DISTRIBUTION.inDegree(new Location("CT132")));
+        assertEquals(BASKET_DISTRIBUTION.outDegree(new Location("CT154")),
+                BASKET_DISTRIBUTION.inDegree(new Location("CT154")));
+        assertEquals(BASKET_DISTRIBUTION.outDegree(new Location("CT321")),
+                BASKET_DISTRIBUTION.inDegree(new Location("CT321")));
     }
 
     @Test
     void testShortestPaths() {
         System.out.println("Testing ShortestPaths...");
 
-        assertTrue(graphController.shortestPaths("CT1"));
+        ArrayList<LinkedList<Location>> shortPaths = new ArrayList<>();
+        ArrayList<Integer> dists = new ArrayList<>();
+
+        assertTrue(Algorithms.shortestPaths(BASKET_DISTRIBUTION, new Location("CT1"), Integer::compare, Integer::sum, 0,
+                shortPaths, dists));
+        assertEquals(shortPaths.size(), dists.size());
+        List<String> expected1 = Arrays.asList("CT1", "CT222", "CT25", "CT175", "CT43");
+        for (Location location : shortPaths.get(0)) {
+            assertTrue(expected1.contains(location.getId()));
+        }
+        assertEquals(111434, dists.get(BASKET_DISTRIBUTION.key(new Location("CT43"))));
+
+        shortPaths.clear();
+        dists.clear();
+
+        assertTrue(Algorithms.shortestPaths(BASKET_DISTRIBUTION, new Location("CT100"), Integer::compare, Integer::sum,
+                0, shortPaths, dists));
+        assertEquals(shortPaths.size(), dists.size());
+        List<String> expected2 = Arrays.asList("CT100", "CT306", "CT283", "CT222", "CT25", "CT175", "CT43");
+        for (Location location : shortPaths.get(0)) {
+            assertTrue(expected2.contains(location.getId()));
+        }
+        assertEquals(134917, dists.get(BASKET_DISTRIBUTION.key(new Location("CT43"))));
+
+        shortPaths.clear();
+        dists.clear();
+
+        assertTrue(Algorithms.shortestPaths(BASKET_DISTRIBUTION, new Location("CT169"), Integer::compare, Integer::sum,
+                0, shortPaths, dists));
+        assertEquals(shortPaths.size(), dists.size());
+        List<String> expected3 = new ArrayList<>(Arrays.asList("CT169", "CT122", "CT119", "CT21", "CT132", "CT55",
+                "CT124", "CT77", "CT188", "CT79", "CT223", "CT43"));
+        for (Location location : shortPaths.get(0)) {
+            assertTrue(expected3.contains(location.getId()));
+        }
+        assertEquals(319073, dists.get(BASKET_DISTRIBUTION.key(new Location("CT43"))));
+
+        shortPaths.clear();
+        dists.clear();
+
+        assertTrue(Algorithms.shortestPaths(BASKET_DISTRIBUTION, new Location("CT200"), Integer::compare, Integer::sum,
+                0, shortPaths, dists));
+        assertEquals(shortPaths.size(), dists.size());
+        List<String> expected4 = Arrays.asList("CT200", "CT278", "CT92", "CT283", "CT222", "CT25", "CT175", "CT43");
+        for (Location location : shortPaths.get(0)) {
+            assertTrue(expected4.contains(location.getId()));
+        }
+        assertEquals(155507, dists.get(BASKET_DISTRIBUTION.key(new Location("CT43"))));
+
+        shortPaths.clear();
+        dists.clear();
+
+        assertTrue(Algorithms.shortestPaths(BASKET_DISTRIBUTION, new Location("CT322"), Integer::compare, Integer::sum,
+                0, shortPaths, dists));
+        assertEquals(shortPaths.size(), dists.size());
+        List<String> expected5 = Arrays.asList("CT322", "CT113", "CT29", "CT49", "CT236", "CT81", "CT311", "CT257",
+                "CT211", "CT130", "CT154", "CT96", "CT124", "CT77", "CT188", "CT79", "CT223", "CT43");
+        for (Location location : shortPaths.get(0)) {
+            assertTrue(expected5.contains(location.getId()));
+        }
+        assertEquals(325334, dists.get(BASKET_DISTRIBUTION.key(new Location("CT43"))));
     }
 }

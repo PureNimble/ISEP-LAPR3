@@ -11,7 +11,7 @@ public class Algorithms {
     public static <V, E> LinkedList<V> BreadthFirstSearch(Graph<V, E> g, V vert) {
 
         if (!g.validVertex(vert)) {
-            return (LinkedList<V>) Collections.<V>emptyList();
+            return null;
         }
 
         LinkedList<V> bfs = new LinkedList<>();
@@ -50,7 +50,7 @@ public class Algorithms {
     public static <V, E> LinkedList<V> DepthFirstSearch(Graph<V, E> g, V vert) {
 
         if (!g.validVertex(vert)) {
-            return (LinkedList<V>) Collections.<V>emptyList();
+            return null;
         }
         LinkedList<V> dfs = new LinkedList<>();
         boolean[] visited = new boolean[g.numVertices()];

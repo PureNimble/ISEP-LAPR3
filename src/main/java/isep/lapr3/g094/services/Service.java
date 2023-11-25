@@ -1,6 +1,8 @@
 package isep.lapr3.g094.services;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
@@ -12,7 +14,6 @@ import isep.lapr3.g094.struct.graph.Algorithms;
 import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.Edge;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
-import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
 public class Service {
 
@@ -56,8 +57,7 @@ public class Service {
 
     }
 
-    public int keyLocation(String id) {
-        Location location = new Location(id);
+    public int keyLocation(Location location) {
         return graphRepository.keyLocation(location);
     }
 
@@ -83,43 +83,12 @@ public class Service {
         return graphRepository.getNumDistances();
     }
 
-    public <V, E> LinkedList<Location> BreadthFirstSearch(String id) {
-        return Algorithms.BreadthFirstSearch(graphRepository.getBasketDistribution(), new Location(id));
-    }
-
-    public <V, E> LinkedList<Location> DepthFirstSearch(String id) {
-        return Algorithms.DepthFirstSearch(graphRepository.getBasketDistribution(), new Location(id));
-    }
-
-    public <V, E> ArrayList<LinkedList<Location>> allPaths(String idOrigin, String idDest) {
-        return Algorithms.allPaths(graphRepository.getBasketDistribution(), new Location(idOrigin),
-                new Location(idDest));
-    }
-
-    public <V, E> Integer shortestPath(String idOrigin, String idDest, LinkedList<Location> shortPath) {
-        return Algorithms.shortestPath(graphRepository.getBasketDistribution(), new Location(idOrigin),
-                new Location(idDest), Integer::compare, Integer::sum, 0, shortPath);
-    }
-
-    public <V, E> boolean shortestPaths(String id) {
-        return Algorithms.shortestPaths(graphRepository.getBasketDistribution(), new Location(id), Integer::compare,
-                Integer::sum, 0, new ArrayList<LinkedList<Location>>(), new ArrayList<Integer>());
-    }
-
-    public int getLocationDegree(String id) {
-        return graphRepository.getBasketDistribution().inDegree(new Location(id));
-    }
-
-    public <V> Pair<Location, Location> furthestPoints() {
-        return Algorithms.furthestPoints(graphRepository.getBasketDistribution(), Integer::compare, Integer::sum, 0);
-    }
-
     public MapGraph<Location, Integer> getBasketDistribution() {
         return graphRepository.getBasketDistribution();
     }
 
-    public Map<String, Criteria> getVerticesIdeais() {
-        Map<String, Criteria> map = new HashMap<>();
+    public Map<Location, Criteria> getVerticesIdeais() {
+        Map<Location, Criteria> map = new HashMap<>();
         int numberMinimumPaths = 0;
         int i;
         for (Location location : getBasketDistribution().vertices()) {
@@ -128,16 +97,28 @@ public class Service {
             ArrayList<Integer> locationDistance = new ArrayList<>();
             Algorithms.shortestPaths(graphRepository.getBasketDistribution(), location, Integer::compare, Integer::sum,
                     0, locationPaths, locationDistance);
+
+            List<Integer> indices = IntStream.range(0, locationDistance.size()).mapToObj(Integer::valueOf)
+                    .collect(Collectors.toList());
+            indices.sort(Comparator.comparing(locationDistance::get));
+            List<LinkedList<Location>> sortedLocationPaths = indices.stream()
+                    .map(locationPaths::get)
+                    .collect(Collectors.toList());
+            locationDistance.sort(Integer::compareTo);
+            locationPaths.clear();
+            locationPaths.addAll(sortedLocationPaths);
+            locationPaths.remove(0);
+            locationDistance.remove(0);
             Criteria criteria = new Criteria(degree, locationPaths, numberMinimumPaths, locationDistance);
-            map.put(location.getId(), criteria);
+            map.put(location, criteria);
         }
-        for (Map.Entry<String, Criteria> entry : map.entrySet()) {
+        for (Map.Entry<Location, Criteria> entry : map.entrySet()) {
             numberMinimumPaths = 0;
-            String id = entry.getKey();
-            for (Map.Entry<String, Criteria> entry2 : map.entrySet()) {
+            Location location = entry.getKey();
+            for (Map.Entry<Location, Criteria> entry2 : map.entrySet()) {
                 if (!entry.getKey().equals(entry2.getKey())) {
                     for (i = 0; i < entry2.getValue().getPaths().size(); i++) {
-                        if (entry2.getValue().getPaths().get(i).contains(new Location(id))) {
+                        if (entry2.getValue().getPaths().get(i).contains(location)) {
                             numberMinimumPaths++;
                         }
                     }
@@ -149,17 +130,17 @@ public class Service {
         return map;
     }
 
-    public static Map<String, Criteria> sortByValue(Map<String, Criteria> map) {
+    private static Map<Location, Criteria> sortByValue(Map<Location, Criteria> map) {
         // Convert the map to a list of entries
-        List<Map.Entry<String, Criteria>> list = new ArrayList<>(map.entrySet());
+        List<Map.Entry<Location, Criteria>> list = new ArrayList<>(map.entrySet());
 
         // Sort the list using a custom comparator
-        list.sort(Comparator.comparing((Map.Entry<String, Criteria> entry) -> entry.getValue().getDegree())
+        list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDegree())
                 .thenComparing(entry -> entry.getValue().getNumberMinimumPaths()).reversed());
 
         // Convert the sorted list back to a map
-        Map<String, Criteria> sortedMap = new LinkedHashMap<>();
-        for (Map.Entry<String, Criteria> entry : list) {
+        Map<Location, Criteria> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<Location, Criteria> entry : list) {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
 
@@ -209,8 +190,8 @@ public class Service {
             String locationId = location.getId();
             String location1Id = location1.getId();
             int distance = edge.getWeight();
-            if(locationId.compareTo(location1Id) < 0) {
-                if(map.containsKey(location)) {
+            if (locationId.compareTo(location1Id) < 0) {
+                if (map.containsKey(location)) {
                     map.get(location).put(location1, distance);
                 } else {
                     Map<Location, Integer> map1 = new HashMap<>();
@@ -218,7 +199,7 @@ public class Service {
                     map.put(location, map1);
                 }
             } else {
-                if(map.containsKey(location1)) {
+                if (map.containsKey(location1)) {
                     map.get(location1).put(location, distance);
                 } else {
                     Map<Location, Integer> map1 = new HashMap<>();
@@ -230,13 +211,11 @@ public class Service {
         return map;
     }
 
-
-
     public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected){
         Set<Location> listHubs = new LinkedHashSet<>();
-        for (String id : idsSelected){
-            for(Location location : graphRepository.getBasketDistribution().vertices()){
-                if(id.equals(location.getId())){
+        for (String id : idsSelected) {
+            for (Location location : graphRepository.getBasketDistribution().vertices()) {
+                if (id.equals(location.getId())) {
                     listHubs.add(location);
                     break;
                 }

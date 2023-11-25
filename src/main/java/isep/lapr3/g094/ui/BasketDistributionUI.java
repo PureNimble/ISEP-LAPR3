@@ -53,10 +53,11 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void getIdealVertices() {
-        Map<String, Criteria> idealVertices = graphController.getVerticesIdeais();
+        
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais();
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
-                .mapToInt(String::length)
+                .mapToInt(Location -> Location.getId().length())
                 .max()
                 .orElse(0), "ID".length());
         // Calculate the maximum length of the degrees
@@ -71,15 +72,25 @@ public class BasketDistributionUI implements Runnable {
                 .orElse(0), "Nº Caminhos mínimos".length());
 
         int maxLength = Math.max(maxIdLength, Math.max(maxDegreeLength, maxNumPathsLength));
-        for (Map.Entry<String, Criteria> entry : idealVertices.entrySet()) {
+        for (Map.Entry<Location, Criteria> entry : idealVertices.entrySet()) {
+            System.out.println("\n--------------------------------------------------------------------");
+            String formatString = "| ID: %" + maxLength / 3 + "s | Degree: %" + maxLength / 3
+                    + "d | Número de Caminhos Mínimos: %" + maxLength / 3 + "d |\n";
+            System.out.printf(formatString, entry.getKey().getId(), entry.getValue().getDegree(),
+                    entry.getValue().getNumberMinimumPaths());
+            printPaths(entry.getKey().getId(), entry.getValue().getPaths(), entry.getValue().getDistances(), maxLength);
+            formatString = "| Número de Colaboradores: %" + ((maxLength / 2) - 4) + "d | Horário: %" + (maxLength + 3)
+                    + "s |\n";
+            int numEmployees = entry.getKey().getNumEmployees();
+            String schedule = numEmployees > 105 ? (numEmployees < 216 ? "11h:00 – 16h:00" : "12h:00 – 17h:00")
+                    : "9h:00 – 14h:00";
+            System.out.printf(formatString, numEmployees, schedule);
             System.out.println("--------------------------------------------------------------------");
-            String formatString = "| ID: %" + maxLength/3 + "s | Degree: %" + maxLength/3 + "d | Número de Caminhos Mínimos: %" + maxLength/3 + "d |\n";
-            System.out.printf(formatString, entry.getKey(), entry.getValue().getDegree(), entry.getValue().getNumberMinimumPaths());
-            printPaths(entry.getKey(), entry.getValue().getPaths(), entry.getValue().getDistances(), maxLength);
         }
     }
 
-    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances, int maxLength) {
+    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances,
+            int maxLength) {
         if (arrayList.size() != (distances.size())) {
             throw new IllegalArgumentException("As duas listas têm de ter o mesmo tamanho");
         }
@@ -87,7 +98,8 @@ public class BasketDistributionUI implements Runnable {
         for (int i = 0; i < arrayList.size(); i++) {
             LinkedList<Location> path = arrayList.get(i);
             Integer distance = distances.get(i);
-            String formatString = "| ID Destino: %" + (maxLength-1) + "s | Distância: %" + (maxLength-1) + "d m |\n";
+            String formatString = "| ID Destino: %" + (maxLength - 1) + "s | Distância: %" + (maxLength - 1)
+                    + "d m |\n";
             System.out.println("--------------------------------------------------------------------");
             System.out.printf(formatString, path.getLast().getId(), distance);
         }
@@ -163,10 +175,10 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void divideDistribution() {
-        Map<String, Criteria> idealVertices = graphController.getVerticesIdeais();
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais();
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
-                .mapToInt(String::length)
+                .mapToInt(Location -> Location.getId().length())
                 .max()
                 .orElse(0), "ID".length());
         // Calculate the maximum length of the degrees
@@ -181,16 +193,19 @@ public class BasketDistributionUI implements Runnable {
                 .orElse(0), "Nº Caminhos mínimos".length());
 
         int maxLength = Math.max(maxIdLength, Math.max(maxDegreeLength, maxNumPathsLength));
-        for (Map.Entry<String, Criteria> entry : idealVertices.entrySet()) {
+        for (Map.Entry<Location, Criteria> entry : idealVertices.entrySet()) {
             System.out.println("--------------------------------------------------------------------");
-            String formatString = "| ID: %" + maxLength / 3 + "s | Degree: %" + maxLength / 3 + "d | Número de Caminhos Mínimos: %" + maxLength / 3 + "d |\n";
-            System.out.printf(formatString, entry.getKey(), entry.getValue().getDegree(), entry.getValue().getNumberMinimumPaths());
+            String formatString = "| ID: %" + maxLength / 3 + "s | Degree: %" + maxLength / 3
+                    + "d | Número de Caminhos Mínimos: %" + maxLength / 3 + "d |\n";
+            System.out.printf(formatString, entry.getKey().getId(), entry.getValue().getDegree(),
+                    entry.getValue().getNumberMinimumPaths());
         }
         String idSelected;
         List<String> idsSelected = new ArrayList<>();
-        do{
-            idSelected = Utils.readLineFromConsole("Type in ID of desired vertice to add (Press enter without answer to continue): ");
-            if(!idSelected.isEmpty()){
+        do {
+            idSelected = Utils.readLineFromConsole(
+                    "Type in ID of desired vertice to add (Press enter without answer to continue): ");
+            if (!idSelected.isEmpty()) {
                 idsSelected.add(idSelected);
             }
         } while ((!idSelected.isEmpty()));
