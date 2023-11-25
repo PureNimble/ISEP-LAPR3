@@ -2,29 +2,32 @@ CREATE OR REPLACE FUNCTION getFatorProducaoList(dataInicial DATE, dataFinal DATE
     result_cursor SYS_REFCURSOR;
 BEGIN
     OPEN result_cursor FOR
-        SELECT PARCELA, CULTURA, FATORPRODUCAO, TIPOPRODUTO, DATA
+        SELECT DATA, FATORPRODUCAO, CULTURA, APLICACAO, PARCELA
         FROM(
-            SELECT E.DESIGNACAO AS PARCELA, NE.NOMECOMUM || ' ' || CU.VARIEDADE AS CULTURA, FP.DESIGNACAO AS FATORPRODUCAO, TP.DESIGNACAO AS TIPOPRODUTO, O.DATAOPERACAO as data
-            FROM OPERACAOFATOR OPF, FATORPRODUCAO FP, OPERACAOPLANTACAO OP, PLANTACAO P, CULTURA CU, NOMEESPECIE NE, ESPACO E, TIPOPRODUTO TP,Operacao O
-            WHERE OPF.OPERACAOID = O.ID
+            SELECT O.DATAOPERACAO AS data, FP.Designacao AS FATORPRODUCAO, NE.NOMECOMUM ||' ' || CU.VARIEDADE AS Cultura,A.DESIGNACAO AS Aplicacao, E.Designacao as parcela 
+            FROM OPERACAOFATOR OFA, Operacao O, FatorProducao FP, OperacaoPlantacao OP, Plantacao P, Espaco E, Cultura CU, NOMEESPECIE NE, AplicacaoProduto AP, Aplicacao A
+            WHERE OFA.OPERACAOID = O.ID
+            AND OFA.FATORPRODUCAOID = FP.ID
+            AND AP.FATORPRODUCAOID = FP.ID
+            AND AP.AplicacaoID = A.ID
             AND O.ID = OP.OPERACAOID
-            AND OPF.FATORPRODUCAOID = FP.ID
-            AND FP.TIPOPRODUTOID = TP.ID
             AND OP.PLANTACAOID = P.ID
             AND P.PARCELAESPACOID = E.ID
             AND P.CULTURAID = CU.ID
             AND CU.NOMEESPECIEID = NE.ID
-            UNION 
-            SELECT E.DESIGNACAO AS PARCELA, 'NO DATA' AS CULTURA , FP.DESIGNACAO AS FATORPRODUCAO, TP.DESIGNACAO AS TIPOPRODUTO, O.DATAOPERACAO as data
-            FROM OPERACAOFATOR OPF, FATORPRODUCAO FP, OPERACAOPARCELA OP, ESPACO E, TIPOPRODUTO TP,Operacao O
-            WHERE OPF.OPERACAOID = O.ID
+            UNION
+            SELECT O.DATAOPERACAO AS data, FP.Designacao AS FATORPRODUCAO,'Sem cultura'AS Cultura, A.DESIGNACAO AS APLICACAO, E.DESIGNACAO AS PARCELA
+            FROM OPERACAOFATOR OFA, Operacao O, FatorProducao FP, OperacaoParcela OP, Plantacao P, Espaco E, Aplicacao A, AplicacaoProduto AP
+            WHERE OFA.OPERACAOID = O.ID
+            AND OFA.FATORPRODUCAOID = FP.ID
+            AND AP.FATORPRODUCAOID = FP.ID
+            AND AP.AplicacaoID = A.ID
             AND O.ID = OP.OPERACAOID
-            AND OPF.FATORPRODUCAOID = FP.ID
-            AND FP.TIPOPRODUTOID = TP.ID
-            AND OP.PARCELAESPACOID = E.ID 
+            AND OP.PARCELAESPACOID = E.ID
         )
         WHERE data BETWEEN DATAINICIAL AND DATAFINAL
-        ORDER BY TIPOPRODUTO;
+        ORDER BY PARCELA,APLICACAO,FATORPRODUCAO;
+        
     RETURN result_cursor;
 END;
 /
@@ -34,24 +37,39 @@ DECLARE
     parcela VARCHAR2(255);
     cultura VARCHAR2(255);
     fatorproducao VARCHAR2(255);
-    tipoproduto VARCHAR2(255);
-    data VARCHAR2(255);
+    aplicacao VARCHAR2(255);
+    data DATE;
+    previous_parcela VARCHAR2(255);
+    previous_aplicacao VARCHAR2(255);
+
 
     data_found BOOLEAN := FALSE;
 BEGIN
-    result_cursor := getFatorProducaoList(TO_DATE('2018-01-10', 'YYYY-MM-DD'), TO_DATE('2018-07-10', 'YYYY-MM-DD'));
+    result_cursor := getFatorProducaoList(TO_DATE('2019-01-01', 'YYYY-MM-DD'), TO_DATE('2023-07-06', 'YYYY-MM-DD'));
     LOOP
-        FETCH result_cursor INTO parcela, cultura, fatorproducao, tipoproduto, data;
+        FETCH result_cursor INTO data, fatorproducao, cultura, aplicacao, parcela;
         EXIT WHEN result_cursor%NOTFOUND;
         data_found := TRUE;
-        DBMS_OUTPUT.PUT_LINE(result_cursor%ROWCOUNT||' º'  );
-        DBMS_OUTPUT.PUT_LINE(' -> Parcela: '|| parcela);
-        DBMS_OUTPUT.PUT_LINE(' -> Cultura:' || cultura );
-        DBMS_OUTPUT.PUT_LINE(' -> FatorProducao:'|| fatorproducao);
-        DBMS_OUTPUT.PUT_LINE(' -> TipoProduto:'|| tipoproduto);
-        DBMS_OUTPUT.PUT_LINE(' -> Data:'|| data);
-        DBMS_OUTPUT.PUT_LINE(' ');
-        DBMS_OUTPUT.PUT_LINE('---------------------------------');
+        
+        IF previous_parcela IS NULL OR previous_parcela != parcela THEN
+            DBMS_OUTPUT.PUT_LINE(' ');
+            DBMS_OUTPUT.PUT_LINE('Parcela: ' || parcela);
+            
+            IF previous_aplicacao = aplicacao THEN
+                DBMS_OUTPUT.PUT_LINE(' ');
+                DBMS_OUTPUT.PUT_LINE(CHR(9)||'Aplicacao: ' || aplicacao);
+                DBMS_OUTPUT.PUT_LINE(' ');
+            END IF;
+            
+            previous_parcela := parcela;
+        END IF;
+        IF previous_aplicacao IS NULL OR previous_aplicacao != aplicacao THEN
+            DBMS_OUTPUT.PUT_LINE(' ');
+            DBMS_OUTPUT.PUT_LINE(CHR(9)||'Aplicacao: ' || aplicacao);
+            DBMS_OUTPUT.PUT_LINE(' ');
+            previous_aplicacao := aplicacao;
+        END IF;
+        DBMS_OUTPUT.PUT_LINE(CHR(9) || CHR(9) || data || ' - ' || fatorproducao || ' - ' || cultura);
 
     END LOOP;
     CLOSE result_cursor;
