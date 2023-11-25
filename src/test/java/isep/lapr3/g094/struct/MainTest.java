@@ -349,4 +349,30 @@ public class MainTest {
         }
         assertEquals(325334, dists.get(BASKET_DISTRIBUTION.key(new Location("CT43"))));
     }
+
+    @Test
+    void testVerticesIdeais() {
+        System.out.println("Testing VerticesIdeais...");
+
+        Map<Location, Criteria> testMap = service.getVerticesIdeais();
+
+        assertEquals(323, testMap.size());
+
+        assertEquals(30,
+                testMap.get(new Location("CT1")).getPaths().get(testMap.get(new Location("CT1")).getPaths().size() - 1)
+                        .size());
+
+        assertEquals(486165,
+                testMap.get(new Location("CT2")).getDistances()
+                        .get(testMap.get(new Location("CT1")).getDistances().size() - 1));
+
+        List<String> expected = Arrays.asList("CT1", "CT256", "CT301", "CT262", "CT208", "CT76", "CT166", "CT90",
+                "CT288", "CT160", "CT32", "CT3", "CT286", "CT6", "CT104", "CT196", "CT252", "CT38",
+                "CT195", "CT129", "CT101", "CT285", "CT110", "CT136", "CT60", "CT117", "CT30", "CT276", "CT34",
+                "CT162");
+        for (Location location : testMap.get(new Location("CT1")).getPaths()
+                .get(testMap.get(new Location("CT1")).getPaths().size() - 1)) {
+            assertTrue(expected.contains(location.getId()));
+        }
+    }
 }
