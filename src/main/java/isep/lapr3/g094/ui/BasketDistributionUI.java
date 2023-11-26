@@ -185,7 +185,7 @@ public class BasketDistributionUI implements Runnable {
         List<String> idsSelected = new ArrayList<>();
         do {
             idSelected = Utils.readLineFromConsole(
-                    "Type in ID of desired vertice to add (Press enter without answer to continue): ");
+                    "Escreva o ID to vertice a adicionar (Pressione enter sem responder para continuar):");
             if (!idSelected.isEmpty()) {
                 idsSelected.add(idSelected);
             }
@@ -201,8 +201,10 @@ public class BasketDistributionUI implements Runnable {
 
     private void printClusters(List<String> idsSelected) {
         List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(idsSelected);
-        System.out.println("Coeficiente de silhouette: " + graphController.getCoefSil(newList));
         System.out.println(newList.toString());
+        boolean printSC = Utils.confirm("Queres dar print do coeficiente de silhueta? (s/n):");
+        if(printSC){
+            System.out.println("coeficiente de silhueta: " + graphController.getCoefSil(newList));
+        }
     }
-
 }

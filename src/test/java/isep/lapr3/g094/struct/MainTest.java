@@ -461,4 +461,64 @@ public class MainTest {
         System.out.println("Distância total: " + totalDistance);
     }
 
+    @Test
+    void testGetClustersWith2Hubs(){
+        System.out.println("Testing testGetClustersWith2Hubs...");
+
+        List<String> ids = new ArrayList<>();
+        ids.add("CT76");
+        ids.add("CT161");
+        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(ids);
+        assertEquals(221, newList.get(0).numVertices());
+        assertEquals(102, newList.get(1).numVertices());
+        String locationid = "CT76";
+        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+            if (locationid.equals(location.getId())) {
+                assertTrue(newList.get(0).validVertex(location));
+                break;
+            }
+        }
+        locationid = "CT123";
+        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+            if (locationid.equals(location.getId())) {
+                assertTrue(newList.get(0).validVertex(location));
+                break;
+            }
+        }
+        locationid = "CT161";
+        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+            if (locationid.equals(location.getId())) {
+                assertTrue(newList.get(1).validVertex(location));
+                break;
+            }
+        }
+        locationid = "CT309";
+        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+            if (locationid.equals(location.getId())) {
+                assertTrue(newList.get(1).validVertex(location));
+                break;
+            }
+        }
+    }
+
+    @Test
+    void testGetClustersWith0Hubs() {
+        System.out.println("Testing testGetClustersWith0Hubs...");
+        List<String> ids = new ArrayList<>();
+        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(ids);
+        assertNull(newList);
+    }
+
+    /* Como a complexidade de getSC é muito elevada, este teste usa os small csvs e é só para demonstração
+    @Test
+    void testGetSC(){
+        System.out.println("Testing testGetSC...");
+        List<String> ids = new ArrayList<>();
+        ids.add("CT10");
+        ids.add("CT17");
+        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(ids);
+        assertEquals(-0.549414873123169, service.getCoefSil(newList));
+    }
+     */
+
 }

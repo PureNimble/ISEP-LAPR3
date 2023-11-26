@@ -61,7 +61,7 @@ public class Algorithms {
     }
 
     private static <V, E> void allPaths(Graph<V, E> g, V vOrig, V vDest, boolean[] visited,
-            LinkedList<V> path, ArrayList<LinkedList<V>> paths) {
+                                        LinkedList<V> path, ArrayList<LinkedList<V>> paths) {
 
         visited[g.key(vOrig)] = true;
         path.add(vOrig);
@@ -92,8 +92,8 @@ public class Algorithms {
     }
 
     private static <V, E> void shortestPathDijkstra(Graph<V, E> g, V vOrig,
-            Comparator<E> ce, BinaryOperator<E> sum, E zero,
-            boolean[] visited, V[] pathKeys, E[] dist) {
+                                                    Comparator<E> ce, BinaryOperator<E> sum, E zero,
+                                                    boolean[] visited, V[] pathKeys, E[] dist) {
 
         int vertices = g.numVertices();
         for (int i = 0; i < vertices; i++) {
@@ -132,8 +132,8 @@ public class Algorithms {
 
     @SuppressWarnings("unchecked")
     public static <V, E> E shortestPath(Graph<V, E> g, V vOrig, V vDest,
-            Comparator<E> ce, BinaryOperator<E> sum, E zero,
-            LinkedList<V> shortPath) {
+                                        Comparator<E> ce, BinaryOperator<E> sum, E zero,
+                                        LinkedList<V> shortPath) {
 
         if (!g.validVertex(vOrig) || !g.validVertex(vDest)) {
             return null;
@@ -158,8 +158,8 @@ public class Algorithms {
 
     @SuppressWarnings("unchecked")
     public static <V, E> boolean shortestPaths(Graph<V, E> g, V vOrig,
-            Comparator<E> ce, BinaryOperator<E> sum, E zero,
-            ArrayList<LinkedList<V>> paths, ArrayList<E> dists) {
+                                               Comparator<E> ce, BinaryOperator<E> sum, E zero,
+                                               ArrayList<LinkedList<V>> paths, ArrayList<E> dists) {
 
         if (!g.validVertex(vOrig)) {
             return false;
@@ -185,7 +185,7 @@ public class Algorithms {
     }
 
     private static <V, E> void getPath(Graph<V, E> g, V vOrig, V vDest,
-            V[] pathKeys, LinkedList<V> path) {
+                                       V[] pathKeys, LinkedList<V> path) {
 
         if (!vOrig.equals(vDest) && pathKeys[g.key(vDest)] == null) {
             return;
@@ -249,58 +249,55 @@ public class Algorithms {
     }
 
     public static <V, E> List<Graph<V, E>> divideGraph(Graph<V, E> g, Set<V> verticeList, Comparator<E> ce, BinaryOperator<E> sum, E zero,
-                                                       LinkedList<V> shortPath){
+                                                       LinkedList<V> shortPath) {
         int numVertices = g.numVertices();
         List<Graph<V, E>> clusterList = new ArrayList<>();
-        for (V vertice : verticeList){
+        for (V vertice : verticeList) {
             Graph<V, E> graph = new MatrixGraph<>(false, numVertices);
             graph.addVertex(vertice);
             clusterList.add(graph);
         }
-        boolean changed = true;
-        while(changed){
-            changed = false;
-            for (V vertice : g.vertices()){
-                int maxClusterIndex = -1;
-                int minDist = Integer.MAX_VALUE;
-                int currentCluster = 0;
-                for (V hub : verticeList){
-                    int dist = getDistanceTwoVsMST(g, vertice, hub, ce, sum, zero, shortPath);
-                    if(minDist > dist){
-                        minDist = dist;
-                        maxClusterIndex = currentCluster;
-                    }
-                    currentCluster++;
+        int debug = 0;
+        for (V vertice : g.vertices()) {
+            int maxClusterIndex = -1;
+            int minDist = Integer.MAX_VALUE;
+            int currentCluster = 0;
+            for (V hub : verticeList) {
+                int dist = getDistanceTwoVsMST(g, vertice, hub, ce, sum, zero, shortPath);
+                if (minDist > dist) {
+                    minDist = dist;
+                    maxClusterIndex = currentCluster;
                 }
-                if (!clusterList.get(maxClusterIndex).vertices().contains(vertice)){
-                    for (Graph<V, E> veMatrixGraph : clusterList) {
-                        veMatrixGraph.removeVertex(vertice);
-                    }
-                    clusterList.get(maxClusterIndex).addVertex(vertice);
-                    changed = true;
-                }
+                currentCluster++;
             }
+            if (!clusterList.get(maxClusterIndex).vertices().contains(vertice)) {
+                for (Graph<V, E> veMatrixGraph : clusterList) {
+                    veMatrixGraph.removeVertex(vertice);
+                }
+                clusterList.get(maxClusterIndex).addVertex(vertice);
+            }
+            debug++;
         }
         fillEdges(clusterList, g);
         return clusterList;
     }
 
-    private static <V, E> int countCommonNeighbors(V vertex, Graph<V, E> cluster, Graph<V, E> graph){
+    private static <V, E> int countCommonNeighbors(V vertex, Graph<V, E> cluster, Graph<V, E> graph) {
         int count = 0;
-        for (V neighbor : graph.adjVertices(vertex)){
-            if (cluster.vertices().contains(neighbor)){
+        for (V neighbor : graph.adjVertices(vertex)) {
+            if (cluster.vertices().contains(neighbor)) {
                 count++;
             }
         }
         return count;
     }
 
-    private static <V, E> void fillEdges(List<Graph<V, E>> clusterList, Graph<V, E> graph){
+    private static <V, E> void fillEdges(List<Graph<V, E>> clusterList, Graph<V, E> graph) {
         for (Graph<V, E> cluster : clusterList) {
-            for (V vertice : cluster.vertices()){
-                for (V dest : graph.adjVertices(vertice)){
-                    if(cluster.validVertex(dest)){
-                        if (cluster.edge(dest, vertice) == null && cluster.edge(vertice, dest) == null){
+            for (V vertice : cluster.vertices()) {
+                for (V dest : graph.adjVertices(vertice)) {
+                    if (cluster.validVertex(dest)) {
+                        if (cluster.edge(dest, vertice) == null && cluster.edge(vertice, dest) == null) {
                             E weight = graph.edge(vertice, dest).getWeight();
                             cluster.addEdge(vertice, dest, weight);
                         }
@@ -311,48 +308,48 @@ public class Algorithms {
     }
 
     private static <V, E> int getDistanceTwoVsMST(Graph<V, E> graph, V vertOrigin, V vertDest, Comparator<E> ce, BinaryOperator<E> sum, E zero,
-                                                  LinkedList<V> shortPath){
+                                                  LinkedList<V> shortPath) {
         shortestPath(graph, vertOrigin, vertDest, ce, sum, zero, shortPath);
         int dist = 0;
-        for (int i = 0, u = 1; u < shortPath.size(); i++, u++){
+        for (int i = 0, u = 1; u < shortPath.size(); i++, u++) {
             dist += (int) graph.edge(shortPath.get(i), shortPath.get(u)).getWeight();
         }
         return dist;
     }
 
     public static <V, E> float getSC(List<Graph<V, E>> clusterList, Comparator<E> ce, BinaryOperator<E> sum, E zero,
-                                      LinkedList<V> shortPath, Graph<V, E> originalGraph){
+                                     LinkedList<V> shortPath, Graph<V, E> originalGraph) {
         List<Float> sillouetteAverages = new ArrayList<>();
-        for (Graph<V, E> cluster : clusterList){
+        for (Graph<V, E> cluster : clusterList) {
             float sillouetteSum = 0;
             float numSillouettes = 0;
             float lowAvgDistOut = Float.MAX_VALUE;
             float sumDistIn = 0;
-            for(V vertice : cluster.vertices()){
-                for(V verticeIn : cluster.vertices()){
-                    if (!vertice.equals(verticeIn)){
+            for (V vertice : cluster.vertices()) {
+                for (V verticeIn : cluster.vertices()) {
+                    if (!vertice.equals(verticeIn)) {
                         shortestPath(cluster, vertice, verticeIn, ce, sum, zero, shortPath);
                         int dist = 0;
-                        for (int i = 0, u = 1; u < shortPath.size(); i++, u++){
+                        for (int i = 0, u = 1; u < shortPath.size(); i++, u++) {
                             dist += (int) cluster.edge(shortPath.get(i), shortPath.get(u)).getWeight();
                         }
                         sumDistIn += dist;
                     }
                 }
-                float avgDistIn = sumDistIn/(cluster.numVertices() - 1);
-                for (Graph<V, E> clusterout : clusterList){
+                float avgDistIn = sumDistIn / (cluster.numVertices() - 1);
+                for (Graph<V, E> clusterout : clusterList) {
                     float sumDistOut = 0;
-                    if (!cluster.equals(clusterout)){
-                        for (V outVert : clusterout.vertices()){
+                    if (!cluster.equals(clusterout)) {
+                        for (V outVert : clusterout.vertices()) {
                             shortestPath(originalGraph, vertice, outVert, ce, sum, zero, shortPath);
                             int dist = 0;
-                            for (int i = 0, u = 1; u < shortPath.size(); i++, u++){
+                            for (int i = 0, u = 1; u < shortPath.size(); i++, u++) {
                                 dist += (int) originalGraph.edge(shortPath.get(i), shortPath.get(u)).getWeight();
                             }
                             sumDistOut += dist;
                         }
-                        float avgDistOut = sumDistOut/clusterout.numVertices();
-                        if (avgDistOut < lowAvgDistOut){
+                        float avgDistOut = sumDistOut / clusterout.numVertices();
+                        if (avgDistOut < lowAvgDistOut) {
                             lowAvgDistOut = avgDistOut;
                         }
                     }
@@ -361,20 +358,20 @@ public class Algorithms {
                 numSillouettes++;
 
             }
-            sillouetteAverages.add(sillouetteSum/numSillouettes);
+            sillouetteAverages.add(sillouetteSum / numSillouettes);
         }
-        if(sillouetteAverages.stream().max(Float::compareTo).isPresent()){
+        if (sillouetteAverages.stream().max(Float::compareTo).isPresent()) {
             return sillouetteAverages.stream().max(Float::compareTo).get();
         } else {
             return 0;
         }
     }
 
-    private static float calculateSillouette(float lowAvgDistOut, float avgDistIn){
-        if (avgDistIn < lowAvgDistOut){
-            return (1 - (avgDistIn/lowAvgDistOut));
-        } else if (avgDistIn > lowAvgDistOut){
-            return ((lowAvgDistOut/avgDistIn) - 1);
+    private static float calculateSillouette(float lowAvgDistOut, float avgDistIn) {
+        if (avgDistIn < lowAvgDistOut) {
+            return (1 - (avgDistIn / lowAvgDistOut));
+        } else if (avgDistIn > lowAvgDistOut) {
+            return ((lowAvgDistOut / avgDistIn) - 1);
         } else {
             return 0;
         }
