@@ -2,16 +2,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#include "../ex1/asm.h"
-#include "../ex2/asm.h"
-#include "../ex3/asm.h"
-#include "../ex4/asm.h"
-#include "../ex5/asm.h"
+#include "../USAC01/asm.h"
+#include "../USAC02/asm.h"
+#include "../USAC03/asm.h"
+#include "../USAC04/asm.h"
+#include "../USAC05/asm.h"
 
 int main() {
     int i, length = 18, num = 13, read = 0, write = 0;
     int array[length], vec[num];
-    char baseInput[] = "sensor_id:8#type:atmospheric_temperature#value:21.60#unit:celsius#time:", token[] = "time";
+    char baseInput[] = "sensor_id:%i#type:atmospheric_temperature#value:%d#unit:celsius#time:%i";
+    char* token[] = {"sensor_id:", "time:", "value:"};
     time_t t;
     srand((unsigned)time(&t));
 
@@ -20,9 +21,9 @@ int main() {
     for (i = 0; i < 50; i++) {
         int output = 0;
         char input[100];
-        sprintf(input, "%s%d", baseInput, (rand() % 99999) + 10000);
+        sprintf(input, baseInput, (rand() % 15), (rand() % 500), (rand() % 99999) + 10000);        
         printf("\nA processar: %s\n", input);
-        extract_token(input, token, &output);
+        extract_token(input, token[(rand() % 3)], &output);
         printf("A armazenar %i num Buffer Circular...\n", output);
         enqueue_value(array, length, &read, &write, output);
         printf("Valor armazenado no array[%i], Read Index: %i, Write Index: %i\n", write, read, write);

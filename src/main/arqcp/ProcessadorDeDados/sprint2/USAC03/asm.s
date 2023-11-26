@@ -12,7 +12,8 @@ move_num_vec:
 
     movl (%rdx), %r10d            # get read index
     movl (%rcx), %eax             # get write index
-
+    pushq %rdx                    # save read index
+    
     subl %r10d, %eax              # writeIndex -= readIndex
     addl %esi, %eax               # writeIndex += length
     xorl %edx, %edx               # clear edx
@@ -41,4 +42,6 @@ array_to_vec:
     incl %eax                     # increment return value
 
 end:
-	ret                           #return
+    popq %rdx                     # restore read index
+    movl %r10d, (%rdx)            # write return value to write index    
+    ret                           #return

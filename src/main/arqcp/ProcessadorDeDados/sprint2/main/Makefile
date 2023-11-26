@@ -1,8 +1,13 @@
 CC = gcc
 CFLAGS = -g -Wall
 
-# List of object files, generated from corresponding source files
-OBJS = main.o asm.o
+# List of source files
+ASRCS := $(filter-out ../USAC05/order.s, $(wildcard ../*/*.s))
+
+# List of object files
+AOBJS := $(ASRCS:.s=.o)
+
+OBJS := main.o $(AOBJS)
 
 # Target executable file
 EXE = output
@@ -16,10 +21,10 @@ $(EXE): $(OBJS)
 
 # Rules for generating object files from source files
 %.o: %.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o: %.s
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $< -o $@
 
 run: output
 	./output
