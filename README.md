@@ -37,6 +37,10 @@ mvn clean verify
 * [Diagramas BDDAD](./docs/bddad/models/Diagrams.md)
 * [Estrura do Armazém (fsiap)](docs/fsiap/readme.md)
 
+## Burndown Chart
+
+![x](./docs/scrum/image.png)
+
 ## Elementos do grupo 
 
 
