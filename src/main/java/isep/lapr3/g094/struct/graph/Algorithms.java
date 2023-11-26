@@ -1,6 +1,5 @@
 package isep.lapr3.g094.struct.graph;
 
-import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
 import java.util.*;
@@ -61,7 +60,7 @@ public class Algorithms {
     }
 
     private static <V, E> void allPaths(Graph<V, E> g, V vOrig, V vDest, boolean[] visited,
-                                        LinkedList<V> path, ArrayList<LinkedList<V>> paths) {
+            LinkedList<V> path, ArrayList<LinkedList<V>> paths) {
 
         visited[g.key(vOrig)] = true;
         path.add(vOrig);
@@ -92,8 +91,8 @@ public class Algorithms {
     }
 
     private static <V, E> void shortestPathDijkstra(Graph<V, E> g, V vOrig,
-                                                    Comparator<E> ce, BinaryOperator<E> sum, E zero,
-                                                    boolean[] visited, V[] pathKeys, E[] dist) {
+            Comparator<E> ce, BinaryOperator<E> sum, E zero,
+            boolean[] visited, V[] pathKeys, E[] dist) {
 
         int vertices = g.numVertices();
         for (int i = 0; i < vertices; i++) {
@@ -132,8 +131,8 @@ public class Algorithms {
 
     @SuppressWarnings("unchecked")
     public static <V, E> E shortestPath(Graph<V, E> g, V vOrig, V vDest,
-                                        Comparator<E> ce, BinaryOperator<E> sum, E zero,
-                                        LinkedList<V> shortPath) {
+            Comparator<E> ce, BinaryOperator<E> sum, E zero,
+            LinkedList<V> shortPath) {
 
         if (!g.validVertex(vOrig) || !g.validVertex(vDest)) {
             return null;
@@ -158,8 +157,8 @@ public class Algorithms {
 
     @SuppressWarnings("unchecked")
     public static <V, E> boolean shortestPaths(Graph<V, E> g, V vOrig,
-                                               Comparator<E> ce, BinaryOperator<E> sum, E zero,
-                                               ArrayList<LinkedList<V>> paths, ArrayList<E> dists) {
+            Comparator<E> ce, BinaryOperator<E> sum, E zero,
+            ArrayList<LinkedList<V>> paths, ArrayList<E> dists) {
 
         if (!g.validVertex(vOrig)) {
             return false;
@@ -185,7 +184,7 @@ public class Algorithms {
     }
 
     private static <V, E> void getPath(Graph<V, E> g, V vOrig, V vDest,
-                                       V[] pathKeys, LinkedList<V> path) {
+            V[] pathKeys, LinkedList<V> path) {
 
         if (!vOrig.equals(vDest) && pathKeys[g.key(vDest)] == null) {
             return;
@@ -248,8 +247,9 @@ public class Algorithms {
         return minDistGraph;
     }
 
-    public static <V, E> List<Graph<V, E>> divideGraph(Graph<V, E> g, Set<V> verticeList, Comparator<E> ce, BinaryOperator<E> sum, E zero,
-                                                       LinkedList<V> shortPath) {
+    public static <V, E> List<Graph<V, E>> divideGraph(Graph<V, E> g, Set<V> verticeList, Comparator<E> ce,
+            BinaryOperator<E> sum, E zero,
+            LinkedList<V> shortPath) {
         int numVertices = g.numVertices();
         List<Graph<V, E>> clusterList = new ArrayList<>();
         for (V vertice : verticeList) {
@@ -275,6 +275,7 @@ public class Algorithms {
         return clusterList;
     }
 
+    @SuppressWarnings("unused")
     private static <V, E> int countCommonNeighbors(V vertex, Graph<V, E> cluster, Graph<V, E> graph) {
         int count = 0;
         for (V neighbor : graph.adjVertices(vertex)) {
@@ -300,8 +301,9 @@ public class Algorithms {
         }
     }
 
-    private static <V, E> int getDistanceTwoVsMST(Graph<V, E> graph, V vertOrigin, V vertDest, Comparator<E> ce, BinaryOperator<E> sum, E zero,
-                                                  LinkedList<V> shortPath) {
+    private static <V, E> int getDistanceTwoVsMST(Graph<V, E> graph, V vertOrigin, V vertDest, Comparator<E> ce,
+            BinaryOperator<E> sum, E zero,
+            LinkedList<V> shortPath) {
         shortestPath(graph, vertOrigin, vertDest, ce, sum, zero, shortPath);
         int dist = 0;
         for (int i = 0, u = 1; u < shortPath.size(); i++, u++) {
@@ -311,7 +313,7 @@ public class Algorithms {
     }
 
     public static <V, E> float getSC(List<Graph<V, E>> clusterList, Comparator<E> ce, BinaryOperator<E> sum, E zero,
-                                     LinkedList<V> shortPath, Graph<V, E> originalGraph) {
+            LinkedList<V> shortPath, Graph<V, E> originalGraph) {
         List<Float> sillouetteAverages = new ArrayList<>();
         for (Graph<V, E> cluster : clusterList) {
             float sillouetteSum = 0;
@@ -397,24 +399,6 @@ public class Algorithms {
         }
 
         return mst;
-    }
-
-    public static <V, E extends Comparable<E>> Pair<V, V> furthestPoints(Graph<V, E> g, Comparator<E> ce, BinaryOperator<E> sum, E zero) {
-        E maxDist = zero;
-        Pair<V, V> furthestPoints = null;
-        for (V location1 : g.vertices()) {
-            for (V location2 : g.vertices()) {
-                if (!location1.equals(location2)) {
-                    LinkedList<V> shortPath = new LinkedList<>();
-                    E dist = shortestPath(g, location1, location2, ce, sum, zero, shortPath);
-                    if (dist != null && dist.compareTo(maxDist) > 0) {
-                        maxDist = dist;
-                        furthestPoints = new Pair<>(location1, location2);
-                    }
-                }
-            }
-        }
-        return furthestPoints;
     }
 
 }

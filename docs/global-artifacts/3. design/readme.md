@@ -2,6 +2,4 @@
 
 ## Class Diagram
 
-**All repositories used in this project**
-
-![Class Diagram Repository](svg/)
+![Class Diagram Repository](./png/sprint2.png)

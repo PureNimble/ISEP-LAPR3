@@ -16,6 +16,7 @@ public class Main {
             loadProperties();
 
             String ipAddress = System.getProperty("database.inet");
+            @SuppressWarnings("unused")
             InetAddress inet = InetAddress.getByName(ipAddress);
 
             MainMenuUI menu = new MainMenuUI();

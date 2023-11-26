@@ -14,7 +14,6 @@ public class DatabaseConnection {
     private static DatabaseConnection instance;
     private OracleDataSource oracleDataSource;
     private Connection connection;
-    private SQLException error;
 
     public DatabaseConnection() throws SQLException {
         oracleDataSource = new OracleDataSource();

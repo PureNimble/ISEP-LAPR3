@@ -149,18 +149,16 @@ public class Service {
 
     public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy) {
         // this graph takes a long time to run
-        //Graph<Location, Integer> distributionGraph = graphRepository.getBasketDistribution();
+        Graph<Location, Integer> distributionGraph = graphRepository.getBasketDistribution();
         // get graph pequeno
-        Graph<Location, Integer> distributionGraph = graphRepository.getSmallGraph();
+        //Graph<Location, Integer> distributionGraph = graphRepository.getSmallGraph();
 
         // furthest points
-        Pair<Location, Location> furthestPoints = Algorithms.furthestPoints(distributionGraph,
-                Integer::compare, Integer::sum, 0);
+        Pair<Integer, LinkedList<Location>> furthestPoints = furthestPoints(distributionGraph);
         // create shortest path
-        LinkedList<Location> shortPath = new LinkedList<>();
-        // get shortest path
-        int distance = Algorithms.shortestPath(distributionGraph, furthestPoints.getFirst(),
-                furthestPoints.getSecond(), Integer::compare, Integer::sum, 0, shortPath);
+        LinkedList<Location> shortPath = furthestPoints.getSecond();
+
+        int distance = furthestPoints.getFirst();
         int distanceAutonomy = autonomy;
         List<Location> rechargeLocations = new ArrayList<>();
         List<Integer> distances = new ArrayList<>();
@@ -192,8 +190,33 @@ public class Service {
         }
 
         Pair<FurthestPoints, Pair<List<Location>, Integer>> output = new Pair<>(
-                new FurthestPoints(furthestPoints, shortPath, distances), new Pair<>(rechargeLocations, distance));
+                new FurthestPoints(new Pair<Location, Location>(shortPath.getFirst(), shortPath.getLast()), shortPath,
+                        distances),
+                new Pair<>(rechargeLocations, distance));
         return output;
+    }
+
+    private Pair<Integer, LinkedList<Location>> furthestPoints(Graph<Location, Integer> g) {
+
+        Integer maxDist = 0;
+        Pair<Integer, LinkedList<Location>> furthestPoints = null;
+
+        for (Location location : g.vertices()) {
+            ArrayList<LinkedList<Location>> locationPaths = new ArrayList<>();
+            ArrayList<Integer> locationDistance = new ArrayList<>();
+            Algorithms.shortestPaths(g, location, Integer::compare, Integer::sum, 0, locationPaths,
+                    locationDistance);
+
+            for (int i = 0; i < locationDistance.size(); i++) {
+
+                if (locationDistance.get(i) > maxDist) {
+                    maxDist = locationDistance.get(i);
+                    furthestPoints = new Pair<>(maxDist, locationPaths.get(i));
+                }
+            }
+
+        }
+        return furthestPoints;
     }
 
     public Map<Location, Map<Location, Integer>> getMinimalPaths() {
@@ -247,31 +270,9 @@ public class Service {
         }
     }
 
-    //Para uso em testes
-    public float getCoefSilManually(List<String> idsSelected, MapGraph<Location, Integer> graph){
-        if (!idsSelected.isEmpty()) {
-            Set<Location> listHubs = new LinkedHashSet<>();
-            for (String id : idsSelected) {
-                for (Location location : graph.vertices()) {
-                    if (id.equals(location.getId())) {
-                        listHubs.add(location);
-                        break;
-                    }
-                }
-            }
-            Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graph);
-            LinkedList<Location> shortPath = new LinkedList<>();
-            List<Graph<Location, Integer>> clusters = Algorithms.divideGraph(minDistGraph, listHubs, Integer::compare, Integer::sum, 0, shortPath);
-            return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
-        } else {
-            return 0;
-        }
-
-    }
     public float getCoefSil(List<Graph<Location, Integer>> clusters) {
         LinkedList<Location> shortPath = new LinkedList<>();
         Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getBasketDistribution());
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
-
 }
