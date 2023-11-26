@@ -247,6 +247,27 @@ public class Service {
         }
     }
 
+    //Para uso em testes
+    public float getCoefSilManually(List<String> idsSelected, MapGraph<Location, Integer> graph){
+        if (!idsSelected.isEmpty()) {
+            Set<Location> listHubs = new LinkedHashSet<>();
+            for (String id : idsSelected) {
+                for (Location location : graph.vertices()) {
+                    if (id.equals(location.getId())) {
+                        listHubs.add(location);
+                        break;
+                    }
+                }
+            }
+            Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graph);
+            LinkedList<Location> shortPath = new LinkedList<>();
+            List<Graph<Location, Integer>> clusters = Algorithms.divideGraph(minDistGraph, listHubs, Integer::compare, Integer::sum, 0, shortPath);
+            return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
+        } else {
+            return 0;
+        }
+
+    }
     public float getCoefSil(List<Graph<Location, Integer>> clusters) {
         LinkedList<Location> shortPath = new LinkedList<>();
         Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getBasketDistribution());

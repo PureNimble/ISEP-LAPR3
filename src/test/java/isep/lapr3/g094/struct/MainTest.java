@@ -516,17 +516,16 @@ public class MainTest {
         assertNull(newList);
     }
 
-    /* Como a complexidade de getSC é muito elevada, este teste usa os small csvs e é só para demonstração
     @Test
     void testGetSC(){
         System.out.println("Testing testGetSC...");
         List<String> ids = new ArrayList<>();
         ids.add("CT10");
         ids.add("CT17");
-        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(ids);
-        assertEquals(-0.549414873123169, service.getCoefSil(newList));
+        float actual = service.getCoefSilManually(ids, graphRepository.getSmallGraph());
+        assertEquals(-0.549414873123169, actual);
     }
-     */
+
 
     @Test
     void testMinimalOptimalCase() {

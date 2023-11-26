@@ -257,7 +257,6 @@ public class Algorithms {
             graph.addVertex(vertice);
             clusterList.add(graph);
         }
-        int debug = 0;
         for (V vertice : g.vertices()) {
             int maxClusterIndex = -1;
             int minDist = Integer.MAX_VALUE;
@@ -270,13 +269,7 @@ public class Algorithms {
                 }
                 currentCluster++;
             }
-            if (!clusterList.get(maxClusterIndex).vertices().contains(vertice)) {
-                for (Graph<V, E> veMatrixGraph : clusterList) {
-                    veMatrixGraph.removeVertex(vertice);
-                }
-                clusterList.get(maxClusterIndex).addVertex(vertice);
-            }
-            debug++;
+            clusterList.get(maxClusterIndex).addVertex(vertice);
         }
         fillEdges(clusterList, g);
         return clusterList;
