@@ -12,17 +12,17 @@
 ## Estrutura Inicial
 
 ### 2D
-![estruturaInicial2D](./estrutura%20inicial/Res-do-chao_18112023_57e.png)
+![estruturaInicial2D](./estrutura%20inicial/Estrutura_Inicial_2D.png)
 ### 3D
-![estruturaInicial3D](./estrutura%20inicial/Res-do-chao_18112023_100e.png)
+![estruturaInicial3D](./estrutura%20inicial/Estrutura_Inicial_3D.png)
 
 
 ## Estrutura Final
 
 ### 2D
-![estruturaFinal2D](./estrutura%20final/Res-do-chao_18112023_69e_1.png)
+![estruturaFinal2D](./estrutura%20final/Estrutura_Final_2D.png)
 
 ### 3D
-![estruturaFinal3D](./estrutura%20final/Res-do-chao_18112023_100e_3.png)
-![estruturaFinal3D](./estrutura%20final/Res-do-chao_18112023_100e_4.png)
+![estruturaFinal3D](./estrutura%20final/Estrutura_Final_3D.png)
+![estruturaFinal3D](./estrutura%20final/Estrutura_Final_3D_v2.png)
 

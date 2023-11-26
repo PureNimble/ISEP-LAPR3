@@ -161,7 +161,6 @@ public class Service {
         // get shortest path
         int distance = Algorithms.shortestPath(distributionGraph, furthestPoints.getFirst(),
                 furthestPoints.getSecond(), Integer::compare, Integer::sum, 0, shortPath);
-        // nao alterar
         int distanceAutonomy = autonomy;
         List<Location> rechargeLocations = new ArrayList<>();
         List<Integer> distances = new ArrayList<>();
@@ -230,7 +229,7 @@ public class Service {
 
     public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected) {
 
-        if(!idsSelected.isEmpty()) {
+        if (!idsSelected.isEmpty()) {
             Set<Location> listHubs = new LinkedHashSet<>();
             for (String id : idsSelected) {
                 for (Location location : graphRepository.getBasketDistribution().vertices()) {
@@ -243,7 +242,7 @@ public class Service {
             Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getBasketDistribution());
             LinkedList<Location> shortPath = new LinkedList<>();
             return Algorithms.divideGraph(minDistGraph, listHubs, Integer::compare, Integer::sum, 0, shortPath);
-        } else{
+        } else {
             return null;
         }
     }
