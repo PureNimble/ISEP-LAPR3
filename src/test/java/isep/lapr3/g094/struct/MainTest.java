@@ -4,11 +4,13 @@ import isep.lapr3.g094.struct.graph.Graph;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import isep.lapr3.g094.application.controller.GraphController;
 import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.domain.type.Criteria;
+import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.repository.GraphRepository;
 import isep.lapr3.g094.repository.Repositories;
@@ -16,6 +18,7 @@ import isep.lapr3.g094.services.Service;
 import isep.lapr3.g094.services.Services;
 import isep.lapr3.g094.struct.graph.Algorithms;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
+import isep.lapr3.g094.domain.Pair;
 
 public class MainTest {
 
@@ -31,7 +34,8 @@ public class MainTest {
         graphRepository = repositories.getGraphRepository();
         service = services.getService();
         ImportController importController = new ImportController();
-        importController.importToGraph();
+        importController.importToGraph(true);
+        importController.importToGraph(false);
         graphController = new GraphController();
         BASKET_DISTRIBUTION = graphRepository.getBasketDistribution();
     }
@@ -54,8 +58,8 @@ public class MainTest {
     void testBasketDistributionNullLocation() {
         System.out.println("Testing BasketDistributionNullLocation...");
 
-        assertThrows(RuntimeException.class, () -> graphRepository.addLocation(null));
-        assertThrows(RuntimeException.class, () -> graphRepository.addDistance(null, null, 0));
+        assertThrows(RuntimeException.class, () -> graphRepository.addLocation(null, true));
+        assertThrows(RuntimeException.class, () -> graphRepository.addDistance(null, null, 0, true));
     }
 
     @Test
@@ -104,8 +108,8 @@ public class MainTest {
 
         Location location1 = new Location("CT123", 0, 0, 0);
         Location location2 = new Location("CT268", 0, 0, 0);
-        graphRepository.addLocation(location1);
-        graphRepository.addLocation(location2);
+        graphRepository.addLocation(location1, true);
+        graphRepository.addLocation(location2, true);
 
         assertEquals(location1, graphController.locationById("CT123"));
         assertEquals(location2, graphController.locationById("CT268"));
@@ -189,7 +193,8 @@ public class MainTest {
         testGraph.addEdge(new Location("CT3"), new Location("CT5"), 1);
         testGraph.addEdge(new Location("CT4"), new Location("CT5"), 1);
 
-        ArrayList<LinkedList<Location>> paths = Algorithms.allPaths(testGraph, new Location("CT1"), new Location("CT5"));
+        ArrayList<LinkedList<Location>> paths = Algorithms.allPaths(testGraph, new Location("CT1"),
+                new Location("CT5"));
         assertEquals(7, paths.size());
 
         List<String> expected1 = Arrays.asList("CT1", "CT2", "CT3", "CT4", "CT5");
@@ -376,6 +381,7 @@ public class MainTest {
             assertTrue(expected.contains(location.getId()));
         }
     }
+
     @Test
     void testGetMinimalPathsPathExistsBetweenLocalizations() {
         System.out.println("Testing GetMinimalPathsPathExistsBetweenLocalizations...");
@@ -404,7 +410,8 @@ public class MainTest {
             for (Location location2 : testMap.get(location1).keySet()) {
                 location2 = service.locationById(location2.getId());
                 //verificar se a distancia entre dois locais está correta
-                assertEquals(minDistGraph.edge(location1, location2).getWeight(), testMap.get(location1).get(location2));
+                assertEquals(minDistGraph.edge(location1, location2).getWeight(),
+                        testMap.get(location1).get(location2));
             }
         }
     }
@@ -420,8 +427,8 @@ public class MainTest {
             location1 = service.locationById(location1.getId());
             for (Location location2 : testMap.get(location1).keySet()) {
                 location2 = service.locationById(location2.getId());
-                assertTrue(minDistGraph.edge(location1, location2).getWeight() <= testMap.get(location1).
-                        get(location2));
+                assertTrue(
+                        minDistGraph.edge(location1, location2).getWeight() <= testMap.get(location1).get(location2));
             }
         }
     }
@@ -462,7 +469,7 @@ public class MainTest {
     }
 
     @Test
-    void testGetClustersWith2Hubs(){
+    void testGetClustersWith2Hubs() {
         System.out.println("Testing testGetClustersWith2Hubs...");
 
         List<String> ids = new ArrayList<>();
@@ -521,4 +528,115 @@ public class MainTest {
     }
      */
 
+    @Test
+    void testMinimalOptimalCase() {
+        System.out.println("Testing Minimal...");
+        System.out.println("Testing Minimal -> Optimal Case");
+        int autonomy = 250;
+
+        Pair<FurthestPoints, Pair<List<Location>, Integer>> testPair = service.getMinimal(autonomy * 1000);
+
+        assertEquals(3, testPair.getSecond().getFirst().size());
+
+        assertEquals(605261, testPair.getSecond().getSecond());
+        // big graph
+        List<String> small_output = Arrays.asList("CT1", "CT2", "CT3", "CT15", "CT16", "CT12", "CT7", "CT8", "CT13",
+                "CT14", "CT11", "CT5", "CT9", "CT4", "CT17", "CT6", "CT10");
+
+        for (Location location : testPair.getSecond().getFirst()) {
+            assertTrue(small_output.contains(location.getId()));
+        }
+        // Origem
+        assertEquals("CT15", testPair.getFirst().getPair().getFirst().getId());
+        // Destino
+        assertEquals("CT8", testPair.getFirst().getPair().getSecond().getId());
+
+        int locationsSize = testPair.getFirst().getLocations().size();
+        assertEquals(7, locationsSize);
+        // shortestLongestPath
+        List<String> shortestLongestPath = Arrays.asList("CT15", "CT12", "CT1", "CT10", "CT13", "CT14", "CT8");
+        List<String> output = new ArrayList<>();
+
+        for (int i = 0; i < locationsSize; i++) {
+            output.add(testPair.getFirst().getLocations().get(i).getId());
+        }
+        assertArrayEquals(shortestLongestPath.toArray(), output.toArray());
+        List<Integer> distanceOutput = new ArrayList<>();
+        List<Integer> shortestLongestPathDistances = Arrays.asList(70717, 62877, 110848, 63448, 89813, 207558);
+        for (int i = 0; i < locationsSize; i++) {
+            if (i < testPair.getFirst().getDistances().size()) {
+                distanceOutput.add(testPair.getFirst().getDistances().get(i));
+            }
+        }
+        // shortestLongestPathDistances
+        assertArrayEquals(shortestLongestPathDistances.toArray(), distanceOutput.toArray());
+        // distancia total 
+        assertEquals(605261, testPair.getSecond().getSecond());
+
+        // veiculo ficou sem bateria
+        assertFalse(testPair.getSecond().getFirst().contains(null));
+
+        // locais de carregamento
+        List<String> expected = Arrays.asList("CT15", "CT1", "CT14");
+        List<String> locaisDeCarregamento = new ArrayList<>();
+        for (int i = 0; i < testPair.getSecond().getFirst().size(); i++) {
+            locaisDeCarregamento.add(testPair.getSecond().getFirst().get(i).getId());
+        }
+        assertArrayEquals(expected.toArray(), locaisDeCarregamento.toArray());
+
+    }
+
+    @Test
+    void testMinimalNoFuel() {
+        System.out.println("Testing Minimal -> No Fuel");
+        int autonomy = 10;
+
+        Pair<FurthestPoints, Pair<List<Location>, Integer>> testPair = service.getMinimal(autonomy * 1000);
+
+        assertEquals(1, testPair.getSecond().getFirst().size());
+
+        assertEquals(605261, testPair.getSecond().getSecond());
+        // big graph
+        List<String> small_output = Arrays.asList("CT1", "CT2", "CT3", "CT15", "CT16", "CT12", "CT7", "CT8", "CT13",
+                "CT14", "CT11", "CT5", "CT9", "CT4", "CT17", "CT6", "CT10");
+
+        for (Location location : testPair.getSecond().getFirst()) {
+            assertTrue(small_output.contains(location.getId()));
+        }
+        // Origem
+        assertEquals("CT15", testPair.getFirst().getPair().getFirst().getId());
+        // Destino
+        assertEquals("CT8", testPair.getFirst().getPair().getSecond().getId());
+
+        int locationsSize = testPair.getFirst().getLocations().size();
+        assertEquals(7, locationsSize);
+        // shortestLongestPath
+        List<String> shortestLongestPath = Arrays.asList("CT15", "CT12", "CT1", "CT10", "CT13", "CT14", "CT8");
+        List<String> output = new ArrayList<>();
+
+        for (int i = 0; i < locationsSize; i++) {
+            output.add(testPair.getFirst().getLocations().get(i).getId());
+        }
+        assertArrayEquals(shortestLongestPath.toArray(), output.toArray());
+        List<Integer> distanceOutput = new ArrayList<>();
+        List<Integer> shortestLongestPathDistances = Arrays.asList(70717);
+        for (int i = 0; i < locationsSize; i++) {
+            if (i < testPair.getFirst().getDistances().size()) {
+                distanceOutput.add(testPair.getFirst().getDistances().get(i));
+            }
+        }
+        // shortestLongestPathDistances
+        assertArrayEquals(shortestLongestPathDistances.toArray(), distanceOutput.toArray());
+        // distancia total 
+        assertEquals(605261, testPair.getSecond().getSecond());
+
+        // locais de carregamento
+        List<String> expected = Arrays.asList("CT15");
+        List<String> locaisDeCarregamento = new ArrayList<>();
+        for (int i = 0; i < testPair.getSecond().getFirst().size(); i++) {
+            locaisDeCarregamento.add(testPair.getSecond().getFirst().get(i).getId());
+        }
+        assertArrayEquals(expected.toArray(), locaisDeCarregamento.toArray());
+
+    }
 }

@@ -11,7 +11,6 @@ import isep.lapr3.g094.services.Service;
 import isep.lapr3.g094.services.Services;
 import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
-import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
 public class GraphController {
 
@@ -62,11 +61,11 @@ public class GraphController {
         return service.getMinimalPaths();
     }
 
-    public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected){
+    public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected) {
         return service.divideIntoClusters(idsSelected);
     }
 
-    public float getCoefSil(List<Graph<Location, Integer>> clusters){
+    public float getCoefSil(List<Graph<Location, Integer>> clusters) {
         return service.getCoefSil(clusters);
     }
 }

@@ -32,25 +32,25 @@ public class Service {
         return graphRepository;
     }
 
-    public boolean createLocation(List<String> locations) {
+    public boolean createLocation(List<String> locations, boolean bigGraph) {
         boolean allAdded = true;
         for (String location : locations) {
             String[] line = location.split(",");
             if (!graphRepository.addLocation(new Location(line[0], Double.parseDouble(line[1].replace(',', '.')),
-                    Double.parseDouble(line[2].replace(',', '.')), Integer.parseInt(line[0].substring(2))))) {
+                    Double.parseDouble(line[2].replace(',', '.')), Integer.parseInt(line[0].substring(2))), bigGraph)) {
                 allAdded = false;
             }
         }
         return allAdded;
     }
 
-    public boolean addDistance(List<String> distances) {
+    public boolean addDistance(List<String> distances, boolean bigGraph) {
         boolean allAdded = true;
         for (String distance : distances) {
             String[] line = distance.split(",");
             if (!graphRepository.addDistance(graphRepository.locationById(line[0]),
                     graphRepository.locationById(line[1]),
-                    Integer.parseInt(line[2])))
+                    Integer.parseInt(line[2]), bigGraph))
                 allAdded = false;
         }
         return allAdded;
@@ -148,8 +148,11 @@ public class Service {
     }
 
     public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy) {
-        // distribution graph
-        MapGraph<Location, Integer> distributionGraph = graphRepository.getBasketDistribution();
+        // this graph takes a long time to run
+        //Graph<Location, Integer> distributionGraph = graphRepository.getBasketDistribution();
+        // get graph pequeno
+        Graph<Location, Integer> distributionGraph = graphRepository.getSmallGraph();
+
         // furthest points
         Pair<Location, Location> furthestPoints = Algorithms.furthestPoints(distributionGraph,
                 Integer::compare, Integer::sum, 0);

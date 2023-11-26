@@ -6,18 +6,21 @@ import isep.lapr3.g094.struct.graph.map.MapGraph;
 
 public class GraphRepository {
 
-    final private MapGraph<Location, Integer> basketDistribution;
+    private MapGraph<Location, Integer> basketDistribution;
+    private MapGraph<Location, Integer> smallGraph;
 
     public GraphRepository() {
         this.basketDistribution = new MapGraph<>(false);
+        this.smallGraph = new MapGraph<>(false);
     }
 
-    public boolean addLocation(Location location) {
-        return this.basketDistribution.addVertex(location);
+    public boolean addLocation(Location location, boolean bigGraph) {
+        return bigGraph ? this.basketDistribution.addVertex(location) : this.smallGraph.addVertex(location);
     }
 
-    public boolean addDistance(Location location1, Location location2, Integer distance) {
-        return this.basketDistribution.addEdge(location1, location2, distance);
+    public boolean addDistance(Location location1, Location location2, Integer distance, boolean bigGraph) {
+        return bigGraph ? this.basketDistribution.addEdge(location1, location2, distance)
+                : this.smallGraph.addEdge(location1, location2, distance);
     }
 
     public int keyLocation(Location location) {
@@ -48,6 +51,10 @@ public class GraphRepository {
 
     public int getNumDistances() {
         return this.basketDistribution.numEdges();
+    }
+
+    public MapGraph<Location, Integer> getSmallGraph() {
+        return smallGraph;
     }
 
     public MapGraph<Location, Integer> getBasketDistribution() {

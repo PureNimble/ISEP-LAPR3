@@ -45,10 +45,14 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void buildBasketDistribution() {
-        if (importController.importToGraph()) {
-            System.out.println("Grafo criado com sucesso");
-        } else
-            System.out.println("Erro ao criar o grafo");
+
+        String bigGraphPrint = importController.importToGraph(true) ? "Grafo grande criado com sucesso\n\n"
+                : "Erro ao criar o grafo grande\n\n";
+        String smallGraphPrint = importController.importToGraph(false) ? "Grafo pequeno criado com sucesso"
+                : "Erro ao criar o grafo pequeno";
+
+        System.out.println(bigGraphPrint + smallGraphPrint);
+
     }
 
     private void getIdealVertices() {
@@ -124,14 +128,11 @@ public class BasketDistributionUI implements Runnable {
         }
         System.out.println("\nDistância Total: " + result.getSecond().getSecond() + "m");
 
-        if (result.getSecond().getFirst().contains(null)) {
-            System.out.println("O veículo ficou sem bateria a meio do percurso");
-        } else {
-            System.out.println("Locais de Carregamento: ");
-            for (int i = 0; i < result.getSecond().getFirst().size(); i++) {
-                System.out.println(result.getSecond().getFirst().get(i).getId());
-            }
+        System.out.println("Locais de Carregamento: ");
+        for (int i = 0; i < result.getSecond().getFirst().size(); i++) {
+            System.out.println(result.getSecond().getFirst().get(i).getId());
         }
+
     }
 
     /*Determinar a rede que liga todas as localidades com uma distância total mínima.
@@ -203,7 +204,7 @@ public class BasketDistributionUI implements Runnable {
         List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(idsSelected);
         System.out.println(newList.toString());
         boolean printSC = Utils.confirm("Queres dar print do coeficiente de silhueta? (s/n):");
-        if(printSC){
+        if (printSC) {
             System.out.println("coeficiente de silhueta: " + graphController.getCoefSil(newList));
         }
     }

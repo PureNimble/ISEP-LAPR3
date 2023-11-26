@@ -96,15 +96,20 @@ public class ImportController {
         return importClass.importTxtFile("bddad/NovosDados.txt", false);
     }
 
-    public boolean importToGraph() {
+    public boolean importToGraph(boolean bigGraph) {
         boolean check = true;
-        List<String> locations = importClass.importTxtFile("esinf/locais_big.csv", true);
-        List<String> distances = importClass.importTxtFile("esinf/distancias_big.csv", true);
+        String locais;
+        String distancias;
+
+        locais = bigGraph ? "esinf/locais_big.csv" : "esinf/locais_small.csv";
+        distancias = bigGraph ? "esinf/distancias_big.csv" : "esinf/distancias_small.csv";
+
+        List<String> locations = importClass.importTxtFile(locais, true);
+        List<String> distances = importClass.importTxtFile(distancias, true);
         if (locations.isEmpty() || distances.isEmpty())
             return false;
-        if (!service.createLocation(locations) || !service.addDistance(distances))
+        if (!service.createLocation(locations, bigGraph) || !service.addDistance(distances, bigGraph))
             check = false;
         return check;
     }
-
 }
