@@ -33,8 +33,8 @@ mvn clean verify
 
 ## Lista de conteúdos 
 
-* [Modelos Relacionais](docs/bddad/models/Diagrams.md)
-* [Glossário](docs/Glossary.md)
+* [Artefatos globais](./docs/global-artifacts/readme.md)
+* [Diagramas BDDAD](./docs/bddad/models/Diagrams.md)
 * [Estrura do Armazém (fsiap)](docs/fsiap/readme.md)
 
 ## Elementos do grupo 

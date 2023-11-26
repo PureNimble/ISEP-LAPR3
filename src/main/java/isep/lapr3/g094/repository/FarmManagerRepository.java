@@ -680,7 +680,8 @@ public class FarmManagerRepository {
 		while (rs.next()) {
 			int operacaoid = rs.getInt(1);
 			String tipo_de_operacao = rs.getString(2);
-			Date data = rs.getDate(3);
+			String data = rs.getString(3);
+			String cultura = rs.getString(4);
 
 			if (previousTipoOperacao == null || !previousTipoOperacao.equals(tipo_de_operacao)) {
 				result.add("---------------------------------");
@@ -689,7 +690,7 @@ public class FarmManagerRepository {
 				previousTipoOperacao = tipo_de_operacao;
 			}
 
-			result.add("-> Operação: " + operacaoid);
+			result.add("-> Operação: " + operacaoid + " -> Cultura: " + cultura);
 			result.add("\t-> Data: " + data + "\n");
 		}
 		return result;

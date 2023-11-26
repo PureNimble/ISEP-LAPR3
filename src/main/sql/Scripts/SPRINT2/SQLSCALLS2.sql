@@ -118,6 +118,7 @@ DECLARE
 result_cursor SYS_REFCURSOR;
     operacaoid number(10);
     tipo_de_operacao VARCHAR2(255);
+    cultura VARCHAR2(255);
     data VARCHAR2(255);
 
     previous_tipoOperacao VARCHAR2(100) := NULL;
@@ -126,7 +127,7 @@ result_cursor SYS_REFCURSOR;
 BEGIN
     result_cursor := GetOperacaoList(108, TO_DATE('2023-07-01', 'YYYY-MM-DD'), TO_DATE('2023-10-02', 'YYYY-MM-DD'));
     LOOP
-        FETCH result_cursor INTO operacaoid, tipo_de_operacao, data;
+FETCH result_cursor INTO operacaoid, tipo_de_operacao, data, cultura;
         EXIT WHEN result_cursor%NOTFOUND;
         data_found := TRUE;
         IF previous_tipoOperacao IS NULL OR previous_tipoOperacao <> tipo_de_operacao THEN
@@ -134,14 +135,14 @@ BEGIN
             DBMS_OUTPUT.PUT_LINE('Tipo de Operação: ' || tipo_de_operacao);
             DBMS_OUTPUT.PUT_LINE('---------------------------------');
             previous_tipoOperacao := tipo_de_operacao;
-        END IF;
-        DBMS_OUTPUT.PUT_LINE('-> Operação: ' || operacaoid);
+END IF;
+        DBMS_OUTPUT.PUT_LINE('-> Operação: ' || operacaoid || '-> Cultura: ' || cultura);
         DBMS_OUTPUT.PUT_LINE(CHR(9) || '-> Data: '|| data);
         DBMS_OUTPUT.PUT_LINE(' ');
-    END LOOP;
+END LOOP;
 CLOSE result_cursor;
 IF NOT data_found THEN
-        DBMS_OUTPUT.PUT_LINE('Sem resultados, para o intervalo de tempo selecionado!');
+        DBMS_OUTPUT.PUT_LINE('Sem resultados!');
 END IF;
 END;
 /

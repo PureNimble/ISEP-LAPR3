@@ -1,0 +1,87 @@
+@startuml
+
+left to right direction
+actor "Gestor Agrícula" as GA  #pink;line:red;line.bold;text:red
+actor "Product Owner" as PO    #SkyBlue;line:blue;line.bold;text:blue
+
+
+
+
+rectangle System {
+    usecase " USBD01 - Elaborar um dicionário de dados" as UC1
+    usecase " USBD02 - Elaborar o modelo relacional (nivel lógico)" as UC2
+    usecase " USBD03 - Instanciar o modelo relacional (nivel físico)" as UC3
+    usecase " USBD04 - Importar os dados de um sistema Legacy" as UC4
+    usecase " USBD05 - Listar a quantidade de produtos colhidos num dada parcela" as UC5
+    usecase " USBD06 - Listar o número de fatores de produçao aplicados numa dada parcela" as UC6
+    usecase " USBD07 - Listar o número de operaçoes realizadas num dada parcela" as UC7
+    usecase " USBD08 - Mostrar fator de produçao com mais aplicações " as UC8
+    usecase " USBD09 - Mostrar  o número de aplicações de cada tipo de fator de produção aplicados na instalação agricula" as UC9
+    usecase " USBD10 - Saber qual a parcela com mais operações de rega" as UC10
+    usecase " USBD11 - Registar uma operação de semeadura " as UC11
+    usecase " USBD12 - Registar uma operação de monda " as UC12
+    usecase " USBD13 - Registar uma operação de colheita  " as UC13
+    usecase " USBD14 - Registar uma operação de aplicação de fator de produção " as UC14
+    usecase " USBD15 - Registar uma operação de poda " as UC15
+    usecase " USBD16 - Obter a lista dos produtos colhidos " as UC16
+    usecase " USBD17 - Obter a lista dos fatores de produção " as UC17
+    usecase " USBD18 - Obter a lista de operações " as UC18
+    usecase " USBD19 - Obter a lista de aplicações de fator de produção " as UC19
+    usecase " USBD20 - Obter os totais de rega mensal " as UC20
+    usecase " USBD21 - Atualizar o modelo relacional (nível lógico e físico) " as UC21
+    usecase " USBD22 - Importar os dados atualizados" as UC22
+    usecase " USBD23 - Atualizar o dicionário de dados/glossário" as UC23
+    usecase " USLP01 - Elaborar o modelo de domínio (nível conceptual)" as L1
+    usecase " USLP02 - Simular um controlador do sistema de rega" as L2
+    usecase " USLP03 - Consumir o plano de rega" as L3
+    usecase " USLP04 - Permitir a evocação da US BD11" as L4
+    usecase " USLP05 - Permitir a evocação da US BD12" as L5
+    usecase " USLP06 - Permitir a evocação da US BD13" as L6
+    usecase " USLP07 - Permitir a evocação da US BD14" as L7
+    usecase " USLP08 - Permitir a evocação da US BD15" as L8
+    usecase " USLP09 - Atualizar o modelo de domínio (nível conceptual)" as L9
+
+
+
+   
+
+
+
+}
+'implement al uc on diagram?
+'Unregistered User
+PO --> UC1
+PO --> UC2
+PO --> UC3
+PO --> UC4
+GA --> UC5
+GA --> UC6
+GA --> UC7
+GA --> UC8
+GA --> UC9
+GA --> UC10
+GA --> UC11
+GA --> UC12
+GA --> UC13
+GA --> UC14
+GA --> UC15
+GA --> UC16
+GA --> UC17
+GA --> UC18
+GA --> UC19
+GA --> UC20
+PO --> UC21
+PO --> UC22
+PO --> UC23
+PO --> L1
+PO --> L2
+PO --> L3
+PO --> L4
+PO --> L5
+PO --> L6
+PO --> L7
+PO --> L8
+PO --> L9
+
+
+@enduml
