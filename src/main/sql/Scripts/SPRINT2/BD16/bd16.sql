@@ -34,7 +34,7 @@ DECLARE
 
     data_found BOOLEAN := FALSE;
 BEGIN
-    result_cursor := getProdutosColhidosList(500, TO_DATE('2023-05-20', 'YYYY-MM-DD'), TO_DATE('2023-11-06', 'YYYY-MM-DD'));
+    result_cursor := getProdutosColhidosList(108, TO_DATE('2023-05-20', 'YYYY-MM-DD'), TO_DATE('2023-11-06', 'YYYY-MM-DD'));
     LOOP
         FETCH result_cursor INTO parcela, especie, produto, data;
         EXIT WHEN result_cursor%NOTFOUND;

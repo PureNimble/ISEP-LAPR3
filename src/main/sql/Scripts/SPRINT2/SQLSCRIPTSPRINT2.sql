@@ -920,3 +920,93 @@ BEGIN
     RETURN result_cursor;
 END;
 /
+
+CREATE OR REPLACE FUNCTION getFatorProducaoElementosList(dataInicial DATE, dataFinal DATE, IDparcela NUMBER) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT fatorProducao, Quantidade, Elemento, data
+        FROM(
+            SELECT FP.DESIGNACAO as FatorProducao, EF.Quantidade as Quantidade, E.Designacao as Elemento, P.PARCELAESPACOID as parcelaID, O.DATAOPERACAO as data  
+            FROM OperacaoFator OFA, fatorproducao FP, ElementoFicha EF, Elemento E, OPERACAOPLANTACAO OP, Plantacao P, Operacao O
+            WHERE OFA.FATORPRODUCAOID = FP.ID
+            AND OFA.OPERACAOID = O.ID
+            AND OFA.OPERACAOID = OP.OPERACAOID
+            AND OP.PlantacaoID = P.ID
+            AND FP.ID = EF.FATORPRODUCAOID
+            AND EF.ELEMENTOID = E.ID
+            UNION 
+            SELECT FP.DESIGNACAO as Designacao, EF.Quantidade as Quantidade, E.Designacao as Elemento, OP.PARCELAESPACOID as parcelaID, O.DATAOPERACAO as data 
+            FROM OperacaoFator OFA, fatorproducao FP, ElementoFicha EF, Elemento E, OPERACAOPARCELA OP, Operacao O
+            WHERE OFA.FATORPRODUCAOID = FP.ID
+            AND OFA.OPERACAOID = O.ID
+            AND OFA.OPERACAOID = OP.OPERACAOID
+            AND FP.ID = EF.FATORPRODUCAOID
+            AND EF.ELEMENTOID = E.ID
+        )
+        WHERE data BETWEEN DATAINICIAL AND DATAFINAL
+        AND parcelaID = IDparcela
+        ORDER BY fatorProducao, data, elemento;
+
+    RETURN result_cursor;
+END;
+/
+
+CREATE OR REPLACE FUNCTION getRegaMensal(dataInicial DATE, dataFinal DATE) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT PARCELA, EXTRACT(YEAR FROM DATA) AS YEAR, EXTRACT(MONTH FROM DATA) AS MONTH, SUM(DURACAO) AS DURACAO
+        FROM(
+            SELECT ES.DESIGNACAO AS PARCELA, OP.DataOperacao AS DATA, MAX(OP.QUANTIDADE) AS DURACAO
+            FROM TIPOOPERACAO TP, OPERACAO OP, PARCELA PAR, OPERACAOSETOR OS, SETOR S, PLANTACAOSETOR PS, PLANTACAO P, ESPACO ES
+            WHERE TP.ID = 2
+            AND OP.TIPOOPERACAOID = TP.ID
+            AND OS.OPERACAOID = OP.ID
+            AND S.ID = OS.SETORID
+            AND PS.SETORID = S.ID
+            AND P.ID = PS.PLANTACAOID
+            AND PAR.ESPACOID = P.PARCELAESPACOID
+            AND ES.ID = PAR.ESPACOID
+            GROUP BY ES.DESIGNACAO, OP.DataOperacao, OP.ID
+        )
+        WHERE DATA BETWEEN dataInicial AND dataFinal
+        GROUP BY PARCELA, EXTRACT(YEAR FROM DATA), EXTRACT(MONTH FROM DATA)
+        ORDER BY PARCELA, YEAR, MONTH;
+    RETURN result_cursor;
+END;
+/
+
+CREATE OR REPLACE FUNCTION GetOperacaoList(parcelaID NUMBER,dataInicial DATE, dataFinal DATE) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT OperacaoID, TipoDeOperacao, data
+        FROM(
+            SELECT OP.OperacaoID AS OperacaoID, TOP.Designacao AS TipoDeOperacao, O.DataOperacao as data
+            FROM OperacaoParcela OP, TipoOperacao TOP, Operacao O
+            WHERE OP.OperacaoID = O.ID
+            AND O.TIPOOPERACAOID = TOP.ID
+            AND OP.ParcelaEspacoID = parcelaID
+            UNION
+            SELECT OP.OperacaoID AS OperacaoID, TOP.Designacao AS TipoDeOperacao, O.DataOperacao as data
+            FROM OperacaoPlantacao OP, TipoOperacao TOP, Operacao O, Plantacao P
+            WHERE OP.OperacaoID = O.ID
+            AND O.TIPOOPERACAOID = TOP.ID
+            AND OP.PlantacaoID = P.ID
+            AND P.ParcelaEspacoID = parcelaID
+            UNION
+            SELECT OS.OperacaoID AS OperacaoID, TOP.Designacao AS TipoDeOperacao, O.DataOperacao as data
+            FROM OperacaoSetor OS, TipoOperacao TOP, Operacao O, Plantacao P, PlantacaoSetor PS, Setor S
+            WHERE OS.OperacaoID = O.ID
+            AND O.TIPOOPERACAOID = TOP.ID
+            AND OS.SetorID = S.ID
+            AND P.PARCELAESPACOID = parcelaID
+            AND P.ID = PS.PlantacaoID
+            AND PS.SetorID = S.ID
+        )
+        WHERE data BETWEEN DATAINICIAL AND DATAFINAL
+        ORDER BY TipoDeOperacao, data;
+    RETURN result_cursor;
+END;
+/
