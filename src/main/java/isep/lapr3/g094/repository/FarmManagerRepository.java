@@ -5,10 +5,16 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.Time;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.List;
+import java.text.DateFormatSymbols;
+import java.util.Locale;
 
 import isep.lapr3.g094.repository.dataAccess.DatabaseConnection;
+import oracle.jdbc.OracleTypes;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -426,5 +432,266 @@ public class FarmManagerRepository {
 			}
 		}
 		return output;
+	}
+
+	public List<String> getProdutosColhidosList(int parcelaID, Date dataInicial, Date dataFinal) throws SQLException {
+		CallableStatement callStmt = null;
+		ResultSet resultSet = null;
+		List<String> result = null;
+
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ ? = call getProdutosColhidosList(?,?,?) }");
+			callStmt.registerOutParameter(1, OracleTypes.CURSOR);
+			callStmt.setInt(2, parcelaID);
+			callStmt.setDate(3, dataInicial);
+			callStmt.setDate(4, dataFinal);
+			callStmt.execute();
+			resultSet = (ResultSet) callStmt.getObject(1);
+
+			result = getProdutosColhidosSet(resultSet);
+		} finally {
+			if (!Objects.isNull(callStmt)) {
+				callStmt.close();
+			}
+			if (!Objects.isNull(resultSet)) {
+				resultSet.close();
+			}
+		}
+
+		return result;
+	}
+
+	private List<String> getProdutosColhidosSet(ResultSet resultSet) throws SQLException {
+		List<String> result = new ArrayList<>();
+		String previousEspecie = null;
+		String previousProduto = null;
+		while (resultSet.next()) {
+			String parcela = resultSet.getString(1);
+			String especie = resultSet.getString(2);
+			String produto = resultSet.getString(3);
+			if (previousEspecie == null || !previousEspecie.equals(especie)) {
+				result.add(" ");
+				result.add(" -> Parcela: " + parcela);
+				result.add(" -> Especíe: " + especie);
+				previousEspecie = especie;
+			}
+			if (previousProduto == null || !previousProduto.equals(produto)) {
+				result.add("\t-> Produto: " + produto);
+				previousProduto = produto;
+			}
+		}
+		return result;
+	}
+
+	public List<String> getFatoresProducaoList(Date dataInicial, Date dataFinal) throws SQLException {
+		CallableStatement callStmt = null;
+		ResultSet resultSet = null;
+		List<String> result = null;
+
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ ? = call getFatorProducaoList(?,?) }");
+			callStmt.registerOutParameter(1, OracleTypes.CURSOR);
+			callStmt.setDate(2, dataInicial);
+			callStmt.setDate(3, dataFinal);
+			callStmt.execute();
+			resultSet = (ResultSet) callStmt.getObject(1);
+
+			result = getFatorProducaoSet(resultSet);
+		} finally {
+			if (!Objects.isNull(callStmt)) {
+				callStmt.close();
+			}
+			if (!Objects.isNull(resultSet)) {
+				resultSet.close();
+			}
+		}
+
+		return result;
+	}
+
+	private List<String> getFatorProducaoSet(ResultSet rs) throws SQLException {
+		List<String> result = new ArrayList<>();
+		String previousParcela = null;
+		String previousAplicacao = null;
+		while (rs.next()) {
+			Date data = rs.getDate(1);
+			String fatorproducao = rs.getString(2);
+			String cultura = rs.getString(3);
+			String aplicacao = rs.getString(4);
+			String parcela = rs.getString(5);
+
+			if (previousParcela == null || !previousParcela.equals(parcela)) {
+				result.add("\nParcela: " + parcela);
+
+				if (aplicacao.equals(previousAplicacao)) {
+					result.add("\n\tAplicacao: " + aplicacao + "\n");
+				}
+
+				previousParcela = parcela;
+			}
+
+			if (previousAplicacao == null || !previousAplicacao.equals(aplicacao)) {
+				result.add("\n\tAplicacao: " + aplicacao + "\n");
+				previousAplicacao = aplicacao;
+			}
+
+			result.add("\t\t" + data + " - " + fatorproducao + " - " + cultura);
+		}
+		return result;
+
+	}
+
+	public List<String> getFatorProducaoElementosList(int parcelaID, Date dataInicial, Date dataFinal)
+			throws SQLException {
+		CallableStatement callStmt = null;
+		ResultSet resultSet = null;
+		List<String> result = null;
+
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ ? = call getFatorProducaoElementosList(?,?,?) }");
+			callStmt.registerOutParameter(1, OracleTypes.CURSOR);
+			callStmt.setDate(2, dataInicial);
+			callStmt.setDate(3, dataFinal);
+			callStmt.setInt(4, parcelaID);
+			callStmt.execute();
+			resultSet = (ResultSet) callStmt.getObject(1);
+
+			result = getFatorProducaoElementosSet(resultSet);
+		} finally {
+			if (!Objects.isNull(callStmt)) {
+				callStmt.close();
+			}
+			if (!Objects.isNull(resultSet)) {
+				resultSet.close();
+			}
+		}
+
+		return result;
+	}
+
+	private List<String> getFatorProducaoElementosSet(ResultSet resultSet) throws SQLException {
+		List<String> result = new ArrayList<>();
+		String previousFatorProducao = null;
+		Date previousData = null;
+		while (resultSet.next()) {
+			String fatorProducao = resultSet.getString(1);
+			String quantidade = resultSet.getString(2);
+			String elemento = resultSet.getString(3);
+			Date data = resultSet.getDate(4);
+			if (previousFatorProducao == null || !previousFatorProducao.equals(fatorProducao)) {
+				result.add(" ");
+				result.add("Fator de Producao: " + fatorProducao);
+				previousFatorProducao = fatorProducao;
+			}
+			if (previousData == null || !previousData.equals(data)) {
+				result.add(" ");
+				result.add("Data: " + data);
+				result.add(" ");
+				previousData = data;
+			}
+			result.add("\t-> Quantidade: " + quantidade + ", Elemento: " + elemento);
+		}
+		return result;
+	}
+
+	public List<String> getRegaMensal(Date dataInicial, Date dataFinal)
+			throws SQLException {
+		CallableStatement callStmt = null;
+		ResultSet resultSet = null;
+		List<String> result = null;
+
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ ? = call getRegaMensal(?,?) }");
+			callStmt.registerOutParameter(1, OracleTypes.CURSOR);
+			callStmt.setDate(2, dataInicial);
+			callStmt.setDate(3, dataFinal);
+			callStmt.execute();
+			resultSet = (ResultSet) callStmt.getObject(1);
+
+			result = getRegaMensalSet(resultSet);
+		} finally {
+			if (!Objects.isNull(callStmt)) {
+				callStmt.close();
+			}
+			if (!Objects.isNull(resultSet)) {
+				resultSet.close();
+			}
+		}
+
+		return result;
+	}
+
+	private List<String> getRegaMensalSet(ResultSet resultSet) throws SQLException {
+		List<String> result = new ArrayList<>();
+		String previousParcela = null;
+		while (resultSet.next()) {
+			String parcela = resultSet.getString(1);
+			int year = resultSet.getInt(2);
+			int data = resultSet.getInt(3);
+			int duracao = resultSet.getInt(4);
+			if (previousParcela == null || !previousParcela.equals(parcela)) {
+				result.add(" ");
+				result.add("Parcela: " + parcela);
+				previousParcela = parcela;
+			}
+			result.add("\t" + new DateFormatSymbols(new Locale("pt", "PT")).getMonths()[data - 1] + " de " + year
+					+ " -> Duração: " + duracao + "min");
+		}
+		return result;
+	}
+
+	public List<String> GetOperacaoList(int parcelaID, Date dataInicial, Date dataFinal)
+			throws SQLException {
+		CallableStatement callStmt = null;
+		ResultSet resultSet = null;
+		List<String> result = null;
+
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ ? = call GetOperacaoList(?,?,?) }");
+			callStmt.registerOutParameter(1, OracleTypes.CURSOR);
+			callStmt.setInt(2, parcelaID);
+			callStmt.setDate(3, dataInicial);
+			callStmt.setDate(4, dataFinal);
+			callStmt.execute();
+			resultSet = (ResultSet) callStmt.getObject(1);
+
+			result = GetOperacaoSet(resultSet);
+		} finally {
+			if (!Objects.isNull(callStmt)) {
+				callStmt.close();
+			}
+			if (!Objects.isNull(resultSet)) {
+				resultSet.close();
+			}
+		}
+
+		return result;
+	}
+
+	private List<String> GetOperacaoSet(ResultSet rs) throws SQLException {
+		List<String> result = new ArrayList<>();
+		String previousTipoOperacao = null;
+
+		while (rs.next()) {
+			int operacaoid = rs.getInt(1);
+			String tipo_de_operacao = rs.getString(2);
+			Date data = rs.getDate(3);
+
+			if (previousTipoOperacao == null || !previousTipoOperacao.equals(tipo_de_operacao)) {
+				result.add("---------------------------------");
+				result.add("Tipo de Operação: " + tipo_de_operacao);
+				result.add("---------------------------------");
+				previousTipoOperacao = tipo_de_operacao;
+			}
+
+			result.add("-> Operação: " + operacaoid);
+			result.add("\t-> Data: " + data + "\n");
+		}
+		return result;
 	}
 }

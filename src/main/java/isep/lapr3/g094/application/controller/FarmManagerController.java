@@ -2,6 +2,8 @@ package isep.lapr3.g094.application.controller;
 
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import isep.lapr3.g094.repository.FarmManagerRepository;
@@ -80,5 +82,29 @@ public class FarmManagerController {
 
     public Map<String, Integer> getPlantacaoByProduto(int parcelaID, int produtoID) throws SQLException {
         return farmManagerRepository.getPlantacaoByProduto(parcelaID, produtoID);
+    }
+
+    public List<String> getOperation(char operationType, int parcelaID, Date dataInicial, Date dataFinal)
+            throws SQLException {
+        switch (Character.toUpperCase(operationType)) {
+            case 'C':
+                return farmManagerRepository.getProdutosColhidosList(parcelaID, dataInicial, dataFinal);
+            case 'E':
+                return farmManagerRepository.getFatorProducaoElementosList(parcelaID, dataInicial, dataFinal);
+            case 'O':
+                return farmManagerRepository.GetOperacaoList(parcelaID, dataInicial, dataFinal);
+        }
+        return new ArrayList<String>();
+    }
+
+    public List<String> getOperationByDate(char operationType, Date dataInicial, Date dataFinal)
+            throws SQLException {
+        switch (Character.toUpperCase(operationType)) {
+            case 'F':
+                return farmManagerRepository.getFatoresProducaoList(dataInicial, dataFinal);
+            case 'R':
+                return farmManagerRepository.getRegaMensal(dataInicial, dataFinal);
+        }
+        return new ArrayList<String>();
     }
 }
