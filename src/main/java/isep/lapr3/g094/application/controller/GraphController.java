@@ -31,40 +31,40 @@ public class GraphController {
         return service;
     }
 
-    public MapGraph<Location, Integer> getBasketDistribution() {
-        return service.getBasketDistribution();
+    public MapGraph<Location, Integer> getGraph(boolean bigGraph) {
+        return service.getGraph(bigGraph);
     }
 
-    public int getNumLocations() {
-        return service.getNumLocations();
+    public int getNumLocations(boolean bigGraph) {
+        return service.getNumLocations(bigGraph);
     }
 
-    public int getNumDistances() {
-        return service.getNumDistances();
+    public int getNumDistances(boolean bigGraph) {
+        return service.getNumDistances(bigGraph);
     }
 
-    public Location locationById(String id) {
-        return service.locationById(id);
+    public Location locationById(String id, boolean bigGraph) {
+        return service.locationById(id, bigGraph);
     }
 
-    public Integer distanceLocations(String id1, String id2) {
-        return service.distanceLocations(id1, id2);
+    public Integer distanceLocations(String id1, String id2, boolean bigGraph) {
+        return service.distanceLocations(id1, id2, bigGraph);
     }
 
-    public Map<Location, Criteria> getVerticesIdeais() {
-        return service.getVerticesIdeais();
+    public Map<Location, Criteria> getVerticesIdeais(boolean bigGraph) {
+        return service.getVerticesIdeais(bigGraph);
     }
 
-    public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy) {
-        return service.getMinimal(autonomy);
+    public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy, boolean bigGraph) {
+        return service.getMinimal(autonomy, bigGraph);
     }
 
-    public Map<Location, Map<Location, Integer>> getMinimalPaths() {
-        return service.getMinimalPaths();
+    public Map<Location, Map<Location, Integer>> getMinimalPaths(boolean bigGraph) {
+        return service.getMinimalPaths(bigGraph);
     }
 
-    public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected) {
-        return service.divideIntoClusters(idsSelected);
+    public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected, boolean bigGraph) {
+        return service.divideIntoClusters(idsSelected, bigGraph);
     }
 
     public float getCoefSil(List<Graph<Location, Integer>> clusters) {
@@ -72,7 +72,7 @@ public class GraphController {
     }
 
     public ArrayList<LinkedList<Location>> getAllPathsWithAutonomy(Location origin, Location destination, int autonomy,
-            int velocity) {
-        return service.getAllPathsWithAutonomy(origin, destination, autonomy, velocity);
+            int velocity, boolean bigGraph) {
+        return service.getAllPathsWithAutonomy(origin, destination, autonomy, velocity, bigGraph);
     }
 }

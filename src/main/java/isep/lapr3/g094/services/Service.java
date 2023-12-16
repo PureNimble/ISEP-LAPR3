@@ -1,5 +1,6 @@
 package isep.lapr3.g094.services;
 
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -14,6 +15,7 @@ import isep.lapr3.g094.struct.graph.Algorithms;
 import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.Edge;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
+import oracle.net.aso.b;
 
 public class Service {
 
@@ -37,7 +39,8 @@ public class Service {
         for (String location : locations) {
             String[] line = location.split(",");
             if (!graphRepository.addLocation(new Location(line[0], Double.parseDouble(line[1].replace(',', '.')),
-                    Double.parseDouble(line[2].replace(',', '.')), Integer.parseInt(line[0].substring(2))), bigGraph)) {
+                    Double.parseDouble(line[2].replace(',', '.')), Integer.parseInt(line[0].substring(2)), null, null),
+                    bigGraph)) {
                 allAdded = false;
             }
         }
@@ -48,8 +51,8 @@ public class Service {
         boolean allAdded = true;
         for (String distance : distances) {
             String[] line = distance.split(",");
-            if (!graphRepository.addDistance(graphRepository.locationById(line[0]),
-                    graphRepository.locationById(line[1]),
+            if (!graphRepository.addDistance(graphRepository.locationById(line[0], bigGraph),
+                    graphRepository.locationById(line[1], bigGraph),
                     Integer.parseInt(line[2]), bigGraph))
                 allAdded = false;
         }
@@ -57,45 +60,63 @@ public class Service {
 
     }
 
-    public int keyLocation(Location location) {
-        return graphRepository.keyLocation(location);
+    public boolean createOpeningHours(List<String> horarios, boolean bigGraph) throws Exception {
+        boolean allAdded = true;
+        for (String horario : horarios) {
+            String[] line = horario.split(",");
+            Location location = graphRepository.locationById(line[0], bigGraph);
+            if (location != null) {
+                LocalTime startHour = LocalTime.parse(line[1]);
+                LocalTime endHour = LocalTime.parse(line[2]);
+                location.setStarHour(startHour);
+                location.setEndHour(endHour);
+            } else {
+                allAdded = false;
+                System.err.println("Localização com ID " + line[0] + " não existe");
+            }
+        }
+        return allAdded;
     }
 
-    public Location locationByKey(int key) {
-        return graphRepository.locationByKey(key);
+    public int keyLocation(Location location, boolean bigGraph) {
+        return graphRepository.keyLocation(location, bigGraph);
     }
 
-    public Location locationById(String id) {
-        return graphRepository.locationById(id);
+    public Location locationByKey(int key, boolean bigGraph) {
+        return graphRepository.locationByKey(key, bigGraph);
     }
 
-    public Integer distanceLocations(String id1, String id2) {
-        Location location1 = graphRepository.locationById(id1);
-        Location location2 = graphRepository.locationById(id2);
-        return graphRepository.distanceLocations(location1, location2);
+    public Location locationById(String id, boolean bigGraph) {
+        return graphRepository.locationById(id, bigGraph);
     }
 
-    public int getNumLocations() {
-        return graphRepository.getNumLocations();
+    public Integer distanceLocations(String id1, String id2, boolean bigGraph) {
+        Location location1 = graphRepository.locationById(id1, bigGraph);
+        Location location2 = graphRepository.locationById(id2, bigGraph);
+        return graphRepository.distanceLocations(location1, location2, bigGraph);
     }
 
-    public int getNumDistances() {
-        return graphRepository.getNumDistances();
+    public int getNumLocations(boolean bigGraph) {
+        return graphRepository.getNumLocations(bigGraph);
     }
 
-    public MapGraph<Location, Integer> getBasketDistribution() {
-        return graphRepository.getBasketDistribution();
+    public int getNumDistances(boolean bigGraph) {
+        return graphRepository.getNumDistances(bigGraph);
     }
 
-    public Map<Location, Criteria> getVerticesIdeais() {
+    public MapGraph<Location, Integer> getGraph(boolean bigGraph) {
+        return bigGraph ? graphRepository.getBasketDistribution() : graphRepository.getSmallGraph();
+    }
+
+    public Map<Location, Criteria> getVerticesIdeais(boolean bigGraph) {
         Map<Location, Criteria> map = new HashMap<>();
         int numberMinimumPaths = 0;
         int i;
-        for (Location location : getBasketDistribution().vertices()) {
-            int degree = graphRepository.getBasketDistribution().inDegree(location);
+        for (Location location : getGraph(bigGraph).vertices()) {
+            int degree = getGraph(bigGraph).inDegree(location);
             ArrayList<LinkedList<Location>> locationPaths = new ArrayList<>();
             ArrayList<Integer> locationDistance = new ArrayList<>();
-            Algorithms.shortestPaths(graphRepository.getBasketDistribution(), location, Integer::compare, Integer::sum,
+            Algorithms.shortestPaths(getGraph(bigGraph), location, Integer::compare, Integer::sum,
                     0, locationPaths, locationDistance);
 
             List<Integer> indices = IntStream.range(0, locationDistance.size()).mapToObj(Integer::valueOf)
@@ -147,14 +168,12 @@ public class Service {
         return sortedMap;
     }
 
-    public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy) {
+    public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy, boolean bigGraph) {
         // this graph takes a long time to run
-        Graph<Location, Integer> distributionGraph = graphRepository.getBasketDistribution();
-        // get graph pequeno
-        //Graph<Location, Integer> distributionGraph = graphRepository.getSmallGraph();
+        Graph<Location, Integer> graph = getGraph(bigGraph);
 
         // furthest points
-        Pair<Integer, LinkedList<Location>> furthestPoints = furthestPoints(distributionGraph);
+        Pair<Integer, LinkedList<Location>> furthestPoints = furthestPoints(graph);
         // create shortest path
         LinkedList<Location> shortPath = furthestPoints.getSecond();
 
@@ -167,7 +186,7 @@ public class Service {
         for (int i = 0; i < shortPath.size() - 1; i++) {
             Location location1 = shortPath.get(i);
             Location location2 = shortPath.get(i + 1);
-            int distanceBetweenPoints = distributionGraph.edge(location1, location2).getWeight();
+            int distanceBetweenPoints = graph.edge(location1, location2).getWeight();
             distances.add(distanceBetweenPoints);
             try {
                 // if distance between points is greater than autonomy
@@ -183,7 +202,7 @@ public class Service {
                     distanceAutonomy = autonomy;
                 }
             } catch (RuntimeException e) {
-                // Declaring ANSI_RESET so that we can reset the color 
+                // Declaring ANSI_RESET so that we can reset the color
                 System.err.println(e.getMessage());
                 break;
             }
@@ -219,9 +238,9 @@ public class Service {
         return furthestPoints;
     }
 
-    public Map<Location, Map<Location, Integer>> getMinimalPaths() {
+    public Map<Location, Map<Location, Integer>> getMinimalPaths(boolean bigGraph) {
         Map<Location, Map<Location, Integer>> map = new HashMap<>();
-        MapGraph<Location, Integer> graph = graphRepository.getBasketDistribution();
+        MapGraph<Location, Integer> graph = getGraph(bigGraph);
         Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graph);
         for (Edge<Location, Integer> edge : minDistGraph.edges()) {
             Location location = edge.getVDest();
@@ -250,12 +269,12 @@ public class Service {
         return map;
     }
 
-    public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected) {
+    public List<Graph<Location, Integer>> divideIntoClusters(List<String> idsSelected, boolean bigGraph) {
 
         if (!idsSelected.isEmpty()) {
             Set<Location> listHubs = new LinkedHashSet<>();
             for (String id : idsSelected) {
-                for (Location location : graphRepository.getBasketDistribution().vertices()) {
+                for (Location location : getGraph(bigGraph).vertices()) {
                     if (id.equals(location.getId())) {
                         listHubs.add(location);
                         break;
@@ -277,11 +296,11 @@ public class Service {
     }
 
     public ArrayList<LinkedList<Location>> getAllPathsWithAutonomy(Location vOrigin, Location vDest, int autonomy,
-            int velocity) {
+            int velocity, boolean bigGraph) {
         ArrayList<LinkedList<Location>> output = null;
-        Graph<Location, Integer> distributionGraph = graphRepository.getBasketDistribution();
+        Graph<Location, Integer> graph = getGraph(bigGraph);
 
-        output = Algorithms.allPathsWithAutonomy(distributionGraph, vOrigin, vDest, autonomy);
+        output = Algorithms.allPathsWithAutonomy(graph, vOrigin, vDest, autonomy);
 
         return output;
 

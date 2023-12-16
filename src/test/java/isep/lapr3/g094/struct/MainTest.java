@@ -44,14 +44,14 @@ public class MainTest {
     void testBasketDistributionLocationsNum() {
         System.out.println("Testing BasketDistributionLocationsNum...");
 
-        assertEquals(323, graphController.getNumLocations());
+        assertEquals(323, graphController.getNumLocations(true));
     }
 
     @Test
     void testBasketDistributionDistancesNum() {
         System.out.println("Testing BasketDistributionDistancesNum...");
 
-        assertEquals(1566, graphController.getNumDistances());
+        assertEquals(1566, graphController.getNumDistances(true));
     }
 
     @Test
@@ -66,54 +66,54 @@ public class MainTest {
     void testBasketDistributionLocationByKey() {
         System.out.println("Testing BasketDistributionLocationByKey...");
 
-        assertNull(service.locationByKey(1000000));
-        assertEquals("CT43", service.locationByKey(0).getId());
-        assertEquals("CT211", service.locationByKey(69).getId());
-        assertEquals("CT305", service.locationByKey(123).getId());
-        assertEquals("CT253", service.locationByKey(265).getId());
-        assertEquals("CT46", service.locationByKey(321).getId());
-        assertEquals("CT159", service.locationByKey(322).getId());
-        assertNull(service.locationByKey(999));
+        assertNull(service.locationByKey(1000000, true));
+        assertEquals("CT43", service.locationByKey(0, true).getId());
+        assertEquals("CT211", service.locationByKey(69, true).getId());
+        assertEquals("CT305", service.locationByKey(123, true).getId());
+        assertEquals("CT253", service.locationByKey(265, true).getId());
+        assertEquals("CT46", service.locationByKey(321, true).getId());
+        assertEquals("CT159", service.locationByKey(322, true).getId());
+        assertNull(service.locationByKey(999, true));
     }
 
     @Test
     void testBasketDistributionLocationById() {
         System.out.println("Testing BasketDistributionLocationById...");
 
-        assertNull(service.locationById("CT999"));
-        assertEquals(new Location("CT43"), service.locationById("CT43"));
-        assertEquals(new Location("CT211"), service.locationById("CT211"));
-        assertEquals(new Location("CT305"), service.locationById("CT305"));
-        assertEquals(new Location("CT253"), service.locationById("CT253"));
-        assertEquals(new Location("CT46"), service.locationById("CT46"));
-        assertEquals(new Location("CT159"), service.locationById("CT159"));
+        assertNull(service.locationById("CT999", true));
+        assertEquals(new Location("CT43"), service.locationById("CT43", true));
+        assertEquals(new Location("CT211"), service.locationById("CT211", true));
+        assertEquals(new Location("CT305"), service.locationById("CT305", true));
+        assertEquals(new Location("CT253"), service.locationById("CT253", true));
+        assertEquals(new Location("CT46"), service.locationById("CT46", true));
+        assertEquals(new Location("CT159"), service.locationById("CT159", true));
     }
 
     @Test
     void testBasketDistributionKeyLocation() {
         System.out.println("Testing BasketDistributionKeyLocation...");
 
-        assertEquals(-1, service.keyLocation(new Location("CT999")));
-        assertEquals(0, service.keyLocation(new Location("CT43")));
-        assertEquals(69, service.keyLocation(new Location("CT211")));
-        assertEquals(123, service.keyLocation(new Location("CT305")));
-        assertEquals(265, service.keyLocation(new Location("CT253")));
-        assertEquals(321, service.keyLocation(new Location("CT46")));
-        assertEquals(322, service.keyLocation(new Location("CT159")));
+        assertEquals(-1, service.keyLocation(new Location("CT999"), true));
+        assertEquals(0, service.keyLocation(new Location("CT43"), true));
+        assertEquals(69, service.keyLocation(new Location("CT211"), true));
+        assertEquals(123, service.keyLocation(new Location("CT305"), true));
+        assertEquals(265, service.keyLocation(new Location("CT253"), true));
+        assertEquals(321, service.keyLocation(new Location("CT46"), true));
+        assertEquals(322, service.keyLocation(new Location("CT159"), true));
     }
 
     @Test
     void testBasketDistributionLocationByID() {
         System.out.println("Testing BasketDistributionLocationByID...");
 
-        Location location1 = new Location("CT123", 0, 0, 0);
-        Location location2 = new Location("CT268", 0, 0, 0);
+        Location location1 = new Location("CT123", 0, 0, 0, null, null);
+        Location location2 = new Location("CT268", 0, 0, 0, null, null);
         graphRepository.addLocation(location1, true);
         graphRepository.addLocation(location2, true);
 
-        assertEquals(location1, graphController.locationById("CT123"));
-        assertEquals(location2, graphController.locationById("CT268"));
-        assertNull(graphController.locationById("CT999"));
+        assertEquals(location1, graphController.locationById("CT123", true));
+        assertEquals(location2, graphController.locationById("CT268", true));
+        assertNull(graphController.locationById("CT999", true));
     }
 
     @Test
@@ -360,7 +360,7 @@ public class MainTest {
     void testVerticesIdeais() {
         System.out.println("Testing VerticesIdeais...");
 
-        Map<Location, Criteria> testMap = service.getVerticesIdeais();
+        Map<Location, Criteria> testMap = service.getVerticesIdeais(true);
 
         assertEquals(323, testMap.size());
 
@@ -386,13 +386,13 @@ public class MainTest {
     void testGetMinimalPathsPathExistsBetweenLocalizations() {
         System.out.println("Testing GetMinimalPathsPathExistsBetweenLocalizations...");
 
-        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths(true);
         Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(BASKET_DISTRIBUTION);
 
         for (Location location1 : testMap.keySet()) {
-            location1 = service.locationById(location1.getId());
+            location1 = service.locationById(location1.getId(), true);
             for (Location location2 : testMap.get(location1).keySet()) {
-                location2 = service.locationById(location2.getId());
+                location2 = service.locationById(location2.getId(), true);
                 assertTrue(minDistGraph.edge(location1, location2) != null);
             }
         }
@@ -402,14 +402,14 @@ public class MainTest {
     void testGetMinimalPathsDistanceBetweenLocalizations() {
         System.out.println("Testing GetMinimalPathsDistanceBetweenLocalizations...");
 
-        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths(true);
         Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(BASKET_DISTRIBUTION);
 
         for (Location location1 : testMap.keySet()) {
-            location1 = service.locationById(location1.getId());
+            location1 = service.locationById(location1.getId(), true);
             for (Location location2 : testMap.get(location1).keySet()) {
-                location2 = service.locationById(location2.getId());
-                //verificar se a distancia entre dois locais está correta
+                location2 = service.locationById(location2.getId(), true);
+                // verificar se a distancia entre dois locais está correta
                 assertEquals(minDistGraph.edge(location1, location2).getWeight(),
                         testMap.get(location1).get(location2));
             }
@@ -420,13 +420,13 @@ public class MainTest {
     void testGetMinimalPathsMinimalDistanceBetweenLocalizations() {
         System.out.println("Testing GetMinimalPathsMinimalDistanceBetweenLocalizations...");
 
-        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths(true);
         Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(BASKET_DISTRIBUTION);
 
         for (Location location1 : testMap.keySet()) {
-            location1 = service.locationById(location1.getId());
+            location1 = service.locationById(location1.getId(), true);
             for (Location location2 : testMap.get(location1).keySet()) {
-                location2 = service.locationById(location2.getId());
+                location2 = service.locationById(location2.getId(), true);
                 assertTrue(
                         minDistGraph.edge(location1, location2).getWeight() <= testMap.get(location1).get(location2));
             }
@@ -437,12 +437,12 @@ public class MainTest {
     void testGetMinimalPathsDistanceBetweenLocalizationsNotNegative() {
         System.out.println("Testing GetMinimalPathsDistanceBetweenLocalizationsNotNegative...");
 
-        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths(true);
 
         for (Location location1 : testMap.keySet()) {
-            location1 = service.locationById(location1.getId());
+            location1 = service.locationById(location1.getId(), true);
             for (Location location2 : testMap.get(location1).keySet()) {
-                location2 = service.locationById(location2.getId());
+                location2 = service.locationById(location2.getId(), true);
                 assertTrue(testMap.get(location1).get(location2) >= 0);
             }
         }
@@ -452,13 +452,13 @@ public class MainTest {
     void testGetMinimalPathsPrint() {
         System.out.println("Testing GetMinimalPathsPrint...");
 
-        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths();
+        Map<Location, Map<Location, Integer>> testMap = service.getMinimalPaths(true);
         int totalDistance = 0;
 
         for (Location location1 : testMap.keySet()) {
-            location1 = service.locationById(location1.getId());
+            location1 = service.locationById(location1.getId(), true);
             for (Location location2 : testMap.get(location1).keySet()) {
-                location2 = service.locationById(location2.getId());
+                location2 = service.locationById(location2.getId(), true);
                 System.out.println(location1.getId() + " -> " + location2.getId() + "; Distância: "
                         + testMap.get(location1).get(location2));
 
@@ -475,7 +475,7 @@ public class MainTest {
         List<String> ids = new ArrayList<>();
         ids.add("CT76");
         ids.add("CT161");
-        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(ids);
+        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(ids, true);
         assertEquals(221, newList.get(0).numVertices());
         assertEquals(102, newList.get(1).numVertices());
         String locationid = "CT76";
@@ -512,19 +512,22 @@ public class MainTest {
     void testGetClustersWith0Hubs() {
         System.out.println("Testing GetClustersWith0Hubs...");
         List<String> ids = new ArrayList<>();
-        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(ids);
+        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(ids, true);
         assertNull(newList);
     }
 
-    /* @Test
-    void testGetSC() {
-        System.out.println("Testing GetSC...");
-        List<String> ids = new ArrayList<>();
-        ids.add("CT10");
-        ids.add("CT17");
-        float actual = service.getCoefSilManually(ids, graphRepository.getSmallGraph());
-        assertEquals(-0.549414873123169, actual);
-    } */
+    /*
+     * @Test
+     * void testGetSC() {
+     * System.out.println("Testing GetSC...");
+     * List<String> ids = new ArrayList<>();
+     * ids.add("CT10");
+     * ids.add("CT17");
+     * float actual = service.getCoefSilManually(ids,
+     * graphRepository.getSmallGraph());
+     * assertEquals(-0.549414873123169, actual);
+     * }
+     */
 
     @Test
     void testMinimalOptimalCase() {
@@ -532,7 +535,7 @@ public class MainTest {
 
         int autonomy = 250;
 
-        Pair<FurthestPoints, Pair<List<Location>, Integer>> testPair = service.getMinimal(autonomy * 1000);
+        Pair<FurthestPoints, Pair<List<Location>, Integer>> testPair = service.getMinimal(autonomy * 1000, true);
 
         assertEquals(3, testPair.getSecond().getFirst().size());
 
@@ -575,7 +578,7 @@ public class MainTest {
         }
         // shortestLongestPathDistances
         assertArrayEquals(distances.toArray(), distanceOutput.toArray());
-        // distancia total 
+        // distancia total
         assertEquals(685116, testPair.getSecond().getSecond());
 
         // locais de carregamento
@@ -593,7 +596,7 @@ public class MainTest {
         System.out.println("Testing MinimalNoFuel...");
         int autonomy = 10;
 
-        Pair<FurthestPoints, Pair<List<Location>, Integer>> testPair = service.getMinimal(autonomy * 1000);
+        Pair<FurthestPoints, Pair<List<Location>, Integer>> testPair = service.getMinimal(autonomy * 1000, true);
 
         assertEquals(1, testPair.getSecond().getFirst().size());
 
@@ -624,7 +627,7 @@ public class MainTest {
         }
         // shortestLongestPathDistances
         assertArrayEquals(shortestLongestPathDistances.toArray(), distanceOutput.toArray());
-        // distancia total 
+        // distancia total
         assertEquals(685116, testPair.getSecond().getSecond());
 
         // locais de carregamento

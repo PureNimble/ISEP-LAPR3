@@ -6,15 +6,12 @@ import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
-import isep.lapr3.g094.gui.GraphVisualizationGUI;
 import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
-
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.time.LocalTime;
 import java.util.*;
-
-import javax.swing.SwingUtilities;
 
 public class BasketDistributionUI implements Runnable {
 
@@ -28,20 +25,21 @@ public class BasketDistributionUI implements Runnable {
         do {
             options.clear();
 
-            if (graphController.getNumLocations() == 0) {
+            if (graphController.getNumLocations(true) == 0 || graphController.getNumDistances(false) == 0) {
                 options.add(new MenuItem("USEI01 - Importar a rede de distribuição de cabazes",
                         this::buildBasketDistribution));
             } else {
                 options.add(
-                        new MenuItem("USEI02 - Ver rede de distribuição de cabazes", this::printBasketDistribution));
-                options.add(new MenuItem("USEI03 - Determinar os vértices ideais", this::getIdealVertices));
+                        new MenuItem("USEI01 - Ver rede de distribuição de cabazes", this::printBasketDistribution));
+                options.add(new MenuItem("USEI02 - Determinar os vértices ideais", this::getIdealVertices));
                 options.add(
-                        new MenuItem("USEI04 - Percurso mínimo possível entre os dois locais mais afastados",
+                        new MenuItem("USEI03 - Percurso mínimo possível entre os dois locais mais afastados",
                                 this::getMinimal));
-                options.add(new MenuItem("USEI05 - Determinar a rede de caminhos mínimos", this::getMinimalPaths));
-                options.add(new MenuItem("USEI06 - Dividir a rede em N clusters", this::divideDistribution));
-                options.add(new MenuItem("USEI07 - Percursos possivel entre os dois locais, com uma dada autonomia",
+                options.add(new MenuItem("USEI04 - Determinar a rede de caminhos mínimos", this::getMinimalPaths));
+                options.add(new MenuItem("USEI05 - Dividir a rede em N clusters", this::divideDistribution));
+                options.add(new MenuItem("USEI06 - Percursos possivel entre os dois locais, com uma dada autonomia",
                         this::getAllPathsWithAutonomy));
+                options.add(new MenuItem("USEI11 - Adicionar horários", this::addSchedule));
             }
 
             option = Utils.showAndSelectIndex(options, "\n=========Interface da Rede de Distribuição=========");
@@ -65,8 +63,12 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void getIdealVertices() {
-
-        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais();
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(bigGraph);
+        importController.importOpeningHours("esinf/schedules/horarioFuncionamento.csv", bigGraph);
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
                 .mapToInt(Location -> Location.getId().length())
@@ -94,8 +96,9 @@ public class BasketDistributionUI implements Runnable {
             formatString = "| Número de Colaboradores: %" + ((maxLength / 2) - 4) + "d | Horário: %" + (maxLength + 3)
                     + "s |\n";
             int numEmployees = entry.getKey().getNumEmployees();
-            String schedule = numEmployees > 105 ? (numEmployees < 216 ? "11h:00 – 16h:00" : "12h:00 – 17h:00")
-                    : "9h:00 – 14h:00";
+            LocalTime startHour = entry.getKey().getStartHour();
+            LocalTime endHour = entry.getKey().getEndHour();
+            String schedule = startHour + " - " + endHour;
             System.out.printf(formatString, numEmployees, schedule);
             System.out.println("--------------------------------------------------------------------");
         }
@@ -119,9 +122,13 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void getMinimal() {
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
         int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
         autonomy *= 1000;
-        Pair<FurthestPoints, Pair<List<Location>, Integer>> result = graphController.getMinimal(autonomy);
+        Pair<FurthestPoints, Pair<List<Location>, Integer>> result = graphController.getMinimal(autonomy, bigGraph);
         System.out.println("Localização de Origem: " + result.getFirst().getPair().getFirst().getId());
         System.out.println("Localização de Destino: " + result.getFirst().getPair().getSecond().getId());
         System.out.println("Pontos De Passagem: ");
@@ -144,13 +151,20 @@ public class BasketDistributionUI implements Runnable {
 
     }
 
-    /*Determinar a rede que liga todas as localidades com uma distância total mínima.
-    Critério de Aceitação: Devolver a rede de ligação mínima: locais, distância entre os locais e
-    distância total da rede.
+    /*
+     * Determinar a rede que liga todas as localidades com uma distância total
+     * mínima.
+     * Critério de Aceitação: Devolver a rede de ligação mínima: locais, distância
+     * entre os locais e
+     * distância total da rede.
      */
 
     private void getMinimalPaths() {
-        Map<Location, Map<Location, Integer>> map = graphController.getMinimalPaths();
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
+        Map<Location, Map<Location, Integer>> map = graphController.getMinimalPaths(bigGraph);
         Integer sumDistance = 0;
         for (Map.Entry<Location, Map<Location, Integer>> entry : map.entrySet()) {
             String locationId = entry.getKey().getId();
@@ -166,7 +180,11 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void divideDistribution() {
-        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais();
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(bigGraph);
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
                 .mapToInt(Location -> Location.getId().length())
@@ -204,26 +222,34 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void printBasketDistribution() {
-        System.out.println(graphController.getBasketDistribution().toString());
-        /* try {
-            SwingUtilities.invokeLater(() -> {
-                try {
-                    new GraphVisualizationGUI(graphController.getBasketDistribution());
-                } catch (FileNotFoundException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            });
-        } catch (Exception e) {
-            System.out.println("Erro ao abrir a janela");
-        } */
-        System.out.println(graphController.getNumLocations() + " Localizações existentes");
-        System.out.println(graphController.getNumDistances() + " Distâncias existentes");
-
+        /*
+         * System.out.println(graphController.getBasketDistribution().toString());
+         * try {
+         * SwingUtilities.invokeLater(() -> {
+         * try {
+         * new GraphVisualizationGUI(graphController.getBasketDistribution());
+         * } catch (FileNotFoundException e) {
+         * // TODO Auto-generated catch block
+         * e.printStackTrace();
+         * }
+         * });
+         * } catch (Exception e) {
+         * System.out.println("Erro ao abrir a janela");
+         * }
+         * 
+         * System.out.println(graphController.getNumLocations() +
+         * " Localizações existentes");
+         * System.out.println(graphController.getNumDistances() +
+         * " Distâncias existentes");
+         */
     }
 
     private void printClusters(List<String> idsSelected) {
-        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(idsSelected);
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
+        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(idsSelected, graphOption());
         System.out.println(newList.toString());
         boolean printSC = Utils.confirm("Queres dar print do coeficiente de silhueta? (s/n):");
         if (printSC) {
@@ -232,6 +258,10 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void getAllPathsWithAutonomy() {
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
         String idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem:");
         Location idOrigemLocation = new Location(idOrigem);
         String idDestino = Utils.readLineFromConsole("Escreva o ID da localização de destino:");
@@ -240,7 +270,7 @@ public class BasketDistributionUI implements Runnable {
         int velocity = Utils.readIntegerFromConsole("Qual a velocidade do veículo?(km/h)");
         autonomy *= 1000;
         ArrayList<LinkedList<Location>> result = graphController.getAllPathsWithAutonomy(idOrigemLocation,
-                idDestinoLocation, autonomy, velocity);
+                idDestinoLocation, autonomy, velocity, bigGraph);
         System.out.println("Localização de Origem: " + idOrigem);
         System.out.println("Localização de Destino: " + idDestino);
         System.out.println("Pontos De Passagem: ");
@@ -248,5 +278,36 @@ public class BasketDistributionUI implements Runnable {
         for (LinkedList<Location> path : result) {
             path.forEach(location -> System.out.print(location.getId() + " -> "));
         }
+    }
+
+    private void addSchedule() {
+        try {
+            Boolean bigGraph = graphOption();
+            if (bigGraph == null) {
+                return;
+            }
+            List<String> files = importController.getFilesFromDirectory("esinf/schedules");
+            int fileNumber = Utils.showAndSelectIndex(files, "\n=========Lista de ficheiros=========");
+            boolean check = importController.importOpeningHours(files.get(fileNumber).toString(), bigGraph);
+            if (check) {
+                System.out.println("Horários adicionados com sucesso");
+            } else {
+                System.out.println("Erro ao adicionar todos os horários");
+            }
+
+        } catch (IOException e) {
+            System.out.println("Ocorreu um erro na pesquisa dos caminhos dos ficheiros: " + e.getMessage());
+        }
+    }
+
+    private Boolean graphOption() {
+        List<String> graphs = new ArrayList<>();
+        graphs.add("Grafo Grande");
+        graphs.add("Grafo Pequeno");
+        int option = Utils.showAndSelectIndex(graphs, "\n=========Escolha do grafo=========");
+        if (option >= 0) {
+            return (option == 0) ? true : false;
+        }
+        return null;
     }
 }

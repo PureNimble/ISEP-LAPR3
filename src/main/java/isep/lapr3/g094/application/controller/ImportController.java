@@ -1,9 +1,9 @@
 package isep.lapr3.g094.application.controller;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-
 import isep.lapr3.g094.domain.imports.Import;
 import isep.lapr3.g094.repository.Repositories;
 import isep.lapr3.g094.repository.irrigation.IrrigationHourRepository;
@@ -111,5 +111,22 @@ public class ImportController {
         if (!service.createLocation(locations, bigGraph) || !service.addDistance(distances, bigGraph))
             check = false;
         return check;
+    }
+
+    public boolean importOpeningHours(String path, boolean bigGraph) {
+        String openingHours = path;
+        List<String> horarios = importClass.importTxtFile(openingHours, true);
+        if (horarios.isEmpty())
+            return false;
+        try {
+            return service.createOpeningHours(horarios, bigGraph);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+    public List<String> getFilesFromDirectory(String string) throws IOException {
+        return importClass.importFilesNames(string);
     }
 }

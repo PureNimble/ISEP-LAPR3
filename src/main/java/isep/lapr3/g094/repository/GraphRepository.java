@@ -23,34 +23,54 @@ public class GraphRepository {
                 : this.smallGraph.addEdge(location1, location2, distance);
     }
 
-    public int keyLocation(Location location) {
-        return this.basketDistribution.key(location);
+    public int keyLocation(Location location, boolean bigGraph) {
+        return bigGraph ? this.basketDistribution.key(location) : this.smallGraph.key(location);
     }
 
-    public Location locationByKey(int key) {
-        return this.basketDistribution.vertex(key);
+    public Location locationByKey(int key, boolean bigGraph) {
+        return bigGraph ? this.basketDistribution.vertex(key) : this.smallGraph.vertex(key);
     }
 
-    public Location locationById(String id) {
-        for (Location location : this.basketDistribution.vertices()) {
-            if (location.getId().equals(id)) {
-                return location;
+    public Location locationById(String id, boolean bigGraph) {
+        if (bigGraph) {
+            for (Location location : this.basketDistribution.vertices()) {
+                if (location.getId().equals(id)) {
+                    return location;
+                }
+            }
+        } else {
+            for (Location location : this.smallGraph.vertices()) {
+                if (location.getId().equals(id)) {
+                    return location;
+                }
             }
         }
         return null;
     }
 
-    public Integer distanceLocations(Location location1, Location location2) {
-        Edge<Location, Integer> distance = this.basketDistribution.edge(location1, location2);
+    public Integer distanceLocations(Location location1, Location location2, boolean bigGraph) {
+        Edge<Location, Integer> distance = null;
+        if (bigGraph) {
+            if (this.basketDistribution.edge(location1, location2) == null) {
+                return null;
+            }
+            distance = this.basketDistribution.edge(location1, location2);
+        } else {
+            if (this.smallGraph.edge(location1, location2) == null) {
+                return null;
+            }
+            distance = this.smallGraph.edge(location1, location2);
+        }
+
         return distance != null ? distance.getWeight() : null;
     }
 
-    public int getNumLocations() {
-        return this.basketDistribution.numVertices();
+    public int getNumLocations(boolean bigGraph) {
+        return bigGraph ? this.basketDistribution.numVertices() : this.smallGraph.numVertices();
     }
 
-    public int getNumDistances() {
-        return this.basketDistribution.numEdges();
+    public int getNumDistances(boolean bigGraph) {
+        return bigGraph ? this.basketDistribution.numEdges() : this.smallGraph.numEdges();
     }
 
     public MapGraph<Location, Integer> getSmallGraph() {
@@ -59,10 +79,5 @@ public class GraphRepository {
 
     public MapGraph<Location, Integer> getBasketDistribution() {
         return basketDistribution;
-    }
-
-    @Override
-    public String toString() {
-        return this.basketDistribution.toString();
     }
 }

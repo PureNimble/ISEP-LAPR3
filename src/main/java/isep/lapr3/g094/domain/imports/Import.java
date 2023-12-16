@@ -1,13 +1,17 @@
 package isep.lapr3.g094.domain.imports;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -98,5 +102,12 @@ public class Import {
             }
         }
         return cellValue;
+    }
+
+    public List<String> importFilesNames(String folderPath) {
+        URL url = getClass().getClassLoader().getResource(folderPath);
+        File folder = new File(url.getPath());
+        String[] fileNames = folder.list();
+        return Arrays.stream(fileNames).map(fileName -> folderPath + "/" + fileName).collect(Collectors.toList());
     }
 }
