@@ -49,6 +49,10 @@ public class MapGraph<V, E> extends CommonGraph<V, E> {
         return le;
     }
 
+    public Set<V> getVertices() {
+        return new HashSet<>(mapVertices.keySet());
+    }
+
     @Override
     public Edge<V, E> edge(V vOrig, V vDest) {
 

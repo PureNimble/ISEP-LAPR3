@@ -6,11 +6,15 @@ import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
+import isep.lapr3.g094.gui.GraphVisualizationGUI;
 import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
 
+import java.io.FileNotFoundException;
 import java.util.*;
+
+import javax.swing.SwingUtilities;
 
 public class BasketDistributionUI implements Runnable {
 
@@ -25,14 +29,19 @@ public class BasketDistributionUI implements Runnable {
             options.clear();
 
             if (graphController.getNumLocations() == 0) {
-                options.add(new MenuItem("Importar a rede de distribuição de cabazes", this::buildBasketDistribution));
+                options.add(new MenuItem("USEI01 - Importar a rede de distribuição de cabazes",
+                        this::buildBasketDistribution));
             } else {
-                options.add(new MenuItem("Ver rede de distribuição de cabazes", this::printBasketDistribution));
-                options.add(new MenuItem("Determinar os vértices ideais", this::getIdealVertices));
                 options.add(
-                        new MenuItem("Percurso mínimo possível entre os dois locais mais afastados", this::getMinimal));
-                options.add(new MenuItem("Determinar a rede de caminhos mínimos", this::getMinimalPaths));
-                options.add(new MenuItem("Dividir a rede em N clusters", this::divideDistribution));
+                        new MenuItem("USEI02 - Ver rede de distribuição de cabazes", this::printBasketDistribution));
+                options.add(new MenuItem("USEI03 - Determinar os vértices ideais", this::getIdealVertices));
+                options.add(
+                        new MenuItem("USEI04 - Percurso mínimo possível entre os dois locais mais afastados",
+                                this::getMinimal));
+                options.add(new MenuItem("USEI05 - Determinar a rede de caminhos mínimos", this::getMinimalPaths));
+                options.add(new MenuItem("USEI06 - Dividir a rede em N clusters", this::divideDistribution));
+                options.add(new MenuItem("USEI07 - Percursos possivel entre os dois locais, com uma dada autonomia",
+                        this::getAllPathsWithAutonomy));
             }
 
             option = Utils.showAndSelectIndex(options, "\n=========Interface da Rede de Distribuição=========");
@@ -196,8 +205,21 @@ public class BasketDistributionUI implements Runnable {
 
     private void printBasketDistribution() {
         System.out.println(graphController.getBasketDistribution().toString());
+        /* try {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    new GraphVisualizationGUI(graphController.getBasketDistribution());
+                } catch (FileNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            });
+        } catch (Exception e) {
+            System.out.println("Erro ao abrir a janela");
+        } */
         System.out.println(graphController.getNumLocations() + " Localizações existentes");
         System.out.println(graphController.getNumDistances() + " Distâncias existentes");
+
     }
 
     private void printClusters(List<String> idsSelected) {
@@ -206,6 +228,25 @@ public class BasketDistributionUI implements Runnable {
         boolean printSC = Utils.confirm("Queres dar print do coeficiente de silhueta? (s/n):");
         if (printSC) {
             System.out.println("coeficiente de silhueta: " + graphController.getCoefSil(newList));
+        }
+    }
+
+    private void getAllPathsWithAutonomy() {
+        String idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem:");
+        Location idOrigemLocation = new Location(idOrigem);
+        String idDestino = Utils.readLineFromConsole("Escreva o ID da localização de destino:");
+        Location idDestinoLocation = new Location(idDestino);
+        int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
+        int velocity = Utils.readIntegerFromConsole("Qual a velocidade do veículo?(km/h)");
+        autonomy *= 1000;
+        ArrayList<LinkedList<Location>> result = graphController.getAllPathsWithAutonomy(idOrigemLocation,
+                idDestinoLocation, autonomy, velocity);
+        System.out.println("Localização de Origem: " + idOrigem);
+        System.out.println("Localização de Destino: " + idDestino);
+        System.out.println("Pontos De Passagem: ");
+
+        for (LinkedList<Location> path : result) {
+            path.forEach(location -> System.out.print(location.getId() + " -> "));
         }
     }
 }

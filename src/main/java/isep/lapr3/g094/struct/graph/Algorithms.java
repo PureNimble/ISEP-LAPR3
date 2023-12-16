@@ -79,6 +79,44 @@ public class Algorithms {
         visited[g.key(vOrig)] = false;
     }
 
+    private static <V, E> void allPathsWithAutonomy(Graph<V, E> g, V vOrig, V vDest, boolean[] visited,
+            LinkedList<V> path, ArrayList<LinkedList<V>> paths, double autonomy) {
+
+        visited[g.key(vOrig)] = true;
+        path.add(vOrig);
+
+        if (vOrig.equals(vDest)) {
+            double totalWeight = 0;
+            for (int i = 0; i < path.size() - 1; i++) {
+                totalWeight += (double) g.edge(path.get(i), path.get(i + 1)).getWeight();
+            }
+            if (totalWeight <= autonomy) {
+                paths.add(new LinkedList<>(path));
+            }
+        } else {
+            for (V adj : g.adjVertices(vOrig)) {
+                if (!visited[g.key(adj)]) {
+                    allPathsWithAutonomy(g, adj, vDest, visited, path, paths, autonomy);
+                }
+            }
+        }
+
+        path.removeLast();
+        visited[g.key(vOrig)] = false;
+    }
+
+    public static <V, E> ArrayList<LinkedList<V>> allPathsWithAutonomy(Graph<V, E> g, V vOrig, V vDest,
+            double autonomy) {
+
+        ArrayList<LinkedList<V>> paths = new ArrayList<>();
+        LinkedList<V> path = new LinkedList<>();
+        boolean[] visited = new boolean[g.numVertices()];
+
+        allPathsWithAutonomy(g, vOrig, vDest, visited, path, paths, autonomy);
+
+        return paths;
+    }
+
     public static <V, E> ArrayList<LinkedList<V>> allPaths(Graph<V, E> g, V vOrig, V vDest) {
 
         ArrayList<LinkedList<V>> paths = new ArrayList<>();

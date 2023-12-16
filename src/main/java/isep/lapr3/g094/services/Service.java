@@ -275,4 +275,15 @@ public class Service {
         Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getBasketDistribution());
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
+
+    public ArrayList<LinkedList<Location>> getAllPathsWithAutonomy(Location vOrigin, Location vDest, int autonomy,
+            int velocity) {
+        ArrayList<LinkedList<Location>> output = null;
+        Graph<Location, Integer> distributionGraph = graphRepository.getBasketDistribution();
+
+        output = Algorithms.allPathsWithAutonomy(distributionGraph, vOrigin, vDest, autonomy);
+
+        return output;
+
+    }
 }
