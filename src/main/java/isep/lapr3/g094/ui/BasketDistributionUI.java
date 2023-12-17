@@ -243,22 +243,56 @@ public class BasketDistributionUI implements Runnable {
         if (bigGraph == null) {
             return;
         }
-        String idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem:");
-        Location idOrigemLocation = new Location(idOrigem);
-        String idDestino = Utils.readLineFromConsole("Escreva o ID da localização de destino:");
-        Location idDestinoLocation = new Location(idDestino);
+        String idOrigem = null;
+        String idDestino = null;
+        do {
+            idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem:").toUpperCase();
+
+        } while ((!idOrigem.contains("CT")));
+        do {
+            idDestino = Utils.readLineFromConsole("Escreva o ID da localização de destino:").toUpperCase();
+
+        } while ((!idDestino.contains("CT")));
         int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
         int velocity = Utils.readIntegerFromConsole("Qual a velocidade do veículo?(km/h)");
-        autonomy *= 1000;
-        ArrayList<LinkedList<Location>> result = graphController.getAllPathsWithAutonomy(idOrigemLocation,
-                idDestinoLocation, autonomy, velocity, bigGraph);
+
+        ArrayList<LinkedHashMap<Location, Integer>> result = graphController.getAllPathsWithAutonomy(idOrigem,
+                idDestino, autonomy * 1000, velocity, bigGraph);
+        if (result == null) {
+            System.out.println("--------------------------");
+            System.out.println("| Localização invalida ! |");
+            System.out.println("--------------------------");
+            return;
+        }
+        if (result.isEmpty()) {
+            System.out.println("--------------------------");
+            System.out.println("| Não existem caminhos ! |");
+            System.out.println("--------------------------");
+            return;
+        }
         System.out.println("Localização de Origem: " + idOrigem);
         System.out.println("Localização de Destino: " + idDestino);
-        System.out.println("Pontos De Passagem: ");
+        System.out.println("Caminhos Possiveis: \n");
+        final String dest = idDestino;
 
-        for (LinkedList<Location> path : result) {
-            path.forEach(location -> System.out.print(location.getId() + " -> "));
-        }
+        result.forEach(map -> {
+            int totalDistance = 0;
+            for (Map.Entry<Location, Integer> entry : map.entrySet()) {
+                String locationId = entry.getKey().getId();
+                int distance = entry.getValue();
+                System.out.print(locationId + " -> " + distance + "m -> ");
+                totalDistance = +distance;
+            }
+            double totalDistanceDouble = totalDistance / 1000;
+            double time = totalDistanceDouble / velocity;
+            int hours = (int) time;
+            int minutes = (int) ((time - hours) * 60);
+            int seconds = (int) (((time - hours) * 60 - minutes) * 60);
+
+            String timeFormatted = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+            System.out.println(dest + "\nDistância Total: " + totalDistance + "m");
+            System.out.println("Tempo Total: " + timeFormatted + "\n");
+        });
     }
 
     private void addSchedule() {

@@ -2,6 +2,7 @@ package isep.lapr3.g094.struct.graph;
 
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BinaryOperator;
 
@@ -80,23 +81,23 @@ public class Algorithms {
     }
 
     private static <V, E> void allPathsWithAutonomy(Graph<V, E> g, V vOrig, V vDest, boolean[] visited,
-            LinkedList<V> path, ArrayList<LinkedList<V>> paths, double autonomy) {
+            LinkedList<V> path, ArrayList<LinkedHashMap<V, E>> paths, double autonomy, int currentWeight) {
 
         visited[g.key(vOrig)] = true;
         path.add(vOrig);
 
-        if (vOrig.equals(vDest)) {
-            double totalWeight = 0;
+        if (vOrig.equals(vDest) && currentWeight <= autonomy) {
+            LinkedHashMap<V, E> output = new LinkedHashMap<>();
             for (int i = 0; i < path.size() - 1; i++) {
-                totalWeight += (double) g.edge(path.get(i), path.get(i + 1)).getWeight();
+                Integer distance = (int) g.edge(path.get(i), path.get(i + 1)).getWeight();
+                output.put(path.get(i), (E) distance);
             }
-            if (totalWeight <= autonomy) {
-                paths.add(new LinkedList<>(path));
-            }
+            paths.add(output);
         } else {
             for (V adj : g.adjVertices(vOrig)) {
                 if (!visited[g.key(adj)]) {
-                    allPathsWithAutonomy(g, adj, vDest, visited, path, paths, autonomy);
+                    Integer distance = (int) g.edge(vOrig, adj).getWeight();
+                    allPathsWithAutonomy(g, adj, vDest, visited, path, paths, autonomy, currentWeight + distance);
                 }
             }
         }
@@ -105,14 +106,13 @@ public class Algorithms {
         visited[g.key(vOrig)] = false;
     }
 
-    public static <V, E> ArrayList<LinkedList<V>> allPathsWithAutonomy(Graph<V, E> g, V vOrig, V vDest,
+    public static <V, E> ArrayList<LinkedHashMap<V, E>> allPathsWithAutonomy(Graph<V, E> g, V vOrig, V vDest,
             double autonomy) {
-
-        ArrayList<LinkedList<V>> paths = new ArrayList<>();
+        ArrayList<LinkedHashMap<V, E>> paths = new ArrayList<>();
         LinkedList<V> path = new LinkedList<>();
         boolean[] visited = new boolean[g.numVertices()];
 
-        allPathsWithAutonomy(g, vOrig, vDest, visited, path, paths, autonomy);
+        allPathsWithAutonomy(g, vOrig, vDest, visited, path, paths, autonomy, 0);
 
         return paths;
     }

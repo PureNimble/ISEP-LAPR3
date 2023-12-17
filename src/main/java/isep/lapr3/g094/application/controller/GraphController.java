@@ -1,6 +1,7 @@
 package isep.lapr3.g094.application.controller;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,8 @@ public class GraphController {
         return service.getCoefSil(clusters, bigGraph);
     }
 
-    public ArrayList<LinkedList<Location>> getAllPathsWithAutonomy(Location origin, Location destination, int autonomy,
+    public ArrayList<LinkedHashMap<Location, Integer>> getAllPathsWithAutonomy(String origin, String destination,
+            int autonomy,
             int velocity, boolean bigGraph) {
         return service.getAllPathsWithAutonomy(origin, destination, autonomy, velocity, bigGraph);
     }
@@ -84,7 +86,7 @@ public class GraphController {
         return service.generateDataCSV(graph);
     }
 
-	public boolean convertMapToMapGraph(Map<Location, Map<Location, Integer>> map, MapGraph<Location, Integer> graph) {
+    public boolean convertMapToMapGraph(Map<Location, Map<Location, Integer>> map, MapGraph<Location, Integer> graph) {
         return service.convertMapToMapGraph(map, graph);
-	}
+    }
 }

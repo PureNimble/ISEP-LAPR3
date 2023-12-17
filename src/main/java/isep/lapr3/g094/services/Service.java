@@ -297,12 +297,19 @@ public class Service {
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
 
-    public ArrayList<LinkedList<Location>> getAllPathsWithAutonomy(Location vOrigin, Location vDest, int autonomy,
+    public ArrayList<LinkedHashMap<Location, Integer>> getAllPathsWithAutonomy(String vOrigin, String vDest,
+            int autonomy,
             int velocity, boolean bigGraph) {
-        ArrayList<LinkedList<Location>> output = null;
+        ArrayList<LinkedHashMap<Location, Integer>> output = null;
         Graph<Location, Integer> graph = getGraph(bigGraph);
 
-        output = Algorithms.allPathsWithAutonomy(graph, vOrigin, vDest, autonomy);
+        if (!graph.validVertex(new Location(vOrigin))
+                || !graph.validVertex(new Location(vDest))) {
+            return null;
+        }
+
+        output = Algorithms.allPathsWithAutonomy(graph, graphRepository.locationById(vOrigin, bigGraph),
+                graphRepository.locationById(vDest, bigGraph), autonomy);
 
         return output;
 
