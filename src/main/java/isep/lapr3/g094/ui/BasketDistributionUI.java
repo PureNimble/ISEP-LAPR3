@@ -6,17 +6,21 @@ import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
+import isep.lapr3.g094.gui.GraphVisualizationGUI;
 import isep.lapr3.g094.struct.graph.Graph;
+import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.*;
 
+
 public class BasketDistributionUI implements Runnable {
 
     private ImportController importController = new ImportController();
     private GraphController graphController = new GraphController();
+    private GraphVisualizationGUI graphVisualizationGUI = new GraphVisualizationGUI();
 
     public void run() {
         List<MenuItem> options = new ArrayList<>();
@@ -59,65 +63,60 @@ public class BasketDistributionUI implements Runnable {
                 : "Erro ao criar o grafo pequeno";
 
         System.out.println(bigGraphPrint + smallGraphPrint);
-
+        if (graphController.generateInitialDataCSV(true) && graphController.generateInitialDataCSV(false)){
+            System.out.println("CSV's gerados com sucesso");
+        } else {
+            System.out.println("Erro ao gerar os CSV's");
+        };
     }
 
     private void getIdealVertices() {
         Boolean bigGraph = graphOption();
         if (bigGraph == null) {
-            return;
+        return;
         }
         Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(bigGraph);
         importController.importOpeningHours("esinf/schedules/horarioFuncionamento.csv", bigGraph);
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
-                .mapToInt(Location -> Location.getId().length())
-                .max()
-                .orElse(0), "ID".length());
+            .mapToInt(Location -> Location.getId().length())
+            .max()
+            .orElse(0), "ID".length());
         // Calculate the maximum length of the degrees
         int maxDegreeLength = Math.max(idealVertices.values().stream()
-                .mapToInt(criteria -> Integer.toString(criteria.getDegree()).length())
-                .max()
-                .orElse(0), "Grau".length());
+            .mapToInt(criteria -> Integer.toString(criteria.getDegree()).length())
+            .max()
+            .orElse(0), "Grau".length());
         // Calculate the maximum length of the number of minimum paths
         int maxNumPathsLength = Math.max(idealVertices.values().stream()
-                .mapToInt(criteria -> Integer.toString(criteria.getNumberMinimumPaths()).length())
-                .max()
-                .orElse(0), "Nº Caminhos mínimos".length());
+            .mapToInt(criteria -> Integer.toString(criteria.getNumberMinimumPaths()).length())
+            .max()
+            .orElse(0), "Nº Caminhos mínimos".length());
 
         int maxLength = Math.max(maxIdLength, Math.max(maxDegreeLength, maxNumPathsLength));
         for (Map.Entry<Location, Criteria> entry : idealVertices.entrySet()) {
-            System.out.println("\n--------------------------------------------------------------------");
-            String formatString = "| ID: %" + maxLength / 3 + "s | Degree: %" + maxLength / 3
-                    + "d | Número de Caminhos Mínimos: %" + maxLength / 3 + "d |\n";
-            System.out.printf(formatString, entry.getKey().getId(), entry.getValue().getDegree(),
-                    entry.getValue().getNumberMinimumPaths());
-            printPaths(entry.getKey().getId(), entry.getValue().getPaths(), entry.getValue().getDistances(), maxLength);
-            formatString = "| Número de Colaboradores: %" + ((maxLength / 2) - 4) + "d | Horário: %" + (maxLength + 3)
-                    + "s |\n";
-            int numEmployees = entry.getKey().getNumEmployees();
-            LocalTime startHour = entry.getKey().getStartHour();
-            LocalTime endHour = entry.getKey().getEndHour();
-            String schedule = startHour + " - " + endHour;
-            System.out.printf(formatString, numEmployees, schedule);
-            System.out.println("--------------------------------------------------------------------");
+        System.out.println("\n--------------------------------------------------------------------");
+        String formatString = "| ID: %" + maxLength / 3 + "s | Degree: %" + maxLength / 3
+            + "d | Número de Caminhos Mínimos: %" + maxLength / 3 + "d |\n";
+        System.out.printf(formatString, entry.getKey().getId(), entry.getValue().getDegree(),
+            entry.getValue().getNumberMinimumPaths());
+        int totalDistance = entry.getValue().getDistances();
+        printPaths(totalDistance, maxLength);
+        formatString = "| Número de Colaboradores: %" + ((maxLength / 2) - 4) + "d | Horário: %" + (maxLength + 3)
+            + "s |\n";
+        int numEmployees = entry.getKey().getNumEmployees();
+        LocalTime startHour = entry.getKey().getStartHour();
+        LocalTime endHour = entry.getKey().getEndHour();
+        String schedule = startHour + " - " + endHour;
+        System.out.printf(formatString, numEmployees, schedule);
+        System.out.println("--------------------------------------------------------------------");
         }
     }
 
-    private void printPaths(String id, ArrayList<LinkedList<Location>> arrayList, ArrayList<Integer> distances,
-            int maxLength) {
-        if (arrayList.size() != (distances.size())) {
-            throw new IllegalArgumentException("As duas listas têm de ter o mesmo tamanho");
-        }
-
-        for (int i = 0; i < arrayList.size(); i++) {
-            LinkedList<Location> path = arrayList.get(i);
-            Integer distance = distances.get(i);
-            String formatString = "| ID Destino: %" + (maxLength - 1) + "s | Distância: %" + (maxLength - 1)
-                    + "d m |\n";
-            System.out.println("--------------------------------------------------------------------");
-            System.out.printf(formatString, path.getLast().getId(), distance);
-        }
+    private void printPaths(int totalDistance, int maxLength) {
+        String formatString = "| Total Distance: %" + ((maxLength * 2) + 8) + "d m |\n";
+        System.out.println("--------------------------------------------------------------------");
+        System.out.printf(formatString, totalDistance);
         System.out.println("--------------------------------------------------------------------");
     }
 
@@ -165,20 +164,20 @@ public class BasketDistributionUI implements Runnable {
             return;
         }
         Map<Location, Map<Location, Integer>> map = graphController.getMinimalPaths(bigGraph);
-        Integer sumDistance = 0;
-        for (Map.Entry<Location, Map<Location, Integer>> entry : map.entrySet()) {
-            String locationId = entry.getKey().getId();
-            for (Map.Entry<Location, Integer> entry2 : entry.getValue().entrySet()) {
-                String location1Id = entry2.getKey().getId();
-                int distance = entry2.getValue();
-                System.out.println(locationId + " -> " + location1Id + "; Distância: " + distance);
-                sumDistance = sumDistance + distance;
-            }
+        MapGraph<Location, Integer> graph = new MapGraph<>(false);
+        if (graphController.convertMapToMapGraph(map, graph)) {
+            System.out.println("Grafo criado com sucesso");
+        } else {
+            System.out.println("Erro ao criar o grafo");
         }
-        System.out.print("\n");
-        System.out.println("Distância total: " + sumDistance);
+        Utils.confirm("Deseja ver o grafo? (s/n):");
+        if (true) {
+            graphController.generateDataCSV(graph);
+            openGraphViewer();
+            graphVisualizationGUI.showGraph();
+        }
     }
-
+    
     private void divideDistribution() {
         Boolean bigGraph = graphOption();
         if (bigGraph == null) {
@@ -213,7 +212,7 @@ public class BasketDistributionUI implements Runnable {
         List<String> idsSelected = new ArrayList<>();
         do {
             idSelected = Utils.readLineFromConsole(
-                    "Escreva o ID to vertice a adicionar (Pressione enter sem responder para continuar):");
+                    "Escreva o ID do vertice a adicionar (Pressione enter sem responder para continuar):");
             if (!idSelected.isEmpty()) {
                 idsSelected.add(idSelected);
             }
@@ -222,26 +221,8 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void printBasketDistribution() {
-        /*
-         * System.out.println(graphController.getBasketDistribution().toString());
-         * try {
-         * SwingUtilities.invokeLater(() -> {
-         * try {
-         * new GraphVisualizationGUI(graphController.getBasketDistribution());
-         * } catch (FileNotFoundException e) {
-         * // TODO Auto-generated catch block
-         * e.printStackTrace();
-         * }
-         * });
-         * } catch (Exception e) {
-         * System.out.println("Erro ao abrir a janela");
-         * }
-         * 
-         * System.out.println(graphController.getNumLocations() +
-         * " Localizações existentes");
-         * System.out.println(graphController.getNumDistances() +
-         * " Distâncias existentes");
-         */
+        openGraphViewer();
+        graphVisualizationGUI.showGraph();
     }
 
     private void printClusters(List<String> idsSelected) {
@@ -253,7 +234,7 @@ public class BasketDistributionUI implements Runnable {
         System.out.println(newList.toString());
         boolean printSC = Utils.confirm("Queres dar print do coeficiente de silhueta? (s/n):");
         if (printSC) {
-            System.out.println("coeficiente de silhueta: " + graphController.getCoefSil(newList));
+            System.out.println("coeficiente de silhueta: " + graphController.getCoefSil(newList, bigGraph));
         }
     }
 
@@ -310,4 +291,24 @@ public class BasketDistributionUI implements Runnable {
         }
         return null;
     }
+
+     private void openGraphViewer() {
+        if (java.awt.Desktop.isDesktopSupported()) {
+            java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+
+            if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
+                try {
+                    java.net.URI uri = new java.net.URI("https://cosmograph.app/run/");
+                    desktop.browse(uri);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.err.println("Esta ação não é suportada neste sistema operativo");
+            }
+        } else {
+            System.err.println("Este sistema operativo não suporta esta ação");
+        }
+    }
+
 }

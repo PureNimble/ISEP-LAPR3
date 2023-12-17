@@ -1,5 +1,8 @@
 package isep.lapr3.g094.services;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,7 +18,6 @@ import isep.lapr3.g094.struct.graph.Algorithms;
 import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.Edge;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
-import oracle.net.aso.b;
 
 public class Service {
 
@@ -105,7 +107,7 @@ public class Service {
     }
 
     public MapGraph<Location, Integer> getGraph(boolean bigGraph) {
-        return bigGraph ? graphRepository.getBasketDistribution() : graphRepository.getSmallGraph();
+        return graphRepository.getGraph(bigGraph);
     }
 
     public Map<Location, Criteria> getVerticesIdeais(boolean bigGraph) {
@@ -119,18 +121,18 @@ public class Service {
             Algorithms.shortestPaths(getGraph(bigGraph), location, Integer::compare, Integer::sum,
                     0, locationPaths, locationDistance);
 
+            int totalDistance = locationDistance.stream().mapToInt(Integer::intValue).sum();
+
             List<Integer> indices = IntStream.range(0, locationDistance.size()).mapToObj(Integer::valueOf)
                     .collect(Collectors.toList());
             indices.sort(Comparator.comparing(locationDistance::get));
             List<LinkedList<Location>> sortedLocationPaths = indices.stream()
                     .map(locationPaths::get)
                     .collect(Collectors.toList());
-            locationDistance.sort(Integer::compareTo);
             locationPaths.clear();
             locationPaths.addAll(sortedLocationPaths);
             locationPaths.remove(0);
-            locationDistance.remove(0);
-            Criteria criteria = new Criteria(degree, locationPaths, numberMinimumPaths, locationDistance);
+            Criteria criteria = new Criteria(degree, locationPaths, numberMinimumPaths, totalDistance);
             map.put(location, criteria);
         }
         for (Map.Entry<Location, Criteria> entry : map.entrySet()) {
@@ -281,7 +283,7 @@ public class Service {
                     }
                 }
             }
-            Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getBasketDistribution());
+            Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getGraph(bigGraph));
             LinkedList<Location> shortPath = new LinkedList<>();
             return Algorithms.divideGraph(minDistGraph, listHubs, Integer::compare, Integer::sum, 0, shortPath);
         } else {
@@ -289,9 +291,9 @@ public class Service {
         }
     }
 
-    public float getCoefSil(List<Graph<Location, Integer>> clusters) {
+    public float getCoefSil(List<Graph<Location, Integer>> clusters, boolean bigGraph) {
         LinkedList<Location> shortPath = new LinkedList<>();
-        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getBasketDistribution());
+        Graph<Location, Integer> minDistGraph = Algorithms.minSpanningTree(graphRepository.getGraph(bigGraph));
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
 
@@ -304,5 +306,89 @@ public class Service {
 
         return output;
 
+    }
+
+    public boolean generateInitialDataCSV(boolean bigGraph) {
+        MapGraph<Location, Integer> graph = graphRepository.getGraph(bigGraph);
+        List<String> data = transformData(graph);
+        String fileName;
+        if (bigGraph)
+            fileName = "BigGraph.csv";
+        else
+            fileName = "SmallGraph.csv";
+            
+        return makeCsvFile(fileName, data);
+    }
+
+    public boolean generateDataCSV(MapGraph<Location, Integer> graph) {
+        List<String> data = transformData(graph);
+        int numFiles = new java.io.File("src/main/resources/esinf/output/").listFiles().length;
+        String fileName = "Graph" + numFiles + ".csv";
+        return makeCsvFile(fileName, data);
+    }
+
+    private List<String> transformData(MapGraph<Location, Integer> graph) {
+        List<String> data = new ArrayList<>();
+        Set<String> addedEdges = new HashSet<>();
+        for (Edge<Location,Integer> edge : graph.edges()) {
+                if (edge.getVOrig() == null || edge.getVDest() == null) {
+                    continue;
+                }
+                if (edge.getVOrig().getId().equals(edge.getVDest().getId())) {
+                    continue;
+                }
+
+                String edgeStr = edge.getVOrig().getId() + "-" + edge.getVDest().getId();
+                String oppositeEdgeStr = edge.getVDest().getId() + "-" + edge.getVOrig().getId();
+
+                if (addedEdges.contains(oppositeEdgeStr)) {
+                    continue;
+                }
+
+                addedEdges.add(edgeStr);
+
+                data.add(edge.getVOrig().getId() + "," + edge.getVDest().getId() + "," + edge.getWeight());
+            }
+        return data;
+    }
+
+    private static boolean makeCsvFile(String fileName, List<String> data) {
+        try (BufferedWriter writer = new BufferedWriter(
+                new FileWriter("src/main/resources/esinf/output/" + fileName, false))) {
+            // Write the header line
+            writer.write("source,target,value");
+            writer.newLine();
+
+            for (String item : data) {
+                writer.write(item);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public boolean convertMapToMapGraph(Map<Location, Map<Location, Integer>> map, MapGraph<Location, Integer> graph) {
+        for (Map.Entry<Location, Map<Location, Integer>> entry : map.entrySet()) {
+            Location origin = entry.getKey();
+            for (Map.Entry<Location, Integer> entry2 : entry.getValue().entrySet()) {
+                Location destination = entry2.getKey();
+                int distance = entry2.getValue();
+                graph.addEdge(origin, destination, distance);
+            }
+        }
+        Set<Location> uniqueLocations = new HashSet<>();
+        for (Map.Entry<Location, Map<Location, Integer>> entry : map.entrySet()) {
+            uniqueLocations.add(entry.getKey());
+            uniqueLocations.addAll(entry.getValue().keySet());
+        }
+
+        if (graph.numVertices() == uniqueLocations.size()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

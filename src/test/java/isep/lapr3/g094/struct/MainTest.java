@@ -37,7 +37,7 @@ public class MainTest {
         importController.importToGraph(true);
         importController.importToGraph(false);
         graphController = new GraphController();
-        BASKET_DISTRIBUTION = graphRepository.getBasketDistribution();
+        BASKET_DISTRIBUTION = graphRepository.getGraph(true);
     }
 
     @Test
@@ -368,10 +368,6 @@ public class MainTest {
                 testMap.get(new Location("CT1")).getPaths().get(testMap.get(new Location("CT1")).getPaths().size() - 1)
                         .size());
 
-        assertEquals(486165,
-                testMap.get(new Location("CT2")).getDistances()
-                        .get(testMap.get(new Location("CT1")).getDistances().size() - 1));
-
         List<String> expected = Arrays.asList("CT1", "CT256", "CT301", "CT262", "CT208", "CT76", "CT166", "CT90",
                 "CT288", "CT160", "CT32", "CT3", "CT286", "CT6", "CT104", "CT196", "CT252", "CT38",
                 "CT195", "CT129", "CT101", "CT285", "CT110", "CT136", "CT60", "CT117", "CT30", "CT276", "CT34",
@@ -479,28 +475,28 @@ public class MainTest {
         assertEquals(221, newList.get(0).numVertices());
         assertEquals(102, newList.get(1).numVertices());
         String locationid = "CT76";
-        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+        for (Location location : graphRepository.getGraph(true).vertices()) {
             if (locationid.equals(location.getId())) {
                 assertTrue(newList.get(0).validVertex(location));
                 break;
             }
         }
         locationid = "CT123";
-        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+        for (Location location : graphRepository.getGraph(true).vertices()) {
             if (locationid.equals(location.getId())) {
                 assertTrue(newList.get(0).validVertex(location));
                 break;
             }
         }
         locationid = "CT161";
-        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+        for (Location location : graphRepository.getGraph(true).vertices()) {
             if (locationid.equals(location.getId())) {
                 assertTrue(newList.get(1).validVertex(location));
                 break;
             }
         }
         locationid = "CT309";
-        for (Location location : graphRepository.getBasketDistribution().vertices()) {
+        for (Location location : graphRepository.getGraph(true).vertices()) {
             if (locationid.equals(location.getId())) {
                 assertTrue(newList.get(1).validVertex(location));
                 break;

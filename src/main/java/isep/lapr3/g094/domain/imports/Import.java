@@ -110,4 +110,5 @@ public class Import {
         String[] fileNames = folder.list();
         return Arrays.stream(fileNames).map(fileName -> folderPath + "/" + fileName).collect(Collectors.toList());
     }
+
 }

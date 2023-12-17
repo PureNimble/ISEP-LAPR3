@@ -11,13 +11,13 @@ public class Criteria {
 
     private int numberMinimumPaths;
 
-    private ArrayList<Integer> distances;
+    private int distances;
 
-    public Criteria(int degree, ArrayList<LinkedList<Location>> paths, int numberMinimumPaths, ArrayList<Integer> distances) {
+    public Criteria(int degree, ArrayList<LinkedList<Location>> paths, int numberMinimumPaths, int totalDistance) {
         this.degree = degree;
         this.paths = paths;
         this.numberMinimumPaths = numberMinimumPaths;
-        this.distances = distances;
+        this.distances = totalDistance;
     }
 
     public int getDegree() {
@@ -44,11 +44,11 @@ public class Criteria {
         this.numberMinimumPaths = numberMinimumPaths;
     }
 
-    public ArrayList<Integer> getDistances() {
+    public int getDistances() {
         return distances;
     }
 
-    public void setDistances(ArrayList<Integer> distances) {
+    public void setDistances(int distances) {
         this.distances = distances;
     }
 }

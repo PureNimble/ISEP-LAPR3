@@ -73,11 +73,7 @@ public class GraphRepository {
         return bigGraph ? this.basketDistribution.numEdges() : this.smallGraph.numEdges();
     }
 
-    public MapGraph<Location, Integer> getSmallGraph() {
-        return smallGraph;
-    }
-
-    public MapGraph<Location, Integer> getBasketDistribution() {
-        return basketDistribution;
+    public MapGraph<Location, Integer> getGraph(boolean bigGraph) {
+        return bigGraph ? this.basketDistribution : this.smallGraph;
     }
 }

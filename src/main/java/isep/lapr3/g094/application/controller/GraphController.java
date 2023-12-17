@@ -67,12 +67,24 @@ public class GraphController {
         return service.divideIntoClusters(idsSelected, bigGraph);
     }
 
-    public float getCoefSil(List<Graph<Location, Integer>> clusters) {
-        return service.getCoefSil(clusters);
+    public float getCoefSil(List<Graph<Location, Integer>> clusters, boolean bigGraph) {
+        return service.getCoefSil(clusters, bigGraph);
     }
 
     public ArrayList<LinkedList<Location>> getAllPathsWithAutonomy(Location origin, Location destination, int autonomy,
             int velocity, boolean bigGraph) {
         return service.getAllPathsWithAutonomy(origin, destination, autonomy, velocity, bigGraph);
     }
+
+    public boolean generateInitialDataCSV(boolean bigGraph) {
+        return service.generateInitialDataCSV(bigGraph);
+    }
+
+    public boolean generateDataCSV(MapGraph<Location, Integer> graph) {
+        return service.generateDataCSV(graph);
+    }
+
+	public boolean convertMapToMapGraph(Map<Location, Map<Location, Integer>> map, MapGraph<Location, Integer> graph) {
+        return service.convertMapToMapGraph(map, graph);
+	}
 }
