@@ -16,11 +16,11 @@ public class RegisterOperationUI implements Runnable {
 
     public void run() {
         List<MenuItem> options = new ArrayList<MenuItem>();
-        options.add(new MenuItem("Semeadura", () -> createOperation('S')));
-        options.add(new MenuItem("Monda", () -> createOperation('M')));
-        options.add(new MenuItem("Colheita", () -> createOperation('C')));
-        options.add(new MenuItem("Aplicação de fator de produção", () -> createOperation('A')));
-        options.add(new MenuItem("Poda", () -> createOperation('P')));
+        options.add(new MenuItem("USBD11 - Semeadura", () -> createOperation('S')));
+        options.add(new MenuItem("USBD12 - Monda", () -> createOperation('M')));
+        options.add(new MenuItem("USBD13 - Colheita", () -> createOperation('C')));
+        options.add(new MenuItem("USBD14 - Aplicação de fator de produção", () -> createOperation('A')));
+        options.add(new MenuItem("USBD15 - Poda", () -> createOperation('P')));
 
         int option = 0;
         do {

@@ -16,12 +16,12 @@ public class DisplayOperationUI implements Runnable {
 
     public void run() {
         List<MenuItem> options = new ArrayList<MenuItem>();
-        options.add(new MenuItem("Lista de produtos colhidos", () -> checkOperation('C')));
-        options.add(new MenuItem("Lista de quantidades por elemento para fatores de produção aplicados",
+        options.add(new MenuItem("USBD16 - Lista de produtos colhidos", () -> checkOperation('C')));
+        options.add(new MenuItem("USBD17 - Lista de quantidades por elemento para fatores de produção aplicados",
                 () -> checkOperation('E')));
-        options.add(new MenuItem("Lista de operações realizadas", () -> checkOperation('O')));
-        options.add(new MenuItem("Lista de aplicações de fator de produção", () -> checkOperation('F')));
-        options.add(new MenuItem("Lista de rega mensal", () -> checkOperation('R')));
+        options.add(new MenuItem("USBD18 - Lista de operações realizadas", () -> checkOperation('O')));
+        options.add(new MenuItem("USBD19 - Lista de aplicações de fator de produção", () -> checkOperation('F')));
+        options.add(new MenuItem("USBD20 - Lista de rega mensal", () -> checkOperation('R')));
 
         int option = 0;
         do {

@@ -12,9 +12,19 @@ import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.time.LocalTime;
 import java.util.*;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class BasketDistributionUI implements Runnable {
 
@@ -63,53 +73,54 @@ public class BasketDistributionUI implements Runnable {
                 : "Erro ao criar o grafo pequeno";
 
         System.out.println(bigGraphPrint + smallGraphPrint);
-        if (graphController.generateInitialDataCSV(true) && graphController.generateInitialDataCSV(false)){
+        if (graphController.generateInitialDataCSV(true) && graphController.generateInitialDataCSV(false)) {
             System.out.println("CSV's gerados com sucesso");
         } else {
             System.out.println("Erro ao gerar os CSV's");
-        };
+        }
+        ;
     }
 
     private void getIdealVertices() {
         Boolean bigGraph = graphOption();
         if (bigGraph == null) {
-        return;
+            return;
         }
         Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(bigGraph);
         importController.importOpeningHours("esinf/schedules/horarioFuncionamento.csv", bigGraph);
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
-            .mapToInt(Location -> Location.getId().length())
-            .max()
-            .orElse(0), "ID".length());
+                .mapToInt(Location -> Location.getId().length())
+                .max()
+                .orElse(0), "ID".length());
         // Calculate the maximum length of the degrees
         int maxDegreeLength = Math.max(idealVertices.values().stream()
-            .mapToInt(criteria -> Integer.toString(criteria.getDegree()).length())
-            .max()
-            .orElse(0), "Grau".length());
+                .mapToInt(criteria -> Integer.toString(criteria.getDegree()).length())
+                .max()
+                .orElse(0), "Grau".length());
         // Calculate the maximum length of the number of minimum paths
         int maxNumPathsLength = Math.max(idealVertices.values().stream()
-            .mapToInt(criteria -> Integer.toString(criteria.getNumberMinimumPaths()).length())
-            .max()
-            .orElse(0), "Nº Caminhos mínimos".length());
+                .mapToInt(criteria -> Integer.toString(criteria.getNumberMinimumPaths()).length())
+                .max()
+                .orElse(0), "Nº Caminhos mínimos".length());
 
         int maxLength = Math.max(maxIdLength, Math.max(maxDegreeLength, maxNumPathsLength));
         for (Map.Entry<Location, Criteria> entry : idealVertices.entrySet()) {
-        System.out.println("\n--------------------------------------------------------------------");
-        String formatString = "| ID: %" + maxLength / 3 + "s | Degree: %" + maxLength / 3
-            + "d | Número de Caminhos Mínimos: %" + maxLength / 3 + "d |\n";
-        System.out.printf(formatString, entry.getKey().getId(), entry.getValue().getDegree(),
-            entry.getValue().getNumberMinimumPaths());
-        int totalDistance = entry.getValue().getDistances();
-        printPaths(totalDistance, maxLength);
-        formatString = "| Número de Colaboradores: %" + ((maxLength / 2) - 4) + "d | Horário: %" + (maxLength + 3)
-            + "s |\n";
-        int numEmployees = entry.getKey().getNumEmployees();
-        LocalTime startHour = entry.getKey().getStartHour();
-        LocalTime endHour = entry.getKey().getEndHour();
-        String schedule = startHour + " - " + endHour;
-        System.out.printf(formatString, numEmployees, schedule);
-        System.out.println("--------------------------------------------------------------------");
+            System.out.println("\n--------------------------------------------------------------------");
+            String formatString = "| ID: %" + maxLength / 3 + "s | Degree: %" + maxLength / 3
+                    + "d | Número de Caminhos Mínimos: %" + maxLength / 3 + "d |\n";
+            System.out.printf(formatString, entry.getKey().getId(), entry.getValue().getDegree(),
+                    entry.getValue().getNumberMinimumPaths());
+            int totalDistance = entry.getValue().getDistances();
+            printPaths(totalDistance, maxLength);
+            formatString = "| Número de Colaboradores: %" + ((maxLength / 2) - 4) + "d | Horário: %" + (maxLength + 3)
+                    + "s |\n";
+            int numEmployees = entry.getKey().getNumEmployees();
+            LocalTime startHour = entry.getKey().getStartHour();
+            LocalTime endHour = entry.getKey().getEndHour();
+            String schedule = startHour + " - " + endHour;
+            System.out.printf(formatString, numEmployees, schedule);
+            System.out.println("--------------------------------------------------------------------");
         }
     }
 
@@ -173,11 +184,11 @@ public class BasketDistributionUI implements Runnable {
         Utils.confirm("Deseja ver o grafo? (s/n):");
         if (true) {
             graphController.generateDataCSV(graph);
-            openGraphViewer();
+            openGraphViewer(null);
             graphVisualizationGUI.showGraph();
         }
     }
-    
+
     private void divideDistribution() {
         Boolean bigGraph = graphOption();
         if (bigGraph == null) {
@@ -221,8 +232,13 @@ public class BasketDistributionUI implements Runnable {
     }
 
     private void printBasketDistribution() {
-        openGraphViewer();
-        graphVisualizationGUI.showGraph();
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
+        String filePath = bigGraph ? "distancias_big.csv" : "distancias_small.csv";
+        openGraphViewer(filePath);
+        //graphVisualizationGUI.showGraph();
     }
 
     private void printClusters(List<String> idsSelected) {
@@ -246,11 +262,11 @@ public class BasketDistributionUI implements Runnable {
         String idOrigem = null;
         String idDestino = null;
         do {
-            idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem:").toUpperCase();
+            idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem: (CT**)").toUpperCase();
 
         } while ((!idOrigem.contains("CT")));
         do {
-            idDestino = Utils.readLineFromConsole("Escreva o ID da localização de destino:").toUpperCase();
+            idDestino = Utils.readLineFromConsole("Escreva o ID da localização de destino: (CT**)").toUpperCase();
 
         } while ((!idDestino.contains("CT")));
         int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
@@ -326,22 +342,57 @@ public class BasketDistributionUI implements Runnable {
         return null;
     }
 
-     private void openGraphViewer() {
-        if (java.awt.Desktop.isDesktopSupported()) {
-            java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+    private void openGraphViewer(String filePath) {
+        try {
+            URL url = getClass().getClassLoader().getResource("chromedriver.exe");
+            if (url != null) {
+                String path = url.getPath();
+                System.out.println("ChromeDriver path: " + path);
+                System.setProperty("webdriver.chrome.driver", path);
+            } else {
+                System.out.println("Could not find chromedriver.exe");
+                return;
+            }
 
-            if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
+            WebDriver driver = new ChromeDriver();
+            driver.get("https://cosmograph.app/run/");
+
+            // Find all div elements in the webpage
+            List<WebElement> divElements = driver.findElements(By.cssSelector("div"));
+            WebElement div = divElements.get(8);
+            div.click();
+
+            divElements = driver.findElements(By.cssSelector("div"));
+            div = divElements.get(10);
+
+            WebElement input = div.findElement(By.cssSelector("input[type=file]"));
+
+            // get a path of the file in resources folder
+            if (!(filePath == null)) {
+                String path = getClass().getClassLoader().getResource("esinf/" + filePath).getPath();
                 try {
-                    java.net.URI uri = new java.net.URI("https://cosmograph.app/run/");
-                    desktop.browse(uri);
-                } catch (Exception e) {
+                    // Decode the path
+                    path = URLDecoder.decode(path, "UTF-8");
+                } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
-            } else {
-                System.err.println("Esta ação não é suportada neste sistema operativo");
+
+                // Remove leading slash on Windows
+                if (System.getProperty("os.name").startsWith("Windows") && path.startsWith("/")) {
+                    path = path.substring(1);
+                }
+
+                System.out.println("Path: " + path);
+                input.sendKeys(path);
+                List<WebElement> buttons = driver.findElements(By.cssSelector("button"));
+
+                buttons.getLast().click();
             }
-        } else {
-            System.err.println("Este sistema operativo não suporta esta ação");
+
+        } catch (
+
+        Exception e) {
+            System.out.println("Ocorreu um erro ao abrir o GraphViewer: " + e.getMessage());
         }
     }
 
