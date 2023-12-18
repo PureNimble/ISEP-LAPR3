@@ -89,4 +89,8 @@ public class GraphController {
     public boolean convertMapToMapGraph(Map<Location, Map<Location, Integer>> map, MapGraph<Location, Integer> graph) {
         return service.convertMapToMapGraph(map, graph);
     }
+
+    public String getLatestFileFromDirectory(String string) {
+        return service.getLatestFileFromDirectory(string);
+    }
 }

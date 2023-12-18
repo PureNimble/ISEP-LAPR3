@@ -6,7 +6,6 @@ import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
 import isep.lapr3.g094.domain.type.FurthestPoints;
 import isep.lapr3.g094.domain.type.Location;
-import isep.lapr3.g094.gui.GraphVisualizationGUI;
 import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
@@ -30,7 +29,6 @@ public class BasketDistributionUI implements Runnable {
 
     private ImportController importController = new ImportController();
     private GraphController graphController = new GraphController();
-    private GraphVisualizationGUI graphVisualizationGUI = new GraphVisualizationGUI();
 
     public void run() {
         List<MenuItem> options = new ArrayList<>();
@@ -184,8 +182,8 @@ public class BasketDistributionUI implements Runnable {
         Utils.confirm("Deseja ver o grafo? (s/n):");
         if (true) {
             graphController.generateDataCSV(graph);
-            openGraphViewer(null);
-            graphVisualizationGUI.showGraph();
+            String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
+            openGraphViewer(filePath);
         }
     }
 
@@ -238,7 +236,6 @@ public class BasketDistributionUI implements Runnable {
         }
         String filePath = bigGraph ? "distancias_big.csv" : "distancias_small.csv";
         openGraphViewer(filePath);
-        //graphVisualizationGUI.showGraph();
     }
 
     private void printClusters(List<String> idsSelected) {
@@ -355,7 +352,10 @@ public class BasketDistributionUI implements Runnable {
             }
 
             WebDriver driver = new ChromeDriver();
+            driver.manage().window().maximize();
             driver.get("https://cosmograph.app/run/");
+            WebDriverWait wait = new WebDriverWait(driver, 10);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div")));
 
             // Find all div elements in the webpage
             List<WebElement> divElements = driver.findElements(By.cssSelector("div"));
@@ -365,6 +365,7 @@ public class BasketDistributionUI implements Runnable {
             divElements = driver.findElements(By.cssSelector("div"));
             div = divElements.get(10);
 
+            // Find the input element
             WebElement input = div.findElement(By.cssSelector("input[type=file]"));
 
             // get a path of the file in resources folder

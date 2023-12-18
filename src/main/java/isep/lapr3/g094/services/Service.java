@@ -3,10 +3,12 @@ package isep.lapr3.g094.services;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.io.File;
 
 import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
@@ -397,5 +399,29 @@ public class Service {
         } else {
             return false;
         }
+    }
+
+    public String getLatestFileFromDirectory(String dir) {
+        URL url = getClass().getClassLoader().getResource(dir);
+        if (url == null) {
+            System.out.println("Directory not found: " + dir);
+            return "";
+        }
+
+        File folder = new File(url.getPath());
+        File[] listOfFiles = folder.listFiles();
+        String latestFile = "";
+        long lastModified = Long.MIN_VALUE;
+
+        for (File file : listOfFiles) {
+            if (file.isFile()) {
+                if (file.lastModified() > lastModified) {
+                    latestFile = file.getName();
+                    lastModified = file.lastModified();
+                }
+            }
+        }
+
+        return latestFile;
     }
 }
