@@ -1,0 +1,13 @@
+CREATE OR REPLACE TRIGGER operacaoID
+BEFORE INSERT ON Operacao
+FOR EACH ROW
+BEGIN
+  IF :NEW.id IS NULL THEN
+    SELECT operacaoNextID.NEXTVAL
+    INTO :NEW.id
+    FROM dual;
+  ELSE 
+      RAISE_APPLICATION_ERROR(-20000, 'ID invalido.');
+  END IF;
+END;
+/
