@@ -1,5 +1,6 @@
 package isep.lapr3.g094.application.controller;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -49,7 +50,7 @@ public class TransformXlsxController {
             }
         }
 
-        importNewData(conn);
+        //importNewData(conn);
     }
 
     private List<String> insertCultura(LinkedHashSet<List<String>> pageList, Connection conn) throws SQLException {
@@ -409,14 +410,14 @@ public class TransformXlsxController {
             List<String> culturas,
             List<String> fatoresProducao, Connection conn) throws SQLException, ParseException {
         List<List<String>> insertedDataIndex = new ArrayList<>();
-        int tipoOperacaoID = 1, operacaoID = 1, ModoFertilizacaoID = 1;
+        int tipoOperacaoID = 1, ModoFertilizacaoID = 1, generatedId;
         for (int i = 0; i < 2; i++)
             insertedDataIndex.add(new ArrayList<>());
+        PreparedStatement pstmtEstado = conn.prepareStatement("INSERT INTO Estado VALUES (?,?)");
         PreparedStatement pstmtTipoOperacao = conn.prepareStatement("INSERT INTO TipoOperacao VALUES (?,?)");
         PreparedStatement pstmtModoFertilizacao = conn
                 .prepareStatement("INSERT INTO ModoFertilizacao VALUES (?,?)");
-        PreparedStatement pstmtOperacao = conn
-                .prepareStatement("INSERT INTO Operacao VALUES (?,?,?,?,?,?)");
+        CallableStatement stmtOperacao = conn.prepareCall("{call insertOperacao(?, ?, ?, ?, ?, ?, ?)}");
         PreparedStatement pstmtOperacaoFator = conn
                 .prepareStatement("INSERT INTO OperacaoFator VALUES (?, ?)");
         PreparedStatement pstmtFertilizacao = conn
@@ -432,6 +433,21 @@ public class TransformXlsxController {
             try {
                 pstmtCadernoCampo.setInt(1, 1);
                 pstmtCadernoCampo.setInt(2, 1);
+                pstmtCadernoCampo.execute();
+
+                pstmtEstado.setInt(1, 1);
+                pstmtEstado.setString(2, "Pendente");
+                pstmtEstado.addBatch();
+
+                pstmtEstado.setInt(1, 2);
+                pstmtEstado.setString(2, "Executada");
+                pstmtEstado.addBatch();
+
+                pstmtEstado.setInt(1, 3);
+                pstmtEstado.setString(2, "Anulada");
+                pstmtEstado.addBatch();
+                pstmtEstado.executeBatch();
+
                 for (List<String> rowData : pageList) {
 
                     int parcelaID = Integer.valueOf(rowData.get(0));
@@ -446,32 +462,36 @@ public class TransformXlsxController {
                     if (!insertedDataIndex.get(0).contains(tipoOperacao)) { // TipoOperacao
                         pstmtTipoOperacao.setInt(1, tipoOperacaoID); // ID
                         pstmtTipoOperacao.setString(2, tipoOperacao); // Designação
-                        pstmtTipoOperacao.addBatch();
+                        pstmtTipoOperacao.execute();
                         insertedDataIndex.get(0).add(tipoOperacao);
                         tipoOperacaoID++;
                     }
 
-                    pstmtOperacao.setInt(1, operacaoID); // ID
-                    pstmtOperacao.setDate(2, new Date(data.getTime())); // Data
-                    pstmtOperacao.setDouble(3, quantidade); // Quantidade
-                    pstmtOperacao.setString(4, unidade); // Unidade
-                    pstmtOperacao.setInt(5, insertedDataIndex.get(0).indexOf(tipoOperacao) + 1); // TipoOperacao
-                    pstmtOperacao.setInt(6, 1); // CadernoCampo
-                    pstmtOperacao.addBatch();
+                    stmtOperacao.setDate(1, new Date(data.getTime())); // Data
+                    stmtOperacao.setDouble(2, quantidade); // Quantidade
+                    stmtOperacao.setString(3, unidade); // Unidade
+                    stmtOperacao.setInt(4, insertedDataIndex.get(0).indexOf(tipoOperacao) + 1); // TipoOperacao
+                    stmtOperacao.setInt(5, 1); // CadernoCampo
+                    stmtOperacao.setInt(6, 2); // Estado
+
+                    stmtOperacao.registerOutParameter(7, java.sql.Types.INTEGER);
+                    stmtOperacao.execute();
+
+                    generatedId = stmtOperacao.getInt(7);
 
                     if (fatorProducao != "NULL") {
-                        pstmtOperacaoFator.setInt(1, operacaoID); // OperacaoID
+                        pstmtOperacaoFator.setInt(1, generatedId); // OperacaoID
                         pstmtOperacaoFator.setInt(2, fatoresProducao.indexOf(fatorProducao) + 1); // Fator
                         pstmtOperacaoFator.addBatch();
                     }
 
                     if (culturaVariedade.equals("NULL") || culturaVariedade.equals("MACIEIRA")
                             || culturaVariedade.equals("VIDEIRA")) {
-                        pstmtOperacaoParcela.setInt(1, operacaoID);
+                        pstmtOperacaoParcela.setInt(1, generatedId);
                         pstmtOperacaoParcela.setInt(2, parcelaID);
                         pstmtOperacaoParcela.addBatch();
                     } else {
-                        pstmtOperacaoPlantacao.setInt(1, operacaoID);
+                        pstmtOperacaoPlantacao.setInt(1, generatedId);
                         pstmtOperacaoPlantacao.setInt(2, (culturas.indexOf(culturaVariedade)) + 1);
                         pstmtOperacaoPlantacao.setInt(3, parcelaID);
                         pstmtOperacaoPlantacao.addBatch();
@@ -485,17 +505,12 @@ public class TransformXlsxController {
                             insertedDataIndex.get(1).add(modoOperacao);
                             ModoFertilizacaoID++;
                         }
-                        pstmtFertilizacao.setInt(1, operacaoID);
+                        pstmtFertilizacao.setInt(1, generatedId);
                         pstmtFertilizacao.setInt(2, (insertedDataIndex.get(1).indexOf(modoOperacao)) + 1);
                         pstmtFertilizacao.addBatch();
                     }
 
-                    operacaoID++;
                 }
-
-                pstmtCadernoCampo.execute();
-                pstmtTipoOperacao.executeBatch();
-                pstmtOperacao.executeBatch();
                 pstmtOperacaoFator.executeBatch();
                 pstmtModoFertilizacao.executeBatch();
                 pstmtFertilizacao.executeBatch();
@@ -515,9 +530,6 @@ public class TransformXlsxController {
             }
             if (!Objects.isNull(pstmtTipoOperacao)) {
                 pstmtTipoOperacao.close();
-            }
-            if (!Objects.isNull(pstmtOperacao)) {
-                pstmtOperacao.close();
             }
             if (!Objects.isNull(pstmtOperacaoFator)) {
                 pstmtOperacaoFator.close();
