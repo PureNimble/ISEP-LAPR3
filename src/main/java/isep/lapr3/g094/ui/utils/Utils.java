@@ -2,6 +2,7 @@ package isep.lapr3.g094.ui.utils;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -63,6 +64,22 @@ public class Utils {
                 }
                 SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
                 return df.parse(strDate);
+            } catch (Exception ex) {
+                System.out.println(ex.getMessage());
+            }
+        }
+    }
+
+    public static LocalTime readTimeFromConsole(String string) {
+        String errorMessage = "Formato de hora inválido. Por favor insira a hora no formato HH:mm";
+        Pattern pattern = Pattern.compile("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$");
+        while (true) {
+            try {
+                String strTime = readLineFromConsole(string);
+                if (!pattern.matcher(strTime).matches()) {
+                    throw new Exception(errorMessage);
+                }
+                return LocalTime.parse(strTime);
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }

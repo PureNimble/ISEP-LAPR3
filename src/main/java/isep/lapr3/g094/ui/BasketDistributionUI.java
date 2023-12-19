@@ -10,6 +10,8 @@ import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
+import net.bytebuddy.asm.Advice.Local;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -41,16 +43,16 @@ public class BasketDistributionUI implements Runnable {
                 options.add(new MenuItem("USEI01 - Importar a rede de distribuição de cabazes",
                         this::buildBasketDistribution));
             } else {
-                options.add(
-                        new MenuItem("USEI01 - Ver rede de distribuição de cabazes", this::printBasketDistribution));
+                options.add(new MenuItem("USEI01 - Ver rede de distribuição de cabazes", this::printBasketDistribution));
                 options.add(new MenuItem("USEI02 - Determinar os vértices ideais", this::getIdealVertices));
-                options.add(
-                        new MenuItem("USEI03 - Percurso mínimo possível entre os dois locais mais afastados",
-                                this::getMinimal));
+                options.add(new MenuItem("USEI03 - Percurso mínimo possível entre os dois locais mais afastados",
+                        this::getMinimal));
                 options.add(new MenuItem("USEI04 - Determinar a rede de caminhos mínimos", this::getMinimalPaths));
                 options.add(new MenuItem("USEI05 - Dividir a rede em N clusters", this::divideDistribution));
                 options.add(new MenuItem("USEI06 - Percursos possivel entre os dois locais, com uma dada autonomia",
                         this::getAllPathsWithAutonomy));
+                options.add(new MenuItem("USEI07 - Percurso de entrega que maximiza o número de hubs pelo qual passa",
+                        this::maximizedPath));
                 options.add(new MenuItem("USEI11 - Adicionar horários", this::addSchedule));
             }
 
@@ -84,7 +86,8 @@ public class BasketDistributionUI implements Runnable {
         if (bigGraph == null) {
             return;
         }
-        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(bigGraph);
+        int numberOfHubs = Utils.readIntegerFromConsole("Qual o número de hubs?");
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(numberOfHubs, bigGraph);
         importController.importOpeningHours("esinf/schedules/horarioFuncionamento.csv", bigGraph);
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
@@ -192,7 +195,8 @@ public class BasketDistributionUI implements Runnable {
         if (bigGraph == null) {
             return;
         }
-        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(bigGraph);
+        int numberOfHubs = Utils.readIntegerFromConsole("Qual o número de hubs?");
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(numberOfHubs, bigGraph);
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
                 .mapToInt(Location -> Location.getId().length())
@@ -226,7 +230,7 @@ public class BasketDistributionUI implements Runnable {
                 idsSelected.add(idSelected);
             }
         } while ((!idSelected.isEmpty()));
-        printClusters(idsSelected);
+        printClusters(bigGraph, idsSelected);
     }
 
     private void printBasketDistribution() {
@@ -238,12 +242,8 @@ public class BasketDistributionUI implements Runnable {
         openGraphViewer(filePath);
     }
 
-    private void printClusters(List<String> idsSelected) {
-        Boolean bigGraph = graphOption();
-        if (bigGraph == null) {
-            return;
-        }
-        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(idsSelected, graphOption());
+    private void printClusters(Boolean bigGraph, List<String> idsSelected) {
+        List<Graph<Location, Integer>> newList = graphController.divideIntoClusters(idsSelected, bigGraph);
         System.out.println(newList.toString());
         boolean printSC = Utils.confirm("Queres dar print do coeficiente de silhueta? (s/n):");
         if (printSC) {
@@ -306,6 +306,23 @@ public class BasketDistributionUI implements Runnable {
             System.out.println(dest + "\nDistância Total: " + totalDistance + "m");
             System.out.println("Tempo Total: " + timeFormatted + "\n");
         });
+    }
+
+    private void maximizedPath(){
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
+        String idOrigem;
+        LocalTime time;
+        do {
+            idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem: (CT**)").toUpperCase();
+
+        } while ((!idOrigem.contains("CT")));
+        time = Utils.readTimeFromConsole("Escreva a hora de partida: (HH:MM)");
+        int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
+        int velocity = Utils.readIntegerFromConsole("Qual a velocidade média do veículo?(km/h)");
+        graphController.maximizedPath(idOrigem, time, autonomy * 1000, velocity, bigGraph);
     }
 
     private void addSchedule() {

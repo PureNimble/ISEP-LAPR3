@@ -11,6 +11,7 @@ public class Location {
     private int numEmployees;
     private LocalTime startHour;
     private LocalTime endHour;
+    private boolean isHub;
 
     public Location(String id, double latitude, double longitude, int numEmployees, LocalTime startHour, LocalTime endHour) {
         this.id = id;
@@ -19,6 +20,7 @@ public class Location {
         this.numEmployees = numEmployees;
         this.startHour = startHour;
         this.endHour = endHour;
+        this.isHub = false;
     }
 
     public Location(String id) {
@@ -57,6 +59,14 @@ public class Location {
         this.endHour = localTime;
     }
 
+    public boolean isHub() {
+        return isHub;
+    }
+
+    public void setHub(boolean hub) {
+        isHub = hub;
+    }
+
 
     @Override
     public int hashCode() {
@@ -79,7 +89,8 @@ public class Location {
     public String toString() {
         return "Localização [id= " + id + ", latitude= " + latitude + ", longitude= " + longitude
                 + ", Número de empregados= " + numEmployees 
-                + ", start hour= " + (startHour != null ? startHour.toString() : "N/A")
-                + ", finish hour= " + (endHour != null ? endHour.toString() : "N/A") + "]";
+                + ", hora de início = " + (startHour != null ? startHour.toString() : "N/A")
+                + ", hora de fecho = " + (endHour != null ? endHour.toString() : "N/A") + "]"
+                + ", hub? " + (isHub ? "Sim" : "Não")  + "]";
     }
 }

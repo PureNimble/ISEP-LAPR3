@@ -1,5 +1,6 @@
 package isep.lapr3.g094.application.controller;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -52,8 +53,8 @@ public class GraphController {
         return service.distanceLocations(id1, id2, bigGraph);
     }
 
-    public Map<Location, Criteria> getVerticesIdeais(boolean bigGraph) {
-        return service.getVerticesIdeais(bigGraph);
+    public Map<Location, Criteria> getVerticesIdeais(int numberOfHubs, boolean bigGraph) {
+        return service.getVerticesIdeais(numberOfHubs, bigGraph);
     }
 
     public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy, boolean bigGraph) {
@@ -92,5 +93,9 @@ public class GraphController {
 
     public String getLatestFileFromDirectory(String string) {
         return service.getLatestFileFromDirectory(string);
+    }
+
+    public void maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph) {
+        service.maximizedPath(idOrigem, time, autonomy, velocity, bigGraph);
     }
 }

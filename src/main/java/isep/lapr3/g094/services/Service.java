@@ -112,7 +112,7 @@ public class Service {
         return graphRepository.getGraph(bigGraph);
     }
 
-    public Map<Location, Criteria> getVerticesIdeais(boolean bigGraph) {
+    public Map<Location, Criteria> getVerticesIdeais(int numberOfHubs, boolean bigGraph) {
         Map<Location, Criteria> map = new HashMap<>();
         int numberMinimumPaths = 0;
         int i;
@@ -152,7 +152,23 @@ public class Service {
             entry.getValue().setNumberMinimumPaths(numberMinimumPaths);
         }
         map = sortByValue(map);
+        int numberHubs = numberOfHubs;
+        setHubs(0, numberHubs, map);
         return map;
+    }
+
+    private void setHubs(int i, int numberHubs, Map<Location, Criteria> map) {
+        if (numberHubs <=0) {
+            return;
+        }
+        if (i < map.size()) {
+            Location location = (Location) map.keySet().toArray()[i];
+            location.setHub(true);
+            setHubs(i + 1, numberHubs - 1, map);
+        }
+        else {
+            return;
+        }
     }
 
     private static Map<Location, Criteria> sortByValue(Map<Location, Criteria> map) {
@@ -423,5 +439,18 @@ public class Service {
         }
 
         return latestFile;
+    }
+
+    public void maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph) {
+        int descargaTime = randomTime(); // tempo de descarga aleatório entre 1 e 5 minutos
+        System.out.println("Tempo de descarga: " + descargaTime + " minutos");
+    }
+
+    private int randomTime() {
+        Random rand = new Random();
+        int min = 1;
+        int max = 5;
+        int randomNum = rand.nextInt((max - min) + 1) + min;
+        return randomNum;
     }
 }

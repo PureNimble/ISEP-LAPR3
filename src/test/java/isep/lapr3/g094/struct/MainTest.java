@@ -360,7 +360,7 @@ public class MainTest {
     void testVerticesIdeais() {
         System.out.println("Testing VerticesIdeais...");
 
-        Map<Location, Criteria> testMap = service.getVerticesIdeais(true);
+        Map<Location, Criteria> testMap = service.getVerticesIdeais(5, true);
 
         assertEquals(323, testMap.size());
 
