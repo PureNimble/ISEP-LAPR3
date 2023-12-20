@@ -50,7 +50,7 @@ public class TransformXlsxController {
             }
         }
 
-        //importNewData(conn);
+        importNewData(conn);
     }
 
     private List<String> insertCultura(LinkedHashSet<List<String>> pageList, Connection conn) throws SQLException {
@@ -278,7 +278,7 @@ public class TransformXlsxController {
             try {
 
                 pstmtQuinta.setInt(1, 1); // QuintaID
-                pstmtQuinta.setString(2, "Quinta Do Ângelo v1.2"); // Designação
+                pstmtQuinta.setString(2, "Quinta Do Ângelo v1.3"); // Designação
                 for (List<String> rowData : pageList) {
 
                     int espacoID = Integer.valueOf(rowData.get(0));
