@@ -10,7 +10,6 @@ DROP TRIGGER CheckUniqueOperacaoIDParcela;
 DROP TRIGGER ChechUniqueOperacaoIDPlantacao;
 DROP TRIGGER CheckUniqueOperacaoIDOperacaoFator;
 DROP TRIGGER CheckUniqueOperacaoIDOperacaoReceita;
-DROP TRIGGER AddRegisto;
 DROP TRIGGER OperacaoID;
 DROP TRIGGER InsertLogOperacao;
 DROP TRIGGER PreventDeleteOperacao;
@@ -48,6 +47,7 @@ DROP TABLE Parcela CASCADE CONSTRAINTS;
 DROP TABLE PlanoPlantacao CASCADE CONSTRAINTS;
 DROP TABLE PlanoSetor CASCADE CONSTRAINTS;
 DROP TABLE Plantacao CASCADE CONSTRAINTS;
+DROP TABLE PlantacaoPermanente CASCADE CONSTRAINTS;
 DROP TABLE PlantacaoSetor CASCADE CONSTRAINTS;
 DROP TABLE Produto CASCADE CONSTRAINTS;
 DROP TABLE ProdutoArmazem CASCADE CONSTRAINTS;
@@ -211,7 +211,7 @@ CREATE TABLE OPERACAO (
     DATAOPERACAO DATE NOT NULL,
     QUANTIDADE DOUBLE PRECISION NOT NULL CHECK(QUANTIDADE > 0),
     UNIDADE VARCHAR2(255) NOT NULL,
-    REGISTO TIMESTAMP(0) NOT NULL,
+    REGISTO TIMESTAMP(0) DEFAULT SYSTIMESTAMP NOT NULL,
     TIPOOPERACAOID NUMBER(10) NOT NULL,
     CADERNOCAMPOID NUMBER(10) NOT NULL,
     ESTADOID NUMBER(10) NOT NULL,
@@ -284,6 +284,13 @@ CREATE TABLE PLANTACAO (
     PARCELAESPACOID NUMBER(10) NOT NULL,
     PRIMARY KEY (ID),
     CONSTRAINT CHECKDATESPLANTACAO CHECK (DATAINICIAL <= DATAFINAL)
+);
+
+CREATE TABLE PLANTACAOPERMANENTE (
+    PLANTACAOID NUMBER(10) NOT NULL,
+    COMPASSO DOUBLE PRECISION NOT NULL,
+    DISTANCIAFILAS DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (PLANTACAOID)
 );
 
 CREATE TABLE PLANTACAOSETOR (
@@ -446,6 +453,7 @@ ALTER TABLE ReceitaFator ADD CONSTRAINT FKReceitaFat104034 FOREIGN KEY (ReceitaI
 ALTER TABLE ReceitaFator ADD CONSTRAINT FKReceitaFat725349 FOREIGN KEY (FatorProducaoID) REFERENCES FatorProducao (ID);
 ALTER TABLE OperacaoReceita ADD CONSTRAINT FKOperacaoRe280761 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
 ALTER TABLE OperacaoReceita ADD CONSTRAINT FKOperacaoRe864440 FOREIGN KEY (ReceitaID) REFERENCES Receita (ID);
+ALTER TABLE PlantacaoPermanente ADD CONSTRAINT FKPlantacaoP192597 FOREIGN KEY (PlantacaoID) REFERENCES Plantacao (ID);
 
 CREATE OR REPLACE TRIGGER CapacidadeTrigger
 BEFORE INSERT OR UPDATE ON ProdutoArmazem
@@ -754,14 +762,6 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE TRIGGER AddRegisto
-BEFORE INSERT ON Operacao
-FOR EACH ROW
-BEGIN
-  :new.REGISTO := SYSTIMESTAMP;
-END;
-/
-
 CREATE OR REPLACE TRIGGER OperacaoID
 BEFORE INSERT ON Operacao
 FOR EACH ROW
@@ -901,5 +901,477 @@ BEGIN
     IF existsCheck > 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Este sensor já está a ser usado numa Estação Meteorológica.');
     END IF;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE verifyDateInfo(dataOperacao DATE) IS
+    dataAtual DATE;
+    invalidDate EXCEPTION;
+
+BEGIN
+
+    SELECT CURRENT_DATE INTO dataAtual FROM DUAL;
+    IF dataOperacao > dataAtual THEN
+        RAISE invalidDate;
+    END IF;
+
+EXCEPTION
+    
+    WHEN invalidDate THEN
+        RAISE_APPLICATION_ERROR(-20001,'Não é possível registar operações no futuro!');
+END verifyDateInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifyParcelaInfo(parcelaID NUMBER) IS
+    parcelaExists NUMBER;
+
+BEGIN
+
+    SELECT 1 INTO parcelaExists FROM PARCELA WHERE EspacoID = parcelaID;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'Parcela não existe.');
+END verifyParcelaInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifyPlantacaoInfo(plantacaoID NUMBER, parcelaID NUMBER, dataOperacao DATE) IS
+    plantacaoExists NUMBER;
+
+BEGIN
+    
+    SELECT 1 INTO plantacaoExists 
+    FROM PLANTACAO 
+    WHERE ID = plantacaoID 
+    AND ParcelaEspacoID = parcelaID 
+    AND dataOperacao BETWEEN DataIniciaL AND NVL(DataFinal, TO_DATE('9999-12-31','YYYY-MM-DD'));
+       
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'Plantação não existe.');
+END verifyPlantacaoInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifySetorInfo(setorID NUMBER) IS
+    setorExists NUMBER;
+
+BEGIN
+
+    SELECT 1 INTO setorExists FROM Setor WHERE ID = setorID;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'Setor não existe.');
+END verifySetorInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifyQuantityInfo(plantacaoID NUMBER, parcelaID NUMBER, quantidade NUMBER, unidade VARCHAR2) IS
+    areaParcela NUMBER;
+    quantidadePlantacao NUMBER;
+    quantidadeParcela NUMBER;
+    invalidQuantidade EXCEPTION;
+    culturaID NUMBER;
+
+BEGIN
+    IF unidade = 'ha' THEN
+        
+        SELECT Area INTO areaParcela FROM Espaco WHERE ID = parcelaID;
+        IF quantidade > areaParcela THEN 
+            RAISE invalidQuantidade;
+        END IF;
+
+    ELSE
+
+        SELECT QUANTIDADE INTO quantidadePlantacao FROM PLANTACAO WHERE ID = plantacaoID;
+        IF quantidade > quantidadePlantacao THEN 
+            RAISE invalidQuantidade;
+        END IF;
+        
+    END IF;
+
+EXCEPTION
+    WHEN invalidQuantidade THEN 
+        RAISE_APPLICATION_ERROR(-20001,'Quantidade fornecida superior à disponivel.');
+END verifyQuantityInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifyAvailableAreaInfo(parcelaID NUMBER, quantidade NUMBER) IS
+    areaParcela NUMBER;
+    quantidadeParcela NUMBER;
+    invalidQuantidade EXCEPTION;
+
+BEGIN
+        
+    SELECT Area INTO areaParcela FROM Espaco WHERE ID = parcelaID;
+    SELECT SUM(Quantidade) INTO quantidadeParcela FROM Plantacao WHERE ParcelaEspacoID = parcelaID AND DataFinal IS NULL;
+        IF quantidade > (areaParcela - quantidadeParcela) THEN 
+            RAISE invalidQuantidade;
+        END IF;
+
+EXCEPTION
+    WHEN invalidQuantidade THEN 
+        RAISE_APPLICATION_ERROR(-20001,'Area fornecida superior à disponivel.');
+END verifyAvailableAreaInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifyFatorDeProducaoInfo(fatorProducaoID NUMBER) IS
+    fatorProducaoExists NUMBER;
+
+BEGIN
+        
+    SELECT 1 INTO fatorProducaoExists FROM FatorProducao WHERE ID = fatorProducaoID;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'Fator de Produção não existe.');
+END verifyFatorDeProducaoInfo;
+/
+
+CREATE OR REPLACE PROCEDURE verifyModoFertilizacaoInfo(modoAplicacaoID NUMBER) IS
+    modoAplicacaoExists NUMBER;
+
+BEGIN
+        
+    SELECT 1 INTO modoAplicacaoExists FROM ModoFertilizacao WHERE ID = modoAplicacaoID;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'Modo de Aplicação não existe.');
+END verifyModoFertilizacaoInfo;
+/
+
+CREATE OR REPLACE PROCEDURE registerRega(quantidade NUMBER,setorID NUMBER,dataOperacao DATE,hora TIMESTAMP) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 2;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'min';
+    idOperacao NUMBER;
+
+BEGIN
+    verifySetorInfo(setorID);
+    verifyDateInfo(dataOperacao);
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+
+    INSERT INTO OperacaoSetor(OperacaoID, HoraInicial, SetorID) VALUES (idOperacao, hora, setorID);
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerPoda(quantidade NUMBER,parcelaID NUMBER,plantacaoID NUMBER,dataOperacao DATE) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 3;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'un';
+    idOperacao NUMBER;
+
+BEGIN
+    verifyParcelaInfo(parcelaID);
+    verifyPlantacaoInfo(plantacaoID, parcelaID,dataOperacao);
+    verifyQuantityInfo(plantacaoID, parcelaID, quantidade, UNIDADE);
+    verifyDateInfo(dataOperacao);
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+
+    INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
+    
+    COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Operação registada com sucesso!');
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerSemeadura(culturaID NUMBER,parcelaID NUMBER,dataOperacao DATE,quantidade NUMBER, area NUMBER) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 6;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'kg';
+    UNIDADE2 CONSTANT VARCHAR2(10) := 'ha';
+    idOperacao NUMBER;
+    idPlantacao NUMBER;
+
+BEGIN
+    verifyDateInfo(dataOperacao);
+    verifyParcelaInfo(parcelaID);
+    verifyQuantityInfo(idPlantacao, parcelaID, area, UNIDADE2);
+    verifyAvailableAreaInfo(parcelaID, quantidade);
+    
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+    SELECT NVL(MAX(ID),0) + 1 INTO idPlantacao FROM Plantacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+    INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) 
+    VALUES (idOperacao, parcelaID);
+    INSERT INTO Plantacao(ID, DataInicial, DataFinal, Quantidade, Unidade, EstadoFenologico, CulturaID, ParcelaEspacoID) 
+    VALUES (idPlantacao, dataOperacao, NULL, area, UNIDADE2, NULL, culturaID, parcelaID);
+    
+    COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Operação registada com sucesso!');
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerMonda(plantacaoID NUMBER,parcelaID NUMBER,dataOperacao DATE,quantidade NUMBER) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 9;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'ha';
+    idOperacao NUMBER;
+
+BEGIN
+    verifyDateInfo(dataOperacao);
+    verifyParcelaInfo(parcelaID);
+    verifyPlantacaoInfo(plantacaoID,parcelaID,dataOperacao);
+    verifyQuantityInfo(plantacaoID,parcelaID,quantidade, UNIDADE);
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+
+    IF plantacaoID IS NULL THEN 
+        INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) VALUES (idOperacao, parcelaID);
+    ELSE
+        INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
+    END IF;
+    
+    COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Operação registada com sucesso!');
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerColheita(plantacaoID NUMBER,parcelaID NUMBER,dataOperacao DATE,quantidade NUMBER) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 7;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'kg';
+    idOperacao NUMBER;
+
+BEGIN
+    verifyParcelaInfo(parcelaID);
+    verifyPlantacaoInfo(plantacaoID, parcelaID, dataOperacao);
+    verifyDateInfo(dataOperacao);
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID)
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+
+    INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
+    
+    COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Operação registada com sucesso!');
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerFatorDeProducao(quantidade NUMBER,parcelaID NUMBER,dataOperacao DATE, area NUMBER, fatorProducaoID NUMBER, modoFertilizacaoID NUMBER) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 4;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE1 CONSTANT VARCHAR2(10) := 'ha';
+    UNIDADE2 CONSTANT VARCHAR2(10) := 'kg';
+    idOperacao NUMBER;
+
+BEGIN
+    verifyParcelaInfo(parcelaID);
+    verifyDateInfo(dataOperacao);
+    verifyFatorDeProducaoInfo(fatorProducaoID);
+    verifyModoFertilizacaoInfo(modoFertilizacaoID);
+    verifyQuantityInfo(NULL,parcelaID,area,UNIDADE1);
+    --Obter o ID da operação
+    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
+
+    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
+    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE2, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+    INSERT INTO OperacaoFator(OperacaoID, FatorProducaoID) VALUES(idOperacao, fatorProducaoID);
+    INSERT INTO Fertilizacao(OperacaoID, ModoFertilizacaoID) VALUES(idOperacao, modoFertilizacaoID);
+    INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) VALUES (idOperacao, parcelaID);
+
+    COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Operação registada com sucesso!');
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE FUNCTION getProdutosColhidosList(parcelaID NUMBER,dataInicial DATE, dataFinal DATE) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT PARCELA, ESPECIE, PRODUTO, DATA
+        FROM(
+        SELECT ES.DESIGNACAO AS PARCELA, NE.ESPECIE AS ESPECIE, NP.DESIGNACAO || ' ' || C.VARIEDADE AS PRODUTO, O.DATAOPERACAO as data
+            FROM ESPACO ES, NOMEESPECIE NE, NOMEPRODUTO NP, CULTURA C, TIPOOPERACAO TP, OPERACAO O, PLANTACAO P, OPERACAOPLANTACAO OP, PRODUTO PR
+            WHERE ES.ID = parcelaID
+            AND P.PARCELAESPACOID = ES.ID
+            AND OP.PLANTACAOID = P.ID
+            AND O.ID = OP.OPERACAOID
+            AND TP.ID = 7
+            AND TP.ID = O.TIPOOPERACAOID
+            AND P.CULTURAID = PR.CULTURAID
+            AND C.ID = PR.CULTURAID
+            AND C.NOMEESPECIEID = NE.ID
+            AND PR.NOMEPRODUTOID = NP.ID
+        )
+        WHERE data BETWEEN DATAINICIAL AND DATAFINAL
+        ORDER BY ESPECIE DESC, PRODUTO;
+    RETURN result_cursor;
+END;
+/
+
+CREATE OR REPLACE FUNCTION getFatorProducaoList(dataInicial DATE, dataFinal DATE) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT DATA, FATORPRODUCAO, CULTURA, APLICACAO, PARCELA
+        FROM(
+            SELECT O.DATAOPERACAO AS data, FP.Designacao AS FATORPRODUCAO, NE.NOMECOMUM ||' ' || CU.VARIEDADE AS Cultura,A.DESIGNACAO AS Aplicacao, E.Designacao as parcela 
+            FROM OPERACAOFATOR OFA, Operacao O, FatorProducao FP, OperacaoPlantacao OP, Plantacao P, Espaco E, Cultura CU, NOMEESPECIE NE, AplicacaoProduto AP, Aplicacao A
+            WHERE OFA.OPERACAOID = O.ID
+            AND OFA.FATORPRODUCAOID = FP.ID
+            AND AP.FATORPRODUCAOID = FP.ID
+            AND AP.AplicacaoID = A.ID
+            AND O.ID = OP.OPERACAOID
+            AND OP.PLANTACAOID = P.ID
+            AND P.PARCELAESPACOID = E.ID
+            AND P.CULTURAID = CU.ID
+            AND CU.NOMEESPECIEID = NE.ID
+            UNION
+            SELECT O.DATAOPERACAO AS data, FP.Designacao AS FATORPRODUCAO,'Sem cultura'AS Cultura, A.DESIGNACAO AS APLICACAO, E.DESIGNACAO AS PARCELA
+            FROM OPERACAOFATOR OFA, Operacao O, FatorProducao FP, OperacaoParcela OP, Plantacao P, Espaco E, Aplicacao A, AplicacaoProduto AP
+            WHERE OFA.OPERACAOID = O.ID
+            AND OFA.FATORPRODUCAOID = FP.ID
+            AND AP.FATORPRODUCAOID = FP.ID
+            AND AP.AplicacaoID = A.ID
+            AND O.ID = OP.OPERACAOID
+            AND OP.PARCELAESPACOID = E.ID
+        )
+        WHERE data BETWEEN DATAINICIAL AND DATAFINAL
+        ORDER BY PARCELA,APLICACAO,FATORPRODUCAO;
+        
+    RETURN result_cursor;
+END;
+/
+
+CREATE OR REPLACE FUNCTION getFatorProducaoElementosList(dataInicial DATE, dataFinal DATE, IDparcela NUMBER) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT fatorProducao, Quantidade, Elemento, data
+        FROM(
+            SELECT FP.DESIGNACAO as FatorProducao, EF.Quantidade as Quantidade, E.Designacao as Elemento, P.PARCELAESPACOID as parcelaID, O.DATAOPERACAO as data  
+            FROM OperacaoFator OFA, fatorproducao FP, ElementoFicha EF, Elemento E, OPERACAOPLANTACAO OP, Plantacao P, Operacao O
+            WHERE OFA.FATORPRODUCAOID = FP.ID
+            AND OFA.OPERACAOID = O.ID
+            AND OFA.OPERACAOID = OP.OPERACAOID
+            AND OP.PlantacaoID = P.ID
+            AND FP.ID = EF.FATORPRODUCAOID
+            AND EF.ELEMENTOID = E.ID
+            UNION 
+            SELECT FP.DESIGNACAO as Designacao, EF.Quantidade as Quantidade, E.Designacao as Elemento, OP.PARCELAESPACOID as parcelaID, O.DATAOPERACAO as data 
+            FROM OperacaoFator OFA, fatorproducao FP, ElementoFicha EF, Elemento E, OPERACAOPARCELA OP, Operacao O
+            WHERE OFA.FATORPRODUCAOID = FP.ID
+            AND OFA.OPERACAOID = O.ID
+            AND OFA.OPERACAOID = OP.OPERACAOID
+            AND FP.ID = EF.FATORPRODUCAOID
+            AND EF.ELEMENTOID = E.ID
+        )
+        WHERE data BETWEEN DATAINICIAL AND DATAFINAL
+        AND parcelaID = IDparcela
+        ORDER BY fatorProducao, data, elemento;
+
+    RETURN result_cursor;
+END;
+/
+
+CREATE OR REPLACE FUNCTION getRegaMensal(dataInicial DATE, dataFinal DATE) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT PARCELA, EXTRACT(YEAR FROM DATA) AS YEAR, EXTRACT(MONTH FROM DATA) AS MONTH, SUM(DURACAO) AS DURACAO
+        FROM(
+            SELECT ES.DESIGNACAO AS PARCELA, OP.DataOperacao AS DATA, MAX(OP.QUANTIDADE) AS DURACAO
+            FROM TIPOOPERACAO TP, OPERACAO OP, PARCELA PAR, OPERACAOSETOR OS, SETOR S, PLANTACAOSETOR PS, PLANTACAO P, ESPACO ES
+            WHERE TP.ID = 2
+            AND OP.TIPOOPERACAOID = TP.ID
+            AND OS.OPERACAOID = OP.ID
+            AND S.ID = OS.SETORID
+            AND PS.SETORID = S.ID
+            AND P.ID = PS.PLANTACAOID
+            AND PAR.ESPACOID = P.PARCELAESPACOID
+            AND ES.ID = PAR.ESPACOID
+            GROUP BY ES.DESIGNACAO, OP.DataOperacao, OP.ID
+        )
+        WHERE DATA BETWEEN dataInicial AND dataFinal
+        GROUP BY PARCELA, EXTRACT(YEAR FROM DATA), EXTRACT(MONTH FROM DATA)
+        ORDER BY PARCELA, YEAR, MONTH;
+    RETURN result_cursor;
+END;
+/
+
+CREATE OR REPLACE FUNCTION GetOperacaoList(parcelaID NUMBER,dataInicial DATE, dataFinal DATE) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+OPEN result_cursor FOR
+SELECT OperacaoID, TipoDeOperacao, data, Cultura
+FROM(
+    SELECT OP.OperacaoID AS OperacaoID, TOP.Designacao AS TipoDeOperacao, O.DataOperacao as data, 'Sem cultura' as Cultura
+    FROM OperacaoParcela OP, TipoOperacao TOP, Operacao O
+    WHERE OP.OperacaoID = O.ID
+      AND O.TIPOOPERACAOID = TOP.ID
+      AND OP.ParcelaEspacoID = parcelaID
+    UNION
+    SELECT OP.OperacaoID AS OperacaoID, TOP.Designacao AS TipoDeOperacao, O.DataOperacao as data, NP.Designacao  ||' '|| CU.Variedade AS Cultura
+    FROM OperacaoPlantacao OP, TipoOperacao TOP, Operacao O, Plantacao P, Cultura CU, Produto Po, NomeProduto NP
+    WHERE OP.OperacaoID = O.ID
+      AND O.TIPOOPERACAOID = TOP.ID
+      AND OP.PlantacaoID = P.ID
+      AND P.ParcelaEspacoID = parcelaID
+      AND P.CulturaID = CU.ID
+      AND P.CulturaID = PO.CulturaID
+      AND PO.NomeProdutoID = NP.ID
+    UNION
+    SELECT OS.OperacaoID AS OperacaoID, TOP.Designacao AS TipoDeOperacao, O.DataOperacao as data, NE.NomeComum  ||' '|| CU.Variedade AS Cultura
+    FROM OperacaoSetor OS, TipoOperacao TOP, Operacao O, Plantacao P, PlantacaoSetor PS, Setor S, Cultura CU, NomeEspecie NE
+    WHERE OS.OperacaoID = O.ID
+      AND O.TIPOOPERACAOID = TOP.ID
+      AND OS.SetorID = S.ID
+      AND P.PARCELAESPACOID = parcelaID
+      AND P.ID = PS.PlantacaoID
+      AND PS.SetorID = S.ID
+      AND P.CulturaID = Cu.ID
+      AND CU.NomeEspecieID = NE.ID
+    )
+WHERE data BETWEEN DATAINICIAL AND DATAFINAL
+ORDER BY TipoDeOperacao, data;
+RETURN result_cursor;
 END;
 /
