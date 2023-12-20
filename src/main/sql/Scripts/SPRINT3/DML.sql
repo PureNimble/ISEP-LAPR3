@@ -148,8 +148,20 @@ INSERT INTO GARAGEM (
 
 INSERT INTO LOGOPERACAO (
     ID,
-    OPERACAOID
+    DATAOPERACAO,
+    QUANTIDADE,
+    UNIDADE,
+    TIPOOPERACAO,
+    ESTADO,
+    REGISTO,
+    TIPOREGISTO
 ) VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
     ?,
     ?
 );
