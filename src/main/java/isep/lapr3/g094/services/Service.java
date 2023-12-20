@@ -158,15 +158,14 @@ public class Service {
     }
 
     private void setHubs(int i, int numberHubs, Map<Location, Criteria> map) {
-        if (numberHubs <=0) {
+        if (numberHubs <= 0) {
             return;
         }
         if (i < map.size()) {
             Location location = (Location) map.keySet().toArray()[i];
             location.setHub(true);
             setHubs(i + 1, numberHubs - 1, map);
-        }
-        else {
+        } else {
             return;
         }
     }
@@ -315,10 +314,9 @@ public class Service {
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
 
-    public ArrayList<LinkedHashMap<Location, Integer>> getAllPathsWithAutonomy(String vOrigin, String vDest,
+    public Map<List<Pair<Location, Integer>>, Integer> allPathsWithLimit(String vOrigin, String vDest,
             int autonomy,
             int velocity, boolean bigGraph) {
-        ArrayList<LinkedHashMap<Location, Integer>> output = null;
         Graph<Location, Integer> graph = getGraph(bigGraph);
 
         if (!graph.validVertex(new Location(vOrigin))
@@ -326,11 +324,31 @@ public class Service {
             return null;
         }
 
-        output = Algorithms.allPathsWithAutonomy(graph, graphRepository.locationById(vOrigin, bigGraph),
-                graphRepository.locationById(vDest, bigGraph), autonomy);
+        List<List<Location>> paths = Algorithms.allPathsWithLimit(graph,
+                graphRepository.locationById(vOrigin, bigGraph),
+                graphRepository.locationById(vDest, bigGraph), autonomy, Integer::compare,
+                Integer::sum, 0);
+        Map<List<Pair<Location, Integer>>, Integer> output = new HashMap<>();
 
-        return output;
+        paths.forEach(path -> {
+            List<Pair<Location, Integer>> pathWithDistance = new ArrayList<>();
+            int pathDistance = 0;
+            for (int i = 0; i < path.size() - 1; i++) {
+                Location loc1 = path.get(i);
+                Location loc2 = path.get(i + 1);
+                Integer distance = graph.edge(loc1, loc2).getWeight();
+                pathDistance += distance;
+                pathWithDistance.add(new Pair<>(loc1, distance));
+            }
+            pathWithDistance.add(new Pair<>(path.getLast(), 0));
+            output.put(pathWithDistance, pathDistance);
 
+        });
+        // order a map by value
+        return output.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
     }
 
     public boolean generateInitialDataCSV(boolean bigGraph) {
@@ -341,7 +359,7 @@ public class Service {
             fileName = "BigGraph.csv";
         else
             fileName = "SmallGraph.csv";
-            
+
         return makeCsvFile(fileName, data);
     }
 
@@ -355,25 +373,25 @@ public class Service {
     private List<String> transformData(MapGraph<Location, Integer> graph) {
         List<String> data = new ArrayList<>();
         Set<String> addedEdges = new HashSet<>();
-        for (Edge<Location,Integer> edge : graph.edges()) {
-                if (edge.getVOrig() == null || edge.getVDest() == null) {
-                    continue;
-                }
-                if (edge.getVOrig().getId().equals(edge.getVDest().getId())) {
-                    continue;
-                }
-
-                String edgeStr = edge.getVOrig().getId() + "-" + edge.getVDest().getId();
-                String oppositeEdgeStr = edge.getVDest().getId() + "-" + edge.getVOrig().getId();
-
-                if (addedEdges.contains(oppositeEdgeStr)) {
-                    continue;
-                }
-
-                addedEdges.add(edgeStr);
-
-                data.add(edge.getVOrig().getId() + "," + edge.getVDest().getId() + "," + edge.getWeight());
+        for (Edge<Location, Integer> edge : graph.edges()) {
+            if (edge.getVOrig() == null || edge.getVDest() == null) {
+                continue;
             }
+            if (edge.getVOrig().getId().equals(edge.getVDest().getId())) {
+                continue;
+            }
+
+            String edgeStr = edge.getVOrig().getId() + "-" + edge.getVDest().getId();
+            String oppositeEdgeStr = edge.getVDest().getId() + "-" + edge.getVOrig().getId();
+
+            if (addedEdges.contains(oppositeEdgeStr)) {
+                continue;
+            }
+
+            addedEdges.add(edgeStr);
+
+            data.add(edge.getVOrig().getId() + "," + edge.getVDest().getId() + "," + edge.getWeight());
+        }
         return data;
     }
 

@@ -1,9 +1,7 @@
 package isep.lapr3.g094.application.controller;
 
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+
 import java.util.List;
 import java.util.Map;
 
@@ -73,10 +71,11 @@ public class GraphController {
         return service.getCoefSil(clusters, bigGraph);
     }
 
-    public ArrayList<LinkedHashMap<Location, Integer>> getAllPathsWithAutonomy(String origin, String destination,
+    public Map<List<Pair<Location, Integer>>, Integer> allPathsWithLimit(String origin,
+            String destination,
             int autonomy,
             int velocity, boolean bigGraph) {
-        return service.getAllPathsWithAutonomy(origin, destination, autonomy, velocity, bigGraph);
+        return service.allPathsWithLimit(origin, destination, autonomy, velocity, bigGraph);
     }
 
     public boolean generateInitialDataCSV(boolean bigGraph) {

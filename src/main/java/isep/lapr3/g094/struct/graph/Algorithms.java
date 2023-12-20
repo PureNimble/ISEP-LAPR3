@@ -2,7 +2,6 @@ package isep.lapr3.g094.struct.graph;
 
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BinaryOperator;
 
@@ -58,74 +57,6 @@ public class Algorithms {
         DepthFirstSearch(g, vert, visited, dfs);
 
         return dfs;
-    }
-
-    private static <V, E> void allPaths(Graph<V, E> g, V vOrig, V vDest, boolean[] visited,
-            LinkedList<V> path, ArrayList<LinkedList<V>> paths) {
-
-        visited[g.key(vOrig)] = true;
-        path.add(vOrig);
-
-        if (vOrig.equals(vDest)) {
-            paths.add(new LinkedList<>(path));
-        } else {
-            for (V adj : g.adjVertices(vOrig)) {
-                if (!visited[g.key(adj)]) {
-                    allPaths(g, adj, vDest, visited, path, paths);
-                }
-            }
-        }
-
-        path.removeLast();
-        visited[g.key(vOrig)] = false;
-    }
-
-    private static <V, E> void allPathsWithAutonomy(Graph<V, E> g, V vOrig, V vDest, boolean[] visited,
-            LinkedList<V> path, ArrayList<LinkedHashMap<V, E>> paths, double autonomy, int currentWeight) {
-
-        visited[g.key(vOrig)] = true;
-        path.add(vOrig);
-
-        if (vOrig.equals(vDest) && currentWeight <= autonomy) {
-            LinkedHashMap<V, E> output = new LinkedHashMap<>();
-            for (int i = 0; i < path.size() - 1; i++) {
-                Integer distance = (int) g.edge(path.get(i), path.get(i + 1)).getWeight();
-                output.put(path.get(i), (E) distance);
-            }
-            paths.add(output);
-        } else {
-            for (V adj : g.adjVertices(vOrig)) {
-                if (!visited[g.key(adj)]) {
-                    Integer distance = (int) g.edge(vOrig, adj).getWeight();
-                    allPathsWithAutonomy(g, adj, vDest, visited, path, paths, autonomy, currentWeight + distance);
-                }
-            }
-        }
-
-        path.removeLast();
-        visited[g.key(vOrig)] = false;
-    }
-
-    public static <V, E> ArrayList<LinkedHashMap<V, E>> allPathsWithAutonomy(Graph<V, E> g, V vOrig, V vDest,
-            double autonomy) {
-        ArrayList<LinkedHashMap<V, E>> paths = new ArrayList<>();
-        LinkedList<V> path = new LinkedList<>();
-        boolean[] visited = new boolean[g.numVertices()];
-
-        allPathsWithAutonomy(g, vOrig, vDest, visited, path, paths, autonomy, 0);
-
-        return paths;
-    }
-
-    public static <V, E> ArrayList<LinkedList<V>> allPaths(Graph<V, E> g, V vOrig, V vDest) {
-
-        ArrayList<LinkedList<V>> paths = new ArrayList<>();
-        LinkedList<V> path = new LinkedList<>();
-        boolean[] visited = new boolean[g.numVertices()];
-
-        allPaths(g, vOrig, vDest, visited, path, paths);
-
-        return paths;
     }
 
     private static <V, E> void shortestPathDijkstra(Graph<V, E> g, V vOrig,
@@ -219,6 +150,73 @@ public class Algorithms {
         }
 
         return true;
+    }
+
+    public static <V, E> List<List<V>> allPathsWithLimit(Graph<V, E> g, V vOrig, V vDest, E distanceLimit,
+            Comparator<E> ce, BinaryOperator<E> sum, E zero) {
+        List<List<V>> paths = new ArrayList<>();
+
+        depthFirstSearchWithDistanceLimit(g, vOrig, vDest, distanceLimit, ce, sum, zero,
+                new ArrayList<>(Collections.singletonList(vOrig)), zero,
+                paths, new HashSet<>());
+        return paths;
+    }
+
+    public static <V, E> void depthFirstSearchWithDistanceLimit(Graph<V, E> g, V v, V vDest, E distanceLimit,
+            Comparator<E> ce,
+            BinaryOperator<E> sum, E weight,
+            List<V> path, E pathWeight, List<List<V>> paths, Set<V> visited) {
+        if (ce.compare(pathWeight, distanceLimit) > 0) {
+            return;
+        }
+
+        if (v.equals(vDest)) {
+            paths.add(new ArrayList<>(path));
+        }
+
+        visited.add(v); // Mark vertex as visited
+
+        for (V vAdj : g.adjVertices(v)) {
+            if (!visited.contains(vAdj)) { // Skip if vertex has been visited
+                E edgeWeight = g.edge(v, vAdj).getWeight();
+                E newPathWeight = sum.apply(pathWeight, edgeWeight);
+                path.add(vAdj);
+                depthFirstSearchWithDistanceLimit(g, vAdj, vDest, distanceLimit, ce, sum, weight, path, newPathWeight,
+                        paths, new HashSet<>(visited)); // Pass a copy of visited set
+                path.remove(path.size() - 1);
+            }
+        }
+    }
+
+    private static <V, E> void allPaths(Graph<V, E> g, V vOrig, V vDest, boolean[] visited,
+            LinkedList<V> path, ArrayList<LinkedList<V>> paths) {
+
+        visited[g.key(vOrig)] = true;
+        path.add(vOrig);
+
+        if (vOrig.equals(vDest)) {
+            paths.add(new LinkedList<>(path));
+        } else {
+            for (V adj : g.adjVertices(vOrig)) {
+                if (!visited[g.key(adj)]) {
+                    allPaths(g, adj, vDest, visited, path, paths);
+                }
+            }
+        }
+
+        path.removeLast();
+        visited[g.key(vOrig)] = false;
+    }
+
+    public static <V, E> ArrayList<LinkedList<V>> allPaths(Graph<V, E> g, V vOrig, V vDest) {
+
+        ArrayList<LinkedList<V>> paths = new ArrayList<>();
+        LinkedList<V> path = new LinkedList<>();
+        boolean[] visited = new boolean[g.numVertices()];
+
+        allPaths(g, vOrig, vDest, visited, path, paths);
+
+        return paths;
     }
 
     private static <V, E> void getPath(Graph<V, E> g, V vOrig, V vDest,

@@ -10,7 +10,6 @@ import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
-import net.bytebuddy.asm.Advice.Local;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -23,7 +22,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -43,7 +41,8 @@ public class BasketDistributionUI implements Runnable {
                 options.add(new MenuItem("USEI01 - Importar a rede de distribuição de cabazes",
                         this::buildBasketDistribution));
             } else {
-                options.add(new MenuItem("USEI01 - Ver rede de distribuição de cabazes", this::printBasketDistribution));
+                options.add(
+                        new MenuItem("USEI01 - Ver rede de distribuição de cabazes", this::printBasketDistribution));
                 options.add(new MenuItem("USEI02 - Determinar os vértices ideais", this::getIdealVertices));
                 options.add(new MenuItem("USEI03 - Percurso mínimo possível entre os dois locais mais afastados",
                         this::getMinimal));
@@ -269,15 +268,15 @@ public class BasketDistributionUI implements Runnable {
         int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
         int velocity = Utils.readIntegerFromConsole("Qual a velocidade do veículo?(km/h)");
 
-        ArrayList<LinkedHashMap<Location, Integer>> result = graphController.getAllPathsWithAutonomy(idOrigem,
+        Map<List<Pair<Location, Integer>>, Integer> paths = graphController.allPathsWithLimit(idOrigem,
                 idDestino, autonomy * 1000, velocity, bigGraph);
-        if (result == null) {
+        if (paths == null) {
             System.out.println("--------------------------");
             System.out.println("| Localização invalida ! |");
             System.out.println("--------------------------");
             return;
         }
-        if (result.isEmpty()) {
+        if (paths.isEmpty()) {
             System.out.println("--------------------------");
             System.out.println("| Não existem caminhos ! |");
             System.out.println("--------------------------");
@@ -288,27 +287,33 @@ public class BasketDistributionUI implements Runnable {
         System.out.println("Caminhos Possiveis: \n");
         final String dest = idDestino;
 
-        result.forEach(map -> {
-            int totalDistance = 0;
-            for (Map.Entry<Location, Integer> entry : map.entrySet()) {
-                String locationId = entry.getKey().getId();
-                int distance = entry.getValue();
-                System.out.print(locationId + " -> " + distance + "m -> ");
-                totalDistance = +distance;
-            }
-            double totalDistanceDouble = totalDistance / 1000;
+        paths.forEach((path, pathDistance) -> {
+
+            path.forEach(locations -> {
+                Location location = locations.getFirst();
+                String locString = location.getId();
+                if (location.isHub())
+                    locString += " (Hub)";
+                int distance = locations.getSecond();
+                if (location.getId().equals(dest))
+                    System.out.print(locString + "\n");
+                else
+                    System.out.print(locString + " -> " + distance + "m -> ");
+            });
+            double totalDistanceDouble = pathDistance / 1000;
             double time = totalDistanceDouble / velocity;
             int hours = (int) time;
             int minutes = (int) ((time - hours) * 60);
             int seconds = (int) (((time - hours) * 60 - minutes) * 60);
 
             String timeFormatted = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-            System.out.println(dest + "\nDistância Total: " + totalDistance + "m");
+            System.out.println("\nDistância Total: " + pathDistance + "m");
             System.out.println("Tempo Total: " + timeFormatted + "\n");
+
         });
     }
 
-    private void maximizedPath(){
+    private void maximizedPath() {
         Boolean bigGraph = graphOption();
         if (bigGraph == null) {
             return;
