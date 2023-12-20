@@ -4,19 +4,21 @@ DROP TRIGGER CheckUniqueEspacoIDEstabulo;
 DROP TRIGGER CheckUniqueEspacoIDGagarem;
 DROP TRIGGER CheckUniqueEspacoIDArmazem;
 DROP TRIGGER CheckUniqueEspacoIDParcela;
+DROP TRIGGER PreventLogChanges;
 DROP TRIGGER CheckUniqueOperacaoIDSetor;
 DROP TRIGGER CheckUniqueOperacaoIDParcela;
 DROP TRIGGER ChechUniqueOperacaoIDPlantacao;
 DROP TRIGGER CheckUniqueOperacaoIDOperacaoFator;
 DROP TRIGGER CheckUniqueOperacaoIDOperacaoReceita;
 DROP TRIGGER AddRegisto;
-DROP TRIGGER operacaoID;
+DROP TRIGGER OperacaoID;
+DROP TRIGGER InsertLogOperacao;
+DROP TRIGGER PreventDeleteOperacao;
 DROP TRIGGER CheckPlantacaoUnidade;
 DROP TRIGGER CheckCaudal;
 DROP TRIGGER CheckUniqueTipoSensor;
 DROP TRIGGER CheckUniqueSensorIDEstacao;
 DROP TRIGGER CheckUniqueSensorIDParcela;
-
 DROP TABLE Aplicacao CASCADE CONSTRAINTS;
 DROP TABLE AplicacaoProduto CASCADE CONSTRAINTS;
 DROP TABLE Armazem CASCADE CONSTRAINTS;
@@ -63,9 +65,11 @@ DROP TABLE TipoCultura CASCADE CONSTRAINTS;
 DROP TABLE TipoOperacao CASCADE CONSTRAINTS;
 DROP TABLE TipoProduto CASCADE CONSTRAINTS;
 DROP TABLE TipoSensor CASCADE CONSTRAINTS;
-DROP SEQUENCE operacaoNextID;
+DROP SEQUENCE LogOperacaoNextID;
+DROP SEQUENCE OperacaoNextID;
 
-CREATE SEQUENCE operacaoNextID START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE LogOperacaoNextID START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE OperacaoNextID START WITH 1 INCREMENT BY 1;
 
 CREATE TABLE APLICACAO (
     ID NUMBER(10) NOT NULL,
@@ -173,7 +177,13 @@ CREATE TABLE GARAGEM (
 
 CREATE TABLE LOGOPERACAO (
     ID NUMBER(10) NOT NULL,
-    OPERACAOID NUMBER(10) NOT NULL,
+    DATAOPERACAO DATE NOT NULL,
+    QUANTIDADE DOUBLE PRECISION NOT NULL,
+    UNIDADE VARCHAR2(255) NOT NULL,
+    TIPOOPERACAO VARCHAR2(255) NOT NULL,
+    ESTADO VARCHAR2(255) NOT NULL,
+    REGISTO TIMESTAMP(0) NOT NULL,
+    TIPOREGISTO VARCHAR2(255) NOT NULL,
     PRIMARY KEY (ID)
 );
 
@@ -432,7 +442,6 @@ ALTER TABLE OperacaoSetor ADD CONSTRAINT FKOperacaoSe277035 FOREIGN KEY (SetorID
 ALTER TABLE OperacaoSetor ADD CONSTRAINT FKOperacaoSe246661 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
 ALTER TABLE PlanoSetor ADD CONSTRAINT FKPlanoSetor502685 FOREIGN KEY (SistemaRegaQuintaID) REFERENCES SistemaRega (QuintaID);
 ALTER TABLE Operacao ADD CONSTRAINT FKOperacao534717 FOREIGN KEY (EstadoID) REFERENCES Estado (ID);
-ALTER TABLE LogOperacao ADD CONSTRAINT FKLogOperaca131250 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
 ALTER TABLE ReceitaFator ADD CONSTRAINT FKReceitaFat104034 FOREIGN KEY (ReceitaID) REFERENCES Receita (ID);
 ALTER TABLE ReceitaFator ADD CONSTRAINT FKReceitaFat725349 FOREIGN KEY (FatorProducaoID) REFERENCES FatorProducao (ID);
 ALTER TABLE OperacaoReceita ADD CONSTRAINT FKOperacaoRe280761 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
@@ -634,6 +643,14 @@ BEGIN
 END;
 /
 
+CREATE OR REPLACE TRIGGER PreventLogChanges
+BEFORE UPDATE OR DELETE ON LogOperacao
+FOR EACH ROW
+BEGIN
+    RAISE_APPLICATION_ERROR(-20001, 'Não possivel alterar/apagar as informações do Log');
+END;
+/
+
 CREATE OR REPLACE TRIGGER CheckUniqueOperacaoIDSetor
 BEFORE INSERT OR UPDATE ON OperacaoSetor
 FOR EACH ROW
@@ -745,17 +762,49 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE TRIGGER operacaoID
+CREATE OR REPLACE TRIGGER OperacaoID
 BEFORE INSERT ON Operacao
 FOR EACH ROW
 BEGIN
-  IF :NEW.id IS NULL THEN
-    SELECT operacaoNextID.NEXTVAL
+    SELECT OperacaoNextID.NEXTVAL
     INTO :NEW.id
     FROM dual;
-  ELSE 
-      RAISE_APPLICATION_ERROR(-20000, 'ID invalido.');
-  END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER InsertLogOperacao
+AFTER INSERT OR UPDATE ON Operacao
+FOR EACH ROW
+DECLARE
+     logOperacaoID NUMBER;
+     tipoOperacaoDes VARCHAR2(100);
+     estadoDes VARCHAR2(100);
+     registoDes VARCHAR2(100);
+BEGIN
+    SELECT LogOperacaoNextID.NEXTVAL
+    INTO logOperacaoID
+    FROM dual;
+
+    SELECT Designacao INTO tipoOperacaoDes FROM TipoOperacao WHERE ID = :NEW.TipoOperacaoID;
+
+    SELECT Designacao INTO estadoDes FROM Estado WHERE ID = :NEW.EstadoID;
+
+    IF INSERTING THEN
+        registoDes := 'Criação Da Operação';
+    ELSE 
+        registoDes := 'Alteração da Operação';
+    END IF;
+
+    INSERT INTO LogOperacao (ID, DataOperacao, Quantidade, Unidade, TipoOperacao, Estado, Registo, TipoRegisto)
+    VALUES (logOperacaoID, :NEW.dataOperacao, :NEW.quantidade, :NEW.Unidade, tipoOperacaoDes, estadoDes, SYSTIMESTAMP, registoDes);
+END;
+/
+
+CREATE OR REPLACE TRIGGER PreventDeleteOperacao
+BEFORE DELETE ON Operacao
+FOR EACH ROW
+BEGIN
+    RAISE_APPLICATION_ERROR(-20001, 'Não é possivel apagar Operações.');
 END;
 /
 
