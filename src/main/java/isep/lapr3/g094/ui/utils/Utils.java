@@ -89,7 +89,7 @@ public class Utils {
     static public boolean confirm(String message) {
         String input;
         do {
-            input = Utils.readLineFromConsole("\n" + message + "\n");
+            input = Utils.readLineFromConsole(message + " (S/N): ");
         } while (!input.equalsIgnoreCase("s") && !input.equalsIgnoreCase("n"));
 
         return input.equalsIgnoreCase("s");

@@ -118,17 +118,41 @@ public class FarmManagerRepository {
 		}
 	}
 
-	public void registerRega(int quantidade, int setorID, Date dataOperacao, Time hora)
+	public void registerRega(int duracao, int setorID, Date dataOperacao, Time hora, int estado)
 			throws SQLException {
 
 		CallableStatement callStmt = null;
 		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
-			callStmt = connection.prepareCall("{ call registerRega(?,?,?,?) }");
-			callStmt.setInt(1, quantidade);
+			callStmt = connection.prepareCall("{ call registerRega(?,?,?,?,?) }");
+			callStmt.setInt(1, duracao);
 			callStmt.setInt(2, setorID);
 			callStmt.setDate(3, dataOperacao);
 			callStmt.setTime(4, hora);
+			callStmt.setInt(5, estado);
+			callStmt.execute();
+			connection.commit();
+		} finally {
+			if (callStmt != null) {
+				callStmt.close();
+			}
+		}
+	}
+
+	public void registerFertirrega(int duracao, int setorID, Date dataOperacao, Time hora, int estado, int mixID)
+			throws SQLException {
+
+		CallableStatement callStmt = null;
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ call registerFertirrega(?,?,?,?,?,?) }");
+			callStmt.setInt(1, duracao);
+			callStmt.setInt(2, setorID);
+			callStmt.setDate(3, dataOperacao);
+			callStmt.setTime(4, hora);
+			callStmt.setInt(5, mixID);
+			callStmt.setInt(6, estado);
+
 			callStmt.execute();
 			connection.commit();
 		} finally {
@@ -147,7 +171,7 @@ public class FarmManagerRepository {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
 			stmt = connection.createStatement();
 			rs = stmt.executeQuery(
-					"SELECT E.ID,E.Designacao,E.Area,E.Unidade FROM Parcela P, ESPACO E WHERE P.ESPACOID = E.ID");
+					"SELECT E.ID, E.Designacao, (E.Area - SUM(PL.Quantidade)) AS AvailableArea, E.Unidade FROM Parcela P JOIN ESPACO E ON P.ESPACOID = E.ID JOIN Plantacao PL ON P.ESPACOID = PL.PARCELAESPACOID WHERE PL.DataFinal IS NULL AND PL.UNIDADE = 'ha' GROUP BY E.ID, E.Designacao, E.Unidade");
 
 			while (rs.next()) {
 				output.put(rs.getString(2) + " - " + rs.getDouble(3) + " " + rs.getString(4), rs.getInt(1));
@@ -164,7 +188,6 @@ public class FarmManagerRepository {
 			}
 		}
 		return output;
-
 	}
 
 	public Map<String, Integer> getPlantacoes(int parcelaID) throws SQLException {
@@ -628,6 +651,7 @@ public class FarmManagerRepository {
 	private List<String> getRegaMensalSet(ResultSet resultSet) throws SQLException {
 		List<String> result = new ArrayList<>();
 		String previousParcela = null;
+		Locale locale = Locale.forLanguageTag("pt-PT");
 		while (resultSet.next()) {
 			String parcela = resultSet.getString(1);
 			int year = resultSet.getInt(2);
@@ -638,7 +662,7 @@ public class FarmManagerRepository {
 				result.add("Parcela: " + parcela);
 				previousParcela = parcela;
 			}
-			result.add("\t" + new DateFormatSymbols(new Locale("pt", "PT")).getMonths()[data - 1] + " de " + year
+			result.add("\t" + new DateFormatSymbols(locale).getMonths()[data - 1] + " de " + year
 					+ " -> Duração: " + duracao + "min");
 		}
 		return result;
@@ -694,5 +718,97 @@ public class FarmManagerRepository {
 			result.add("\t-> Data: " + data + "\n");
 		}
 		return result;
+	}
+
+	public Map<String, Integer> getSetor() {
+		CallableStatement callStmt = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		Map<String, Integer> output = new HashMap<String, Integer>();
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			stmt = connection.createStatement();
+			rs = stmt.executeQuery(
+					"SELECT ID,DESIGNACAO FROM SETOR");
+
+			while (rs.next()) {
+				output.put(rs.getString(2), rs.getInt(1));
+			}
+		} catch (SQLException e) {
+			System.out.println("Erro ao obter lista de setores");
+			System.out.println("Motivo: " + e.getMessage());
+		} finally {
+			if (callStmt != null) {
+				try {
+					callStmt.close();
+				} catch (SQLException e) {
+					System.out.println("Erro ao fechar a ligação à base de dados");
+					System.out.println("Motivo: " + e.getMessage());
+				}
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					System.out.println("Erro ao fechar a ligação à base de dados");
+					System.out.println("Motivo: " + e.getMessage());
+				}
+			}
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException e) {
+					System.out.println("Erro ao fechar a ligação à base de dados");
+					System.out.println("Motivo: " + e.getMessage());
+				}
+			}
+		}
+		return output;
+	}
+
+	public Map<String, Integer> getMix() {
+		CallableStatement callStmt = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		Map<String, Integer> output = new HashMap<String, Integer>();
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			stmt = connection.createStatement();
+			rs = stmt.executeQuery(
+					"SELECT ID,DESIGNACAO FROM RECEITA");
+
+			while (rs.next()) {
+				output.put(rs.getString(2), rs.getInt(1));
+			}
+		} catch (SQLException e) {
+			System.out.println("Erro ao obter lista de receitas");
+			System.out.println("Motivo: " + e.getMessage());
+		} finally {
+			if (callStmt != null) {
+				try {
+					callStmt.close();
+				} catch (SQLException e) {
+					System.out.println("Erro ao fechar a ligação à base de dados");
+					System.out.println("Motivo: " + e.getMessage());
+				}
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					System.out.println("Erro ao fechar a ligação à base de dados");
+					System.out.println("Motivo: " + e.getMessage());
+				}
+			}
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException e) {
+					System.out.println("Erro ao fechar a ligação à base de dados");
+					System.out.println("Motivo: " + e.getMessage());
+				}
+			}
+		}
+		return output;
 	}
 }

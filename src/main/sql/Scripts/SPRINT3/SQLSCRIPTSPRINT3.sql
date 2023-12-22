@@ -904,21 +904,29 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE PROCEDURE verifyDateInfo(dataOperacao DATE) IS
+CREATE OR REPLACE PROCEDURE verifyDateInfo(dataOperacao DATE, estado NUMBER) IS
     dataAtual DATE;
-    invalidDate EXCEPTION;
-
+    invalidFutureDate EXCEPTION;
+    invalidPastDate EXCEPTION;
 BEGIN
 
     SELECT CURRENT_DATE INTO dataAtual FROM DUAL;
-    IF dataOperacao > dataAtual THEN
-        RAISE invalidDate;
+    IF estado = 1 THEN
+        IF dataOperacao < dataAtual THEN
+            RAISE invalidPastDate;
+        END IF;
+    ELSE
+        IF dataOperacao > dataAtual THEN
+            RAISE invalidFutureDate;
+        END IF;
     END IF;
 
 EXCEPTION
     
-    WHEN invalidDate THEN
-        RAISE_APPLICATION_ERROR(-20001,'Não é possível registar operações no futuro!');
+    WHEN invalidFutureDate THEN
+        RAISE_APPLICATION_ERROR(-20001,'Não é possível registar operações executadas no futuro!');
+    WHEN invalidPastDate THEN
+        RAISE_APPLICATION_ERROR(-20001,'Não é possível registar operações pendentes no passado!');
 END verifyDateInfo;
 /
 
@@ -1040,7 +1048,7 @@ EXCEPTION
 END verifyModoFertilizacaoInfo;
 /
 
-CREATE OR REPLACE PROCEDURE registerRega(quantidade NUMBER,setorID NUMBER,dataOperacao DATE,hora TIMESTAMP) IS
+CREATE OR REPLACE PROCEDURE registerRega(quantidade NUMBER, setorID NUMBER, dataOperacao DATE, hora TIMESTAMP, estado NUMBER) IS
 
     TIPO_OPERACAO CONSTANT NUMBER := 2;
     CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
@@ -1049,13 +1057,29 @@ CREATE OR REPLACE PROCEDURE registerRega(quantidade NUMBER,setorID NUMBER,dataOp
 
 BEGIN
     verifySetorInfo(setorID);
-    verifyDateInfo(dataOperacao);
-    --Obter o ID da operação
-    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
 
-    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
-    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+    insertOperacao(dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO, estado, idOperacao);
+    INSERT INTO OperacaoSetor(OperacaoID, HoraInicial, SetorID) VALUES (idOperacao, hora, setorID);
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
 
+CREATE OR REPLACE PROCEDURE registerFertirrega(quantidade NUMBER,setorID NUMBER,dataOperacao DATE,hora TIMESTAMP, receita NUMBER, estado NUMBER) IS
+
+    TIPO_OPERACAO CONSTANT NUMBER := 11;
+    CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
+    UNIDADE CONSTANT VARCHAR2(10) := 'min';
+    idOperacao NUMBER;
+
+BEGIN
+    verifySetorInfo(setorID);
+    
+    insertOperacao(dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO, estado, idOperacao);
+    INSERT INTO OperacaoReceita(OperacaoID, ReceitaID) VALUES (idOperacao, receita);
     INSERT INTO OperacaoSetor(OperacaoID, HoraInicial, SetorID) VALUES (idOperacao, hora, setorID);
     COMMIT;
 EXCEPTION
@@ -1070,13 +1094,14 @@ CREATE OR REPLACE PROCEDURE registerPoda(quantidade NUMBER,parcelaID NUMBER,plan
     TIPO_OPERACAO CONSTANT NUMBER := 3;
     CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
     UNIDADE CONSTANT VARCHAR2(10) := 'un';
+    ESTADO CONSTANT NUMBER := 2;
     idOperacao NUMBER;
 
 BEGIN
     verifyParcelaInfo(parcelaID);
     verifyPlantacaoInfo(plantacaoID, parcelaID,dataOperacao);
     verifyQuantityInfo(plantacaoID, parcelaID, quantidade, UNIDADE);
-    verifyDateInfo(dataOperacao);
+    verifyDateInfo(dataOperacao, ESTADO);
     --Obter o ID da operação
     SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
 
@@ -1100,11 +1125,12 @@ CREATE OR REPLACE PROCEDURE registerSemeadura(culturaID NUMBER,parcelaID NUMBER,
     CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
     UNIDADE CONSTANT VARCHAR2(10) := 'kg';
     UNIDADE2 CONSTANT VARCHAR2(10) := 'ha';
+    ESTADO CONSTANT NUMBER := 2;
     idOperacao NUMBER;
     idPlantacao NUMBER;
 
 BEGIN
-    verifyDateInfo(dataOperacao);
+    verifyDateInfo(dataOperacao, ESTADO);
     verifyParcelaInfo(parcelaID);
     verifyQuantityInfo(idPlantacao, parcelaID, area, UNIDADE2);
     verifyAvailableAreaInfo(parcelaID, quantidade);
@@ -1135,9 +1161,10 @@ CREATE OR REPLACE PROCEDURE registerMonda(plantacaoID NUMBER,parcelaID NUMBER,da
     CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
     UNIDADE CONSTANT VARCHAR2(10) := 'ha';
     idOperacao NUMBER;
+    ESTADO CONSTANT NUMBER := 2;
 
 BEGIN
-    verifyDateInfo(dataOperacao);
+    verifyDateInfo(dataOperacao, ESTADO);
     verifyParcelaInfo(parcelaID);
     verifyPlantacaoInfo(plantacaoID,parcelaID,dataOperacao);
     verifyQuantityInfo(plantacaoID,parcelaID,quantidade, UNIDADE);
@@ -1168,11 +1195,12 @@ CREATE OR REPLACE PROCEDURE registerColheita(plantacaoID NUMBER,parcelaID NUMBER
     CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
     UNIDADE CONSTANT VARCHAR2(10) := 'kg';
     idOperacao NUMBER;
+    ESTADO CONSTANT NUMBER := 2;
 
 BEGIN
     verifyParcelaInfo(parcelaID);
     verifyPlantacaoInfo(plantacaoID, parcelaID, dataOperacao);
-    verifyDateInfo(dataOperacao);
+    verifyDateInfo(dataOperacao, ESTADO);
     --Obter o ID da operação
     SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
 
@@ -1197,10 +1225,11 @@ CREATE OR REPLACE PROCEDURE registerFatorDeProducao(quantidade NUMBER,parcelaID 
     UNIDADE1 CONSTANT VARCHAR2(10) := 'ha';
     UNIDADE2 CONSTANT VARCHAR2(10) := 'kg';
     idOperacao NUMBER;
+    ESTADO CONSTANT NUMBER := 2;
 
 BEGIN
     verifyParcelaInfo(parcelaID);
-    verifyDateInfo(dataOperacao);
+    verifyDateInfo(dataOperacao, ESTADO);
     verifyFatorDeProducaoInfo(fatorProducaoID);
     verifyModoFertilizacaoInfo(modoFertilizacaoID);
     verifyQuantityInfo(NULL,parcelaID,area,UNIDADE1);
@@ -1376,14 +1405,15 @@ RETURN result_cursor;
 END;
 /
 
-CREATE OR REPLACE PROCEDURE insertOperacao(dataoperacao IN Operacao.DATAOPERACAO%TYPE, quantidade IN Operacao.QUANTIDADE%TYPE, unidade IN Operacao.UNIDADE%TYPE, tipooperacaoid IN Operacao.TIPOOPERACAOID%TYPE, cadernocampoid IN Operacao.CADERNOCAMPOID%TYPE, estadoid IN Operacao.ESTADOID%TYPE, id OUT Operacao.ID%TYPE) AS
+CREATE OR REPLACE PROCEDURE insertOperacao(dataoperacao DATE, quantidade NUMBER, unidade VARCHAR2, tipooperacaoid NUMBER, cadernocampoid NUMBER, estadoid NUMBER, id OUT NUMBER) AS
 BEGIN
+    verifyDateInfo(dataOperacao, estadoid);
+
     INSERT INTO Operacao(DATAOPERACAO, QUANTIDADE, UNIDADE, TIPOOPERACAOID, CADERNOCAMPOID, ESTADOID)
     VALUES (dataoperacao, quantidade, unidade, tipooperacaoid, cadernocampoid, estadoid)
     RETURNING id INTO id;
-
 EXCEPTION
     WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('Ocorreu um erro' || SQLCODE || ' - ' || SQLERRM);
+        RAISE_APPLICATION_ERROR(-20001, 'Ocorreu um erro' || SQLCODE || ' - ' || SQLERRM);
 END;
 /

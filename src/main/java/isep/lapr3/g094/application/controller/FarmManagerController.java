@@ -2,6 +2,7 @@ package isep.lapr3.g094.application.controller;
 
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,16 @@ public class FarmManagerController {
                 fatorProducaoID, modoFertilizacaoID);
     }
 
+    public void registerRega(int duracao, int setorID, Date dataOperacao, Time hora, int estado)
+            throws SQLException {
+        farmManagerRepository.registerRega(duracao, setorID, dataOperacao, hora, estado);
+    }
+
+    public void registerFertirrega(int duracao, int setorID, Date dataOperacao, Time hora, int estado, int mixID)
+            throws SQLException {
+        farmManagerRepository.registerFertirrega(duracao, setorID, dataOperacao, hora, estado, mixID);
+    }
+
     public Map<String, Integer> getParcelas() throws SQLException {
         return farmManagerRepository.getParcelas();
     }
@@ -82,6 +93,14 @@ public class FarmManagerController {
 
     public Map<String, Integer> getPlantacaoByProduto(int parcelaID, int produtoID) throws SQLException {
         return farmManagerRepository.getPlantacaoByProduto(parcelaID, produtoID);
+    }
+
+    public Map<String, Integer> getSetor() throws SQLException {
+        return farmManagerRepository.getSetor();
+    }
+
+    public Map<String, Integer> getMix() throws SQLException {
+        return farmManagerRepository.getMix();
     }
 
     public List<String> getOperation(char operationType, int parcelaID, Date dataInicial, Date dataFinal)

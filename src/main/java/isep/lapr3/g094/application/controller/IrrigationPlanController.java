@@ -172,7 +172,7 @@ public class IrrigationPlanController {
                     try {
                         farmManagerRepository.registerRega(sector.getDuracao(), sector.getSector(),
                                 operationDate,
-                                operationTime);
+                                operationTime, 2);
                         System.out.println("Rega registada com sucesso. \nDetalhes: Setor: " + sector.getSector()
                                 + " Data: " + operationDate + " Hora: " + operationTime + " Duração: " + sector.getDuracao() + "min\n");
                     } catch (SQLException e) {
