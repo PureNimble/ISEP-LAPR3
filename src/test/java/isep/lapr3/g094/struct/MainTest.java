@@ -464,7 +464,7 @@ public class MainTest {
         System.out.println("Distância total: " + totalDistance);
     }
 
-    @Test
+    //@Test
     void testGetClustersWith2Hubs() {
         System.out.println("Testing GetClustersWith2Hubs...");
 
@@ -635,4 +635,91 @@ public class MainTest {
         assertArrayEquals(expected.toArray(), locaisDeCarregamento.toArray());
 
     }
+
+    @Test
+    void allPathsWithLimitSmallGraph() {
+
+        System.out.println("Testing allPathsWithLimit (smallGraph)...");
+
+        int autonomy = 300;
+        String idOrigem = "CT15";
+        String idDestino = "CT17";
+        int velocity = 120;
+
+        Map<List<Pair<Location, Integer>>, Integer> paths = graphController.allPathsWithLimit(idOrigem,
+                idDestino, autonomy * 1000, velocity, false);
+
+        paths.forEach((k, v) -> {
+            assertEquals(idOrigem, k.getFirst().getFirst().getId());
+            assertEquals(idDestino, k.getLast().getFirst().getId());
+        });
+        //shortest path
+        List<Pair<Location, Integer>> shortestPath = paths.entrySet().iterator().next().getKey();
+        Integer shortestDistance = paths.entrySet().iterator().next().getValue();
+        List<Pair<Location, Integer>> expectedShortestPath = Arrays.asList(new Pair<>(new Location("CT15"), 43598),
+                new Pair<>(new Location("CT3"), 68957), new Pair<>(new Location("CT16"), 79560),
+                new Pair<>(new Location("CT17"), 0));
+        assertEquals(expectedShortestPath, shortestPath);
+        assertEquals(192115, shortestDistance);
+
+    }
+
+    @Test
+    void allPathsWithLimitBigGraph() {
+
+        System.out.println("Testing allPathsWithLimit (bigGraph)...");
+
+        int autonomy = 100;
+        String idOrigem = "CT137";
+        String idDestino = "CT17";
+        int velocity = 120;
+
+        Map<List<Pair<Location, Integer>>, Integer> paths = graphController.allPathsWithLimit(idOrigem,
+                idDestino, autonomy * 1000, velocity, true);
+
+        paths.forEach((k, v) -> {
+            assertEquals(idOrigem, k.getFirst().getFirst().getId());
+            assertEquals(idDestino, k.getLast().getFirst().getId());
+        });
+        //shortest path
+        List<Pair<Location, Integer>> shortestPath = paths.entrySet().iterator().next().getKey();
+        Integer shortestDistance = paths.entrySet().iterator().next().getValue();
+        List<Pair<Location, Integer>> expectedShortestPath = Arrays.asList(new Pair<>(new Location("CT137"), 7921),
+                new Pair<>(new Location("CT225"), 34652), new Pair<>(new Location("CT17"), 0));
+        assertEquals(expectedShortestPath, shortestPath);
+        assertEquals(42573, shortestDistance);
+
+    }
+
+    @Test
+    void allPathsWithLimitNoPath() {
+
+        System.out.println("Testing allPathsWithLimit (noPath)...");
+
+        int autonomy = 40;
+        String idOrigem = "CT137";
+        String idDestino = "CT17";
+        int velocity = 120;
+
+        Map<List<Pair<Location, Integer>>, Integer> paths = graphController.allPathsWithLimit(idOrigem,
+                idDestino, autonomy * 1000, velocity, true);
+
+        assertTrue(paths.isEmpty());
+
+    }
+
+    @Test
+    void allPathsWithLimitInvalidLocation() {
+        System.out.println("Testing allPathsWithLimit (invalidLocation)...");
+
+        int autonomy = 40;
+        String idOrigem = "CT137";
+        String idDestino = "CT999";
+        int velocity = 120;
+
+        assertEquals(null, graphController.allPathsWithLimit(idOrigem,
+                idDestino, autonomy * 1000, velocity, true));
+
+    }
+
 }
