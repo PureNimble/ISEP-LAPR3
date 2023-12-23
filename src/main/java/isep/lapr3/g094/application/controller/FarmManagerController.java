@@ -126,4 +126,14 @@ public class FarmManagerController {
         }
         return new ArrayList<String>();
     }
+
+    public int createReceita(String designacao)
+            throws SQLException{
+        return farmManagerRepository.createReceita(designacao);
+    }
+
+    public void addFatorToReceita(int receitaID, int fatorProducaoID, int quantidade, String unidade)
+            throws SQLException{
+        farmManagerRepository.addFatorToReceita(receitaID, fatorProducaoID, quantidade, unidade);
+    }
 }
