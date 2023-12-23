@@ -307,7 +307,7 @@ public class BasketDistributionUI implements Runnable {
             int seconds = (int) (((time - hours) * 60 - minutes) * 60);
 
             String timeFormatted = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-            System.out.println("\nDistância Total: " + pathDistance + "m");
+            System.out.println("\nDistância Total: " + pathDistance / 1000.0 + "km");
             System.out.println("Tempo Total: " + timeFormatted + "\n");
 
         });
