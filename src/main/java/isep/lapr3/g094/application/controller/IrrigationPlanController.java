@@ -1,6 +1,7 @@
 package isep.lapr3.g094.application.controller;
 
 import java.sql.SQLException;
+import java.sql.Time;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +89,8 @@ public class IrrigationPlanController {
         return true;
     }
 
-    public Map<IrrigationSector, Pair<Integer, Boolean>> searchIrrigation(Date dataPesquisa, String hora) throws ParseException {
+    public Map<IrrigationSector, Pair<Integer, Boolean>> searchIrrigation(Date dataPesquisa, String hora)
+            throws ParseException {
 
         if (checkIfDateExists(dataPesquisa)) {
 
@@ -107,7 +109,7 @@ public class IrrigationPlanController {
 
             long daysBetween = ChronoUnit.DAYS.between(startDate, currentDate);
 
-            int dayNumber = (int) (daysBetween + 1);            
+            int dayNumber = (int) (daysBetween + 1);
             int minutoPesquisa = convertHoursToMinutes(hora);
 
             for (IrrigationSector regaDiaria : planoDeRega) {
@@ -181,22 +183,54 @@ public class IrrigationPlanController {
     public boolean executeWatering() {
         List<IrrigationSector> sectors = irrigationSectorRepository.getIrrigationSectors();
         sectors.sort(Comparator.comparingInt(IrrigationSector::getDuracao));
-        for (IrrigationDate date : irrigationDateRepository.getIrrigationDates()) {
-            for (IrrigationHour hour : irrigationHourRepository.getIrrigationHours()) {
+        List<IrrigationDate> diasDeRega = irrigationDateRepository.getIrrigationDates();
+        List<IrrigationHour> irrigationHours = irrigationHourRepository.getIrrigationHours();
+        IrrigationDate startDay = diasDeRega.getFirst();
+        LocalDate startDate = startDay.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        for (IrrigationDate date : diasDeRega) {
+            LocalDate currentDate = date.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            int dia = currentDate.getDayOfMonth();
+            java.sql.Date operationDate = java.sql.Date.valueOf(currentDate);
+
+            for (IrrigationHour hour : irrigationHours) {
+                Time operationTime = Time.valueOf(LocalTime.parse(hour.getHour()));
                 for (IrrigationSector sector : sectors) {
-                    java.sql.Date operationDate = new java.sql.Date(date.getDate().getTime());
-                    java.sql.Time operationTime = java.sql.Time.valueOf(LocalTime.parse(hour.getHour()));
-                    try {
-                        farmManagerRepository.registerRega(sector.getDuracao(), sector.getSector(),
-                                operationDate,
-                                operationTime, 2);
-                        System.out.println("Rega registada com sucesso. \nDetalhes: Setor: " + sector.getSector()
-                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: " + sector.getDuracao() + "min\n");
-                    } catch (SQLException e) {
-                        System.out.println("Não foi possível registar a rega. \nDetalhes: Setor: " + sector.getSector()
-                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: " + sector.getDuracao() + "min\n");
-                        System.out.println("Motivo: " + e.getMessage());
-                        return false;
+                    char periodicidade = sector.getPeriodicidade();
+                    boolean shouldRegister = (periodicidade == 'T') ||
+                            (periodicidade == 'P' && dia % 2 == 0) ||
+                            (periodicidade == 'I' && dia % 2 != 0) ||
+                            (periodicidade == '3' && dia % 3 == 0);
+                    int dayNum = (int) ChronoUnit.DAYS.between(startDate, currentDate) + 1;
+
+                    if (shouldRegister) {
+                        try {
+                            if (sector.getRecorrencia() != dayNum) {
+                                farmManagerRepository.registerRega(sector.getDuracao(), sector.getSector(),
+                                        operationDate,
+                                        operationTime, 2);
+                                System.out
+                                        .println("Rega registada com sucesso. \nDetalhes: Setor: " + sector.getSector()
+                                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: "
+                                                + sector.getDuracao() + "min\n");
+                            } else {
+                                farmManagerRepository.registerFertirrega(sector.getDuracao(), sector.getSector(),
+                                        operationDate,
+                                        operationTime, 2, sector.getMix());
+                                System.out
+                                        .println("Fertirrega registada com sucesso. \nDetalhes: Setor: "
+                                                + sector.getSector()
+                                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: "
+                                                + sector.getDuracao() + "min, " + "Mix: " + sector.getMix() + "\n");
+                            }
+                        } catch (SQLException e) {
+                            System.out.println(
+                                    "Não foi possível registar a rega. \nDetalhes: Setor: " + sector.getSector()
+                                            + " Data: " + operationDate + " Hora: " + operationTime + " Duração: "
+                                            + sector.getDuracao() + "min\n");
+                            System.out.println("Motivo: " + e.getMessage());
+                            return false;
+                        }
                     }
                 }
             }
