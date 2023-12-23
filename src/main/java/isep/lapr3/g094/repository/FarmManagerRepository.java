@@ -852,4 +852,35 @@ public class FarmManagerRepository {
 		}
 		return output;
 	}
+
+	public List<String> getConsumoByCultura(int year) throws SQLException {
+		CallableStatement callStmt = null;
+		ResultSet resultSet = null;
+		List<String> result = new ArrayList<>();
+
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ ? = call getConsumoRega(?) }");
+			callStmt.registerOutParameter(1, OracleTypes.CURSOR);
+			callStmt.setInt(2, year);
+			callStmt.execute();
+			resultSet = (ResultSet) callStmt.getObject(1);
+			while (resultSet.next()) {
+				while (resultSet.next()) {
+					result.add("Cultura: " + resultSet.getString(1) + " - Consumo: " + resultSet.getString(2)
+							+ " minutos."); // replace 1 with the column index or column name
+				}
+			}
+
+		} finally {
+			if (!Objects.isNull(callStmt)) {
+				callStmt.close();
+			}
+			if (!Objects.isNull(resultSet)) {
+				resultSet.close();
+			}
+		}
+
+		return result;
+	}
 }

@@ -128,12 +128,16 @@ public class FarmManagerController {
     }
 
     public int createReceita(String designacao)
-            throws SQLException{
+            throws SQLException {
         return farmManagerRepository.createReceita(designacao);
     }
 
     public void addFatorToReceita(int receitaID, int fatorProducaoID, int quantidade, String unidade)
-            throws SQLException{
+            throws SQLException {
         farmManagerRepository.addFatorToReceita(receitaID, fatorProducaoID, quantidade, unidade);
+    }
+
+    public List<String> getConsumoByCultura(int year) throws SQLException {
+        return farmManagerRepository.getConsumoByCultura(year);
     }
 }
