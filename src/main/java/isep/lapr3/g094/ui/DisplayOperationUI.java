@@ -22,6 +22,7 @@ public class DisplayOperationUI implements Runnable {
         options.add(new MenuItem("USBD18 - Lista de operações realizadas", () -> checkOperation('O')));
         options.add(new MenuItem("USBD19 - Lista de aplicações de fator de produção", () -> checkOperation('F')));
         options.add(new MenuItem("USBD20 - Lista de rega mensal", () -> checkOperation('R')));
+        options.add(new MenuItem("USBD33 - Lista de culturas com maior consumo de água", () -> checkOperation('A')));
 
         int option = 0;
         do {
@@ -34,6 +35,11 @@ public class DisplayOperationUI implements Runnable {
     }
 
     private void checkOperation(char operationType) {
+        if (operationType == 'A') {
+            getConsumoByCultura();
+            return;
+        }
+
         java.util.Date utilDateInicial = Utils.readDateFromConsole("Data de Inicio: ");
         java.sql.Date dataInicial = java.sql.Date
                 .valueOf(utilDateInicial.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
@@ -80,6 +86,25 @@ public class DisplayOperationUI implements Runnable {
         }
 
         return parcelaID;
+
+    }
+
+    private void getConsumoByCultura() {
+        Integer year = Utils.readIntegerFromConsole("Ano civil: ");
+
+        try {
+            List<String> list = farmManagerController.getConsumoByCultura(year);
+
+            if (!list.isEmpty()) {
+                System.out.println("\nResultado:");
+                for (String s : list)
+                    System.out.println(s);
+            } else
+                System.out.println("\nSem resultados");
+        } catch (SQLException e) {
+            System.out.println("\nErro na obtenção da lista de operações");
+            System.out.println("Motivo: " + e.getMessage());
+        }
 
     }
 }
