@@ -162,6 +162,47 @@ public class FarmManagerRepository {
 		}
 	}
 
+	public int createReceita(String designacao)
+			throws SQLException{
+
+		CallableStatement callStmt = null;
+		int idReceita;
+		try{
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ call registerReceita(?) }");
+			callStmt.setString(1, designacao);
+			callStmt.registerOutParameter(2, OracleTypes.NUMBER);
+			callStmt.execute();
+			connection.commit();
+			idReceita = callStmt.getInt(2);
+		} finally {
+			if (callStmt != null) {
+				callStmt.close();
+			}
+		}
+		return idReceita;
+	}
+
+	public void addFatorToReceita(int receitaID, int fatorProducaoID, int quantidade, String unidade)
+			throws SQLException{
+
+		CallableStatement callStmt = null;
+		try{
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ call addFatorToReceita(?,?,?,?) }");
+			callStmt.setInt(1, receitaID);
+			callStmt.setInt(2, fatorProducaoID);
+			callStmt.setInt(3, quantidade);
+			callStmt.setString(4, unidade);
+			callStmt.execute();
+			connection.commit();
+		} finally {
+			if (callStmt != null){
+				callStmt.close();
+			}
+		}
+	}
+
 	public Map<String, Integer> getParcelas() throws SQLException {
 		CallableStatement callStmt = null;
 		Statement stmt = null;

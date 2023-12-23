@@ -22,7 +22,7 @@ public class RegisterOperationUI implements Runnable {
         options.add(new MenuItem("USBD13 - Colheita", () -> createOperation('C')));
         options.add(new MenuItem("USBD14 - Aplicação de fator de produção", () -> createOperation('A')));
         options.add(new MenuItem("USBD15 - Poda", () -> createOperation('P')));
-        options.add(new MenuItem("USBD31 - Receita", () -> createOperation('F')));
+        options.add(new MenuItem("USBD31 - Receita", () -> createReceita()));
         options.add(new MenuItem("USBD32 - Rega", () -> createRega()));
 
         int option = 0;
@@ -119,6 +119,31 @@ public class RegisterOperationUI implements Runnable {
             System.out.println("\nOperação registada com sucesso!");
         } catch (SQLException e) {
             System.out.println("\nErro ao registar operação");
+            System.out.println("Motivo: " + e.getMessage());
+        }
+    }
+
+    public void createReceita(){
+        String designacao = Utils.readLineFromConsole("Designação desejada para a receita: ");
+        try {
+            int receitaID = farmManagerController.createReceita(designacao);
+            System.out.println("\nReceita inicializada com sucesso!");
+            boolean cont;
+            do{
+                Integer fatorProducaoID = selectFatorProducao();
+                Integer quantidade = Utils.readIntegerFromConsole("Quantidade: ");
+                String unidade = Utils.readLineFromConsole("Unidade: ");
+                try {
+                    farmManagerController.addFatorToReceita(receitaID, fatorProducaoID, quantidade, unidade);
+                    System.out.println("\nFator adicionado com sucesso!");
+                } catch (SQLException e) {
+                    System.out.println("\nErro ao adicionar fator");
+                    System.out.println("Motivo: " + e.getMessage());
+                }
+                 cont = Utils.confirm("Deseja adicionar mais um fator?");
+            } while (cont);
+        } catch (SQLException e) {
+            System.out.println("\nErro ao inicializar receita");
             System.out.println("Motivo: " + e.getMessage());
         }
     }
