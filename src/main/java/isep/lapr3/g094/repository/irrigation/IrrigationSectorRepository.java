@@ -24,15 +24,20 @@ public class IrrigationSectorRepository {
         return null;
     }
 
-    public Optional<IrrigationSector> createIrrigationSectors(int sector, int duracao, char periocidade) {
-
+    public Optional<IrrigationSector> createIrrigationSectors(int sector, int duracao, char periocidade, Integer mix, Integer recorrencia) {
         Optional<IrrigationSector> optionalValue = Optional.empty();
-        IrrigationSector irrigationSector = new IrrigationSector(sector, duracao, periocidade);
+        IrrigationSector irrigationSector;
+
+        if (mix != null && recorrencia != null) {
+            irrigationSector = new IrrigationSector(sector, duracao, periocidade, mix, recorrencia);
+        } else {
+            irrigationSector = new IrrigationSector(sector, duracao, periocidade);
+        }
 
         if (addIrrigationSector(irrigationSector)) {
             optionalValue = Optional.of(irrigationSector);
-
         }
+
         return optionalValue;
     }
 

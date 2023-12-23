@@ -75,13 +75,22 @@ public class ImportController {
         while (iterator.hasNext()) {
             String[] line = iterator.next().split(",");
             try {
-                if (irrigationSectorRepository
-                        .createIrrigationSectors(Integer.parseInt(line[0]), Integer.parseInt(line[1]),
-                                line[2].charAt(0))
-                        .isEmpty()) {
-                    return false;
+                if (line.length == 3) {
+                    if (irrigationSectorRepository
+                            .createIrrigationSectors(Integer.parseInt(line[0]), Integer.parseInt(line[1]),
+                                    line[2].charAt(0), null, null)
+                            .isEmpty()) {
+                        return false;
+                    }
+                } else if (line.length >= 5) {
+                    if (irrigationSectorRepository
+                            .createIrrigationSectors(Integer.parseInt(line[0]), Integer.parseInt(line[1]),
+                                    line[2].charAt(0), Integer.parseInt(line[3]), Integer.parseInt(line[4]))
+                            .isEmpty()) {
+                        return false;
+                    }
                 }
-            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+            } catch (NumberFormatException e) {
                 return false;
             }
         }

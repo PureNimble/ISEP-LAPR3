@@ -5,11 +5,23 @@ public class IrrigationSector {
     private int sector;
     private int duracao;
     private char periodicidade;
+    private int mix;
+    private int recorrencia;
+
+    public IrrigationSector(int sector, int duracao, char periodicidade, int mix, int recorrencia) {
+        this.sector = sector;
+        this.duracao = duracao;
+        this.periodicidade = periodicidade;
+        this.mix = mix;
+        this.recorrencia = recorrencia;
+    }
 
     public IrrigationSector(int sector, int duracao, char periodicidade) {
         this.sector = sector;
         this.duracao = duracao;
         this.periodicidade = periodicidade;
+        this.mix = -1;
+        this.recorrencia = -1;
     }
 
     public int getSector() {
@@ -22,6 +34,14 @@ public class IrrigationSector {
 
     public char getPeriodicidade() {
         return periodicidade;
+    }
+
+    public int getMix() {
+        return mix;
+    }
+
+    public int getRecorrencia() {
+        return recorrencia;
     }
 
     @Override
@@ -48,7 +68,16 @@ public class IrrigationSector {
 
     @Override
     public String toString() {
-        return "sector=" + sector + ", duracao=" + duracao + ", periodicidade=" + periodicidade;
+        String result = "Setor=" + sector + ", Duração=" + duracao + "min , Periodicidade=" + periodicidade;
+        
+        if (mix != -1) {
+            result += ", Mix=" + mix;
+        }
+        
+        if (recorrencia != -1) {
+            result += ", Recorrência=" + recorrencia;
+        }
+        
+        return result;
     }
-
 }

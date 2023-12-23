@@ -468,7 +468,6 @@ public class Service {
         Random rand = new Random();
         int min = 1;
         int max = 5;
-        int randomNum = rand.nextInt((max - min) + 1) + min;
-        return randomNum;
+        return rand.nextInt(max) + min;
     }
 }

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import isep.lapr3.g094.application.controller.IrrigationPlanController;
 import isep.lapr3.g094.application.controller.ImportController;
+import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.irrigation.IrrigationDate;
 import isep.lapr3.g094.domain.irrigation.IrrigationHour;
 import isep.lapr3.g094.domain.irrigation.IrrigationSector;
@@ -68,7 +69,7 @@ public class IrrigationUI implements Runnable {
         String hora = getValidatedHour("\nFormato: hh:mm\n\nInsira a hora: ",
                 "Formato de hora invalido. Por favor insira uma hora no formato hh:mm");
 
-        Map<IrrigationSector, Integer> lista = irrigationPlanController.searchIrrigation(data, hora);
+        Map<IrrigationSector, Pair<Integer, Boolean>> lista = irrigationPlanController.searchIrrigation(data, hora);
         if (lista != null)
             printResults(lista);
         else
@@ -106,25 +107,28 @@ public class IrrigationUI implements Runnable {
         List<IrrigationSector> irrigationSectors = irrigationPlanController.getIrrigationSectors();
         List<IrrigationHour> irrigationHours = irrigationPlanController.getIrrigationHours();
         List<IrrigationDate> irrigationDates = irrigationPlanController.getIrrigationDates();
-        System.out.println("\n=============Plano de Rega=============");
+        System.out.println("\n===========================Plano de Rega===========================");
         System.out.println("Datas de rega:");
         System.out.println(irrigationDates.get(0) + " a " + irrigationDates.get(irrigationDates.size() - 1));
         System.out.println("\nHoras de rega:");
         irrigationHours.forEach(System.out::println);
         System.out.println("\nSetores a regar:");
         irrigationSectors.forEach(System.out::println);
-        System.out.println("=======================================");
+        System.out.println("===================================================================");
     }
 
-    private void printResults(Map<IrrigationSector, Integer> lista) {
+    private void printResults(Map<IrrigationSector, Pair<Integer, Boolean>> lista) {
 
         if (lista.isEmpty())
-            System.out.println("Nao existem regas nesta hora");
+            System.out.println("\nNao existem regas nesta hora");
         else
-            System.out.println("Existem as seguintes regas nesta hora:\n");
+            System.out.println("\nExistem as seguintes regas nesta hora:");
         lista.entrySet().stream().forEach(i -> {
-            System.out.println(
-                    "-> Parcela: " + i.getKey().getSector() + " Tempo restante: " + i.getValue() + " minutos");
+            System.out.print(
+                    "\n-> Setor: " + i.getKey().getSector() + " Tempo restante: " + i.getValue().getFirst()
+                            + " minutos");
+            if (i.getValue().getSecond())
+                System.out.print(", Mix: " + i.getKey().getMix());
         });
     }
 }

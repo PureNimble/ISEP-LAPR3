@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.irrigation.IrrigationDate;
 import isep.lapr3.g094.domain.irrigation.IrrigationHour;
 import isep.lapr3.g094.domain.irrigation.IrrigationSector;
@@ -19,7 +20,10 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 
 public class IrrigationPlanController {
 
@@ -84,17 +88,26 @@ public class IrrigationPlanController {
         return true;
     }
 
-    public Map<IrrigationSector, Integer> searchIrrigation(Date dataPesquisa, String hora) throws ParseException {
+    public Map<IrrigationSector, Pair<Integer, Boolean>> searchIrrigation(Date dataPesquisa, String hora) throws ParseException {
 
         if (checkIfDateExists(dataPesquisa)) {
 
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(dataPesquisa);
             int dia = calendar.get(Calendar.DAY_OF_MONTH);
+            List<IrrigationDate> diasDeRega = irrigationDateRepository.getIrrigationDates();
             List<IrrigationSector> planoDeRega = irrigationSectorRepository.getIrrigationSectors();
             List<IrrigationHour> horarioDeRega = irrigationHourRepository.getIrrigationHours();
             List<IrrigationSector> listaFinal = new ArrayList<>();
+            IrrigationDate startDay = diasDeRega.getFirst();
+            calendar.setTime(startDay.getDate());
             hora = hora.strip();
+            LocalDate startDate = startDay.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate currentDate = dataPesquisa.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+            long daysBetween = ChronoUnit.DAYS.between(startDate, currentDate);
+
+            int dayNumber = (int) (daysBetween + 1);            
             int minutoPesquisa = convertHoursToMinutes(hora);
 
             for (IrrigationSector regaDiaria : planoDeRega) {
@@ -108,7 +121,7 @@ public class IrrigationPlanController {
                     listaFinal.add(regaDiaria);
 
             }
-            Map<IrrigationSector, Integer> resultMap = new HashMap<>();
+            Map<IrrigationSector, Pair<Integer, Boolean>> resultMap = new HashMap<>();
 
             for (IrrigationHour horarioInicial : horarioDeRega) {
                 int minutoInicial = convertHoursToMinutes(horarioInicial.getHour());
@@ -116,7 +129,11 @@ public class IrrigationPlanController {
                         .forEach((regaDiaria) -> {
                             int minutoFinal = minutoInicial + regaDiaria.getDuracao();
                             if (minutoInicial <= minutoPesquisa && minutoFinal > minutoPesquisa) {
-                                resultMap.put(regaDiaria, minutoFinal - minutoPesquisa);
+                                if (dayNumber == regaDiaria.getRecorrencia()) {
+                                    resultMap.put(regaDiaria, new Pair<>(minutoFinal - minutoPesquisa, true));
+                                } else {
+                                    resultMap.put(regaDiaria, new Pair<>(minutoFinal - minutoPesquisa, false));
+                                }
                             }
                         });
             }
