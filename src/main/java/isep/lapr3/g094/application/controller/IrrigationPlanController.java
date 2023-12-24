@@ -102,7 +102,6 @@ public class IrrigationPlanController {
             List<IrrigationHour> horarioDeRega = irrigationHourRepository.getIrrigationHours();
             List<IrrigationSector> listaFinal = new ArrayList<>();
             IrrigationDate startDay = diasDeRega.getFirst();
-            calendar.setTime(startDay.getDate());
             hora = hora.strip();
             LocalDate startDate = startDay.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate currentDate = dataPesquisa.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
