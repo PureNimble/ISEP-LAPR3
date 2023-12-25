@@ -24,7 +24,7 @@ int main()
 	switch (output)
 	{
 	case 1:
-		processadorDeDados(VALUE_PATH, CONFIG_PATH, SAIDA_PATH, 10);
+		processadorDeDados(VALUE_PATH, CONFIG_PATH, SAIDA_PATH, 4);
 		break;
 	case 0:
 		exit(0);
