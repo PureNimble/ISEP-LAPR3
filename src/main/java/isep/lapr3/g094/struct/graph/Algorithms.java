@@ -1,5 +1,6 @@
 package isep.lapr3.g094.struct.graph;
 
+import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
 import java.util.*;
@@ -217,6 +218,37 @@ public class Algorithms {
         allPaths(g, vOrig, vDest, visited, path, paths);
 
         return paths;
+    }
+
+    public static <V, E> void allPathsWithAutonomyMax(Graph<V, E> g, V vOrig, V vDest, double maxAutonomy, ArrayList<LinkedList<Pair<V, Double>>> paths) {
+
+        LinkedList<Pair<V, Double>> path = new LinkedList<>();
+        boolean[] visited = new boolean[g.numVertices()];
+
+        path.add(new Pair<>(vOrig, 0.0));
+        allPathsWithAutonomyMax(g, vOrig, vDest, visited, path, paths, maxAutonomy);
+    }
+
+    private static <V, E> void allPathsWithAutonomyMax(Graph<V, E> g, V vOrig, V vDest, boolean[] visited,
+                LinkedList<Pair<V, Double>> path, ArrayList<LinkedList<Pair<V, Double>>> paths, double maxAutonomy) {
+
+        visited[g.key(vOrig)] = true;
+
+        if (vOrig.equals(vDest)) {
+            paths.add(new LinkedList<>(path));
+        } else {
+            for (V adj : g.adjVertices(vOrig)) {
+                Edge<V, E> edge = g.edge(vOrig, adj);
+                double edgeWeight = ((Number) edge.getWeight()).doubleValue();
+                if (!visited[g.key(adj)] && edgeWeight <= maxAutonomy) {
+                    path.add(new Pair<>(adj, edgeWeight));
+                    allPathsWithAutonomyMax(g, adj, vDest, visited, path, paths, maxAutonomy);
+                    path.removeLast();
+                }
+            }
+        }
+
+        visited[g.key(vOrig)] = false;
     }
 
     private static <V, E> void getPath(Graph<V, E> g, V vOrig, V vDest,

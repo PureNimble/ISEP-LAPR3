@@ -94,7 +94,11 @@ public class GraphController {
         return service.getLatestFileFromDirectory(string);
     }
 
-    public void maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph) {
+    public void maximizedPath(String idOrigem, LocalTime time, double autonomy, int velocity, Boolean bigGraph) {
         service.maximizedPath(idOrigem, time, autonomy, velocity, bigGraph);
+    }
+
+    public boolean idExists(String idOrigem, Boolean bigGraph) {
+        return service.idExists(idOrigem, bigGraph);
     }
 }
