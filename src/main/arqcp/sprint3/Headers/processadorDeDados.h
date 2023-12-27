@@ -10,8 +10,13 @@ typedef struct
     char *unit;                                   // 8 bytes
     unsigned int instate_temporal_ultima_leitura; // 4 bytes
     unsigned int timeout;                         // 4 bytes
+    unsigned int window_len;                      // 4 bytes
+    unsigned int buffer_size;                     // 4 bytes
+    int buffer_read;                              // 4 bytes
+    int buffer_write;                             // 4 bytes
     unsigned short write_counter;                 // 2 bytes
     unsigned short id;                            // 2 bytes
+    unsigned short medianIndex;                   // 2 bytes
 } Sensor;
 
 // main function
@@ -36,4 +41,8 @@ float median(int *array, int size);
 void printAllSensors(Sensor *sensors, int count);
 // free sensors
 void freeSensors(Sensor *sensors, int count);
+
+void moving_median(Sensor *sensors);
+
+void printString(char *string);
 #endif
