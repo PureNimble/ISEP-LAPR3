@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -459,15 +460,34 @@ public class Service {
         return latestFile;
     }
 
-    public void maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph) {
-        int descargaTime = randomTime(); // tempo de descarga aleatório entre 1 e 5 minutos
-        System.out.println("Tempo de descarga: " + descargaTime + " minutos");
+    public void maximizedPath(String idOrigem, LocalTime time, double autonomy, int velocity, Boolean bigGraph) {
+        Location curLocation = graphRepository.locationById(idOrigem, bigGraph);
+        Graph<Location, Integer> graph = getGraph(bigGraph); 
+        ArrayList<LinkedList<Pair<Location, Double>>> paths = new ArrayList<>();
+        for (Location location : graph.vertices()) {
+            Algorithms.allPathsWithAutonomyMax(graph, curLocation, location, autonomy, paths);                
+        }
     }
 
-    private int randomTime() {
-        Random rand = new Random();
-        int min = 1;
-        int max = 5;
-        return rand.nextInt(max) + min;
+    private Duration unloadingTime() {
+        return Duration.ofMinutes(new Random().nextInt(10) + 1);
+    }
+
+    private Duration chargingTime(int autonomy, int leftAutonomy) {
+        double gainedAutonomyPerMinute = 1016.6666666667;
+        return Duration.ofMinutes(Math.round((autonomy - leftAutonomy) / gainedAutonomyPerMinute));
+    }
+
+    private Duration travelTime(int distance, int velocity) {
+        return Duration.ofMinutes((long) (60 * ((double) distance / velocity)));
+    }
+
+    public boolean idExists(String idOrigem, Boolean bigGraph) {
+        Location curLocation = graphRepository.locationById(idOrigem, bigGraph);
+        if (curLocation == null) {
+            System.err.println("Localização não existe");
+            return false;
+        }
+        return true;
     }
 }

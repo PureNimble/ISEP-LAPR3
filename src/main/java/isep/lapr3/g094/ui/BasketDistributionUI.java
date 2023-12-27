@@ -322,12 +322,15 @@ public class BasketDistributionUI implements Runnable {
         LocalTime time;
         do {
             idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem: (CT**)").toUpperCase();
-
-        } while ((!idOrigem.contains("CT")));
+        } while ((!idOrigem.contains("CT")) || (!idExists(idOrigem, bigGraph)));
         time = Utils.readTimeFromConsole("Escreva a hora de partida: (HH:MM)");
-        int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
+        double autonomy = Utils.readDoubleFromConsole("Qual a autonomia do veículo?(km)");
         int velocity = Utils.readIntegerFromConsole("Qual a velocidade média do veículo?(km/h)");
         graphController.maximizedPath(idOrigem, time, autonomy * 1000, velocity, bigGraph);
+    }
+
+    private boolean idExists(String idOrigem, Boolean bigGraph) {
+        return graphController.idExists(idOrigem, bigGraph);
     }
 
     private void addSchedule() {

@@ -9,9 +9,11 @@
 #include <unistd.h>  // write(), read(), close()
 // malloc
 #include <stdlib.h>
+// time
+#include <time.h>
 
 #include "../Headers/processadorDeDados.h"
-#include "../Headers/extractToken.h"
+#include "../Headers/asm.h"
 void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath, int numberOfReads)
 {
     int const NUM_SENSORS = numberOfLines(configPath);
@@ -44,13 +46,19 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
 
     /* while (1)
     { */
-    for (int i = 0; i < numberOfReads; i++)
+    int i;
+    for (i = 0; i < numberOfReads; i++)
     {
         char *data = test(); // getData(serial_port);
         int *info = extractInfo(data);
         printf("id: %i, x: %i, %i\n", info[0], info[1], info[2]);
         insertInfo(info, ptrSensores, NUM_SENSORS);
         //  free(data);
+    }
+    for (i = 0; i < NUM_SENSORS; i++)
+    {
+        if (numberOfReads > ptrSensores[i].window_len)
+            moving_median(&ptrSensores[i]);
     }
     //}
     printAllSensors(ptrSensores, NUM_SENSORS);
@@ -65,6 +73,8 @@ void freeSensors(Sensor *sensors, int count)
     {
         free(sensors[i].buffer_circular);
         free(sensors[i].median_array);
+        free(sensors[i].sensor_type);
+        free(sensors[i].unit);
     }
     free(sensors);
 }
@@ -114,27 +124,29 @@ void createSensors(Sensor *ptr, char *configPath)
         perror("Erro ao abrir o ficheiro de configuração");
         exit(0);
     }
-    int id;
-    char type[50];
-    char unit[50];
-    int value;
-    int interval;
-    int duration;
+    unsigned short id;
+    char type[30];
+    char unit[20];
+    unsigned int buffer_size;
+    unsigned int window_len;
+    int timeout;
     Sensor s;
 
-    while (fscanf(configFile, "%d#%[^#]#%[^#]#%d#%d#%d\n", &id, type, unit, &value, &interval, &duration) == 6)
+    while (fscanf(configFile, "%hd#%[^#]#%[^#]#%d#%d#%d\n", &id, type, unit, &buffer_size, &window_len, &timeout) == 6)
     {
-
+        s.sensor_type = malloc(strlen(type) + 1);
+        s.unit = malloc(strlen(unit) + 1);
         s.id = id;
-        s.unit = unit;
-        int *buffer_circular = malloc(value * sizeof(int));
+        strcpy(s.sensor_type, type);
+        strcpy(s.unit, unit);
+        int *buffer_circular = malloc(buffer_size * sizeof(int));
         if (buffer_circular == NULL)
         {
             printf("Erro ao alocar memória\n");
             exit(0);
         }
         s.buffer_circular = buffer_circular;
-        int *median_array = malloc(value * sizeof(int));
+        int *median_array = malloc(buffer_size * sizeof(int));
         if (median_array == NULL)
         {
             printf("Erro ao alocar memória\n");
@@ -142,8 +154,13 @@ void createSensors(Sensor *ptr, char *configPath)
         }
         s.median_array = median_array;
         s.instate_temporal_ultima_leitura = 0;
-        s.timeout = interval = 0;
+        s.timeout = timeout;
         s.write_counter = 0;
+        s.window_len = window_len;
+        s.buffer_size = buffer_size;
+        s.buffer_read = 0;
+        s.buffer_write = 0;
+        s.medianIndex = 0;
 
         *ptr = s;
         ptr++;
@@ -154,8 +171,8 @@ void createSensors(Sensor *ptr, char *configPath)
 char *test()
 {
     char *text[] = {"sensor_id:1#value:10#time:10", "sensor_id:2#value:20#time:20", "sensor_id:3#value:30#time:30", "sensor_id:4#value:40#time:40"};
-
-    return text[rand() % 4];
+    srand(time(NULL));
+    return text[0];
 }
 
 void insertInfo(int *info, Sensor *sensors, int count)
@@ -164,10 +181,8 @@ void insertInfo(int *info, Sensor *sensors, int count)
 
     Sensor currentChange = sensors[sensorIndex];
 
-    currentChange.buffer_circular[currentChange.write_counter] = info[1];
+    enqueue_value(currentChange.buffer_circular, currentChange.buffer_size, &currentChange.buffer_read, &currentChange.buffer_write, info[1]);
     currentChange.instate_temporal_ultima_leitura = info[2];
-    currentChange.write_counter++;
-
     sensors[sensorIndex] = currentChange;
 }
 
@@ -208,57 +223,45 @@ void printAllSensors(Sensor *sensors, int count)
 {
     for (int i = 0; i < count; i++)
     {
-        printf("id: %i\n", sensors[i].id);
-        printf("unit: %s\n", sensors[i].unit);
-        printf("write_counter: %i\n", sensors[i].write_counter);
-        printf("instate_temporal_ultima_leitura: %d\n", sensors[i].instate_temporal_ultima_leitura);
-        printf("timeout: %i\n", sensors[i].timeout);
+        printf("id: %i; ", sensors[i].id);
+        printf("type: %s; ", sensors[i].sensor_type);
+        printf("unit: %s; ", sensors[i].unit);
+        printf("write_counter: %i; ", sensors[i].write_counter);
+        printf("instate_temporal_ultima_leitura: %d; ", sensors[i].instate_temporal_ultima_leitura);
+        printf("timeout: %i; ", sensors[i].timeout);
+        printf("buffer_read: %i; ", sensors[i].buffer_read);
+        printf("buffer_write: %i; ", sensors[i].buffer_write);
+        printf("window_len: %i; ", sensors[i].window_len);
+        printf("buffer_size: %i; ", sensors[i].buffer_size);
         printf("buffer_circular: ");
-        for (int j = 0; j < sensors[i].write_counter; j++)
+        for (int j = 0; j < sensors[i].buffer_size; j++)
         {
             printf("%i ", sensors[i].buffer_circular[j]);
         }
-        printf("\n");
-        printf("median_array: ");
-        for (int j = 0; j < sensors[i].write_counter; j++)
+        printf("; median_array: ");
+        for (int j = 0; j < sensors[i].buffer_size; j++)
         {
             printf("%i ", sensors[i].median_array[j]);
         }
-        printf("\n");
+        printf("\n\n");
     }
 }
 
-float median(int *array, int size)
+void moving_median(Sensor *sensors)
 {
-    int *sortedArray = malloc(size * sizeof(int));
-    if (sortedArray == NULL)
+    int window_len = sensors->window_len;
+    int write = sensors->buffer_write;
+    int read = sensors->buffer_read;
+    do
     {
-        printf("Erro ao alocar memória\n");
-        exit(0);
-    }
-    memcpy(sortedArray, array, size * sizeof(int));
-    int temp;
-    for (int i = 0; i < size; i++)
-    {
-        for (int j = i; j > 0; j--)
-        {
-            if (sortedArray[j] < sortedArray[j - 1])
-            {
-                temp = sortedArray[j];
-                sortedArray[j] = sortedArray[j - 1];
-                sortedArray[j - 1] = temp;
-            }
-        }
-    }
-    float median;
-    if (size % 2 == 0)
-    {
-        median = (sortedArray[size / 2] + sortedArray[(size / 2) - 1]) / 2.0;
-    }
-    else
-    {
-        median = sortedArray[size / 2];
-    }
-    free(sortedArray);
-    return median;
+        int vec[window_len];
+        move_num_vec(sensors->buffer_circular, sensors->buffer_size, &read, &write, window_len, vec);
+        sensors->median_array[sensors->medianIndex] = mediana(vec, window_len);
+        sensors->medianIndex++;
+        read = -window_len + 1;
+
+    } while (read == write);
+
+    sensors->buffer_read = read;
+    sensors->write_counter++;
 }
