@@ -1,5 +1,6 @@
 package isep.lapr3.g094.struct.graph;
 
+import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
 import java.util.*;
@@ -44,6 +45,16 @@ public class Algorithms {
                 DepthFirstSearch(g, adj, visited, qdfs);
             }
         }
+    }
+
+    private static <V, E> void DepthFirstSearch(Graph<V, E> g, V vert, LinkedList<V> qdfs){
+        if (!g.validVertex(vert)) {
+            return;
+        }
+
+        boolean[] visited = new boolean[g.numVertices()];
+
+        DepthFirstSearch(g, vert, visited, qdfs);
     }
 
     public static <V, E> LinkedList<V> DepthFirstSearch(Graph<V, E> g, V vert) {
@@ -437,4 +448,67 @@ public class Algorithms {
         return mst;
     }
 
+    public static <V, E> Graph<V, E> divideGraphN(Graph<V, E> g, Set<V> hubList, Comparator<E> ce,BinaryOperator<E> sum, E zero, int numClusters){
+        Map<Edge<V, E>, Integer>  numShortPaths = new LinkedHashMap<>();
+        for (Edge<V, E> e : g.edges()){
+            numShortPaths.put(e, 0);
+        }
+
+        for (V vertice : g.vertices()){
+            ArrayList<LinkedList<V>> verticePaths = new ArrayList<>();
+            ArrayList<E> verticeDistance = new ArrayList<>();
+            shortestPaths(g, vertice, ce, sum, zero, verticePaths, verticeDistance);
+            for (LinkedList<V> list : verticePaths){
+                numShortPaths(g, list, numShortPaths);
+            }
+        }
+        List<Map.Entry<Edge<V, E>, Integer>> sortedMap = new ArrayList<>(numShortPaths.entrySet());
+        sortedMap.sort(Map.Entry.comparingByValue(Integer::compareTo));
+
+        for(Map.Entry<Edge<V, E>, Integer> entry : sortedMap){
+            g.removeEdge(entry.getKey().getVOrig(), entry.getKey().getVDest());
+
+            int numeroClustersAtuais = 0;
+            LinkedList<V> visitados = new LinkedList<>();
+            boolean clustersContainHubs = true;
+
+            for(V vertice : g.vertices()){
+                if (!visitados.contains(vertice)){
+                    LinkedList<V> cluster = new LinkedList<>();
+                    clustersContainHubs = createNewCluster(g, vertice, hubList, cluster);
+                    if(!clustersContainHubs){
+                        break;
+                    } else {
+                        visitados.addAll(cluster);
+                        numeroClustersAtuais++;
+                    }
+                }
+            }
+            if (!clustersContainHubs)
+                g.addEdge(entry.getKey().getVOrig(), entry.getKey().getVDest(), entry.getKey().getWeight());
+
+            if (numeroClustersAtuais == numClusters) break;
+        }
+
+        return g;
+    }
+
+    private static <V, E> boolean createNewCluster(Graph<V, E> g, V vertice, Set<V> hubList, LinkedList<V> cluster){
+        DepthFirstSearch(g, vertice, cluster);
+        for(V hub : hubList){
+            if(!cluster.contains(hub)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static <V, E> void numShortPaths(Graph<V, E> g, LinkedList<V> listVertices, Map<Edge<V, E>, Integer>  numShortPaths){
+        for (int i = 0; i < listVertices.size() - 1; i++){
+            V vOrigin = listVertices.get(i);
+            V vDest = listVertices.get(i + 1);
+            int currentNum = numShortPaths.get(g.edge(vOrigin, vDest));
+            numShortPaths.put(g.edge(vOrigin, vDest), currentNum + 1);
+        }
+    }
 }
