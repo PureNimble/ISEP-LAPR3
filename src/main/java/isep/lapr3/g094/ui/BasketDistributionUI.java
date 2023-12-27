@@ -52,6 +52,7 @@ public class BasketDistributionUI implements Runnable {
                         this::getAllPathsWithAutonomy));
                 options.add(new MenuItem("USEI07 - Percurso de entrega que maximiza o número de hubs pelo qual passa",
                         this::maximizedPath));
+                options.add(new MenuItem("USEI09 - Organizar as localidades do grafo", this::getClusters));
                 options.add(new MenuItem("USEI11 - Adicionar horários", this::addSchedule));
             }
 
@@ -247,6 +248,37 @@ public class BasketDistributionUI implements Runnable {
         boolean printSC = Utils.confirm("Queres dar print do coeficiente de silhueta? (s/n):");
         if (printSC) {
             System.out.println("coeficiente de silhueta: " + graphController.getCoefSil(newList, bigGraph));
+        }
+    }
+
+    private void getClusters(){
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
+        int numberOfClusters = Utils.readIntegerFromConsole("Qual o número de clusters?");
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(numberOfClusters, bigGraph);
+
+        Set<Location> listHubs = new LinkedHashSet<>();
+        int i = 0;
+        for(Map.Entry<Location, Criteria> entry : idealVertices.entrySet()){
+            listHubs.add(entry.getKey());
+            i++;
+            if(i >= numberOfClusters) break;
+        }
+
+        Map<Location, Map<Location, Integer>> clusters = graphController.getClusters(bigGraph, listHubs, numberOfClusters);
+        MapGraph<Location, Integer> graph = new MapGraph<>(false);
+        if (graphController.convertMapToMapGraph(clusters, graph)) {
+            System.out.println("Grafo criado com sucesso");
+        } else {
+            System.out.println("Erro ao criar o grafo");
+        }
+        Utils.confirm("Deseja ver o grafo? (s/n):");
+        if (true) {
+            graphController.generateDataCSV(graph);
+            String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
+            openGraphViewer(filePath);
         }
     }
 

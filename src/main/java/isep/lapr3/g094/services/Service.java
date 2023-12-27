@@ -315,6 +315,37 @@ public class Service {
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
 
+    public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, Set<Location> hubList, int numClusters){
+        Map<Location, Map<Location, Integer>> map = new HashMap<>();
+        MapGraph<Location, Integer> graph = getGraph(bigGraph);
+        Graph<Location, Integer> clusters = Algorithms.divideGraphN(graph, hubList, Integer::compare, Integer::sum, 0, numClusters);
+        for (Edge<Location, Integer> edge : clusters.edges()) {
+            Location location = edge.getVDest();
+            Location location1 = edge.getVOrig();
+            String locationId = location.getId();
+            String location1Id = location1.getId();
+            int distance = edge.getWeight();
+            if (locationId.compareTo(location1Id) < 0) {
+                if (map.containsKey(location)) {
+                    map.get(location).put(location1, distance);
+                } else {
+                    Map<Location, Integer> map1 = new HashMap<>();
+                    map1.put(location1, distance);
+                    map.put(location, map1);
+                }
+            } else {
+                if (map.containsKey(location1)) {
+                    map.get(location1).put(location, distance);
+                } else {
+                    Map<Location, Integer> map1 = new HashMap<>();
+                    map1.put(location, distance);
+                    map.put(location1, map1);
+                }
+            }
+        }
+        return map;
+    }
+
     public Map<List<Pair<Location, Integer>>, Integer> allPathsWithLimit(String vOrigin, String vDest,
             int autonomy,
             int velocity, boolean bigGraph) {

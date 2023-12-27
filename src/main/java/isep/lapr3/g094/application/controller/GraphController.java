@@ -4,6 +4,7 @@ import java.time.LocalTime;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.domain.type.Criteria;
@@ -101,4 +102,6 @@ public class GraphController {
     public boolean idExists(String idOrigem, Boolean bigGraph) {
         return service.idExists(idOrigem, bigGraph);
     }
+
+    public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, Set<Location> hubList, int numClusters){ return service.getClusters(bigGraph,hubList,numClusters); }
 }
