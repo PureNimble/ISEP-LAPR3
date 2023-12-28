@@ -13,6 +13,7 @@ DROP TRIGGER CheckUniqueOperacaoIDOperacaoReceita;
 DROP TRIGGER OperacaoID;
 DROP TRIGGER InsertLogOperacao;
 DROP TRIGGER PreventDeleteOperacao;
+DROP TRIGGER PreventUpdateAfterThreeDays;
 DROP TRIGGER CheckPlantacaoUnidade;
 DROP TRIGGER CheckCaudal;
 DROP TRIGGER CheckUniqueTipoSensor;
@@ -70,7 +71,6 @@ DROP SEQUENCE OperacaoNextID;
 
 CREATE SEQUENCE LogOperacaoNextID START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE OperacaoNextID START WITH 1 INCREMENT BY 1;
-
 CREATE TABLE APLICACAO (
     ID NUMBER(10) NOT NULL,
     DESIGNACAO VARCHAR2(255) NOT NULL UNIQUE,
@@ -807,6 +807,28 @@ BEGIN
 END;
 /
 
+CREATE OR REPLACE TRIGGER PreventUpdateAfterThreeDays
+BEFORE UPDATE ON Operacao
+FOR EACH ROW
+DECLARE
+    dataAtual DATE;
+    plantId NUMBER;
+    operationId NUMBER;
+BEGIN
+    SELECT PlantacaoID INTO plantId FROM OperacaoPlantacao WHERE OperacaoID = :OLD.ID;
+    SELECT COUNT(Op.OperacaoID) INTO operationId FROM OperacaoPlantacao Op, Operacao O WHERE Op.PlantacaoID = plantId AND Op.OperacaoID = O.ID AND O.DataOperacao > :OLD.DataOperacao;
+    IF operationId IS NOT NULL THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Não é possível alterar uma operação que tenha operações posteriores');
+    END IF;
+    IF :NEW.ESTADOID = 3 THEN
+        SELECT CURRENT_DATE INTO dataAtual FROM DUAL;
+        IF (dataAtual - :OLD.DataOperacao) > 3 THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Não é possível alterar uma operação com mais de 3 dias');
+        END IF;
+    END IF;
+END;
+/
+
 CREATE OR REPLACE TRIGGER CheckPlantacaoUnidade
 BEFORE INSERT OR UPDATE ON Plantacao
 FOR EACH ROW
@@ -1414,5 +1436,93 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         RAISE_APPLICATION_ERROR(-20001, 'Ocorreu um erro' || SQLCODE || ' - ' || SQLERRM);
+END;
+/
+
+CREATE OR REPLACE FUNCTION getConsumoRega(year Number) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT CULTURA, SUM(Minutos) AS CONSUMO_MINUTOS
+        FROM(
+            SELECT NE.NOMECOMUM || ' ' || CU.VARIEDADE AS CULTURA, O.QUANTIDADE AS Minutos, O.UNIDADE AS UNIDADE
+            FROM OPERACAOSETOR OS, PLANTACAOSETOR PS, PLANTACAO P, CULTURA CU, NOMEESPECIE NE, OPERACAO O
+            WHERE OS.SETORID = PS.SETORID AND PS.PLANTACAOID = P.ID AND P.CULTURAID = CU.ID AND CU.NOMEESPECIEID = NE.ID AND OS.OPERACAOID = O.ID
+            AND EXTRACT(YEAR FROM OS.HORAINICIAL) = year
+        )
+        GROUP BY CULTURA, UNIDADE
+        ORDER BY CONSUMO_MINUTOS DESC;
+    RETURN result_cursor;
+END;
+/
+
+CREATE OR REPLACE FUNCTION getFatorProducaoYear(year Number) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT fatorProducao, EXTRACT(YEAR FROM data) as ano
+        FROM(
+            SELECT FP.DESIGNACAO as FatorProducao, O.DATAOPERACAO as data  
+            FROM OperacaoFator OFA, fatorproducao FP, Operacao O
+            WHERE OFA.FATORPRODUCAOID = FP.ID
+            AND OFA.OPERACAOID = O.ID
+            AND FP.ID NOT IN (
+                SELECT FP2.ID
+                FROM OperacaoFator OFA2, fatorproducao FP2, Operacao O2
+                WHERE OFA2.FATORPRODUCAOID = FP2.ID
+                AND OFA2.OPERACAOID = O2.ID
+                AND EXTRACT(YEAR FROM O2.DATAOPERACAO) = year
+            )
+            UNION 
+            SELECT FP.DESIGNACAO as Designacao, O.DATAOPERACAO as data
+            FROM fatorproducao FP, Operacao O, OperacaoReceita OPR, Receita RC, ReceitaFator RF
+            WHERE OPR.OPERACAOID = O.ID
+            AND OPR.RECEITAID = RC.ID
+            AND RC.ID = RF.RECEITAID
+            AND RF.FATORPRODUCAOID = FP.ID
+            AND FP.ID NOT IN (
+                SELECT FP2.ID
+                FROM fatorproducao FP2, OperacaoReceita OPR2, Operacao O2
+                WHERE OPR2.RECEITAID = FP2.ID
+                AND OPR2.OPERACAOID = O2.ID
+                AND EXTRACT(YEAR FROM O2.DATAOPERACAO) = year
+            )
+        )
+        WHERE year != EXTRACT(YEAR FROM data)
+        GROUP BY fatorProducao, EXTRACT(YEAR FROM data)
+        ORDER BY fatorProducao, EXTRACT(YEAR FROM data);
+
+    RETURN result_cursor;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE registerReceita(designacaoReceita IN VARCHAR2, idReceita OUT NUMBER) IS
+BEGIN
+    --Obter o ID da receita
+    SELECT NVL(MAX(ID),0) + 1 INTO idReceita FROM Receita;
+
+    INSERT INTO Receita(ID, Designacao)
+    VALUES (idReceita, designacaoReceita);
+    
+    COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Receita criada com sucesso!');
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE addFatorToReceita(receita NUMBER, fator NUMBER, quantidade NUMBER, unidade VARCHAR2) IS
+
+BEGIN
+    verifyFatorDeProducaoInfo(fator);
+    INSERT INTO ReceitaFator(ReceitaID, FatorProducaoID, Quantidade, Unidade) VALUES (receita, fator, quantidade, unidade);
+    COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Fator adicionado com sucesso!');
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
 END;
 /

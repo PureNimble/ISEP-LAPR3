@@ -13,6 +13,7 @@ DROP TRIGGER CheckUniqueOperacaoIDOperacaoReceita;
 DROP TRIGGER OperacaoID;
 DROP TRIGGER InsertLogOperacao;
 DROP TRIGGER PreventDeleteOperacao;
+DROP TRIGGER PreventUpdateAfterThreeDays;
 DROP TRIGGER CheckPlantacaoUnidade;
 DROP TRIGGER CheckCaudal;
 DROP TRIGGER CheckUniqueTipoSensor;
@@ -70,7 +71,6 @@ DROP SEQUENCE OperacaoNextID;
 
 CREATE SEQUENCE LogOperacaoNextID START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE OperacaoNextID START WITH 1 INCREMENT BY 1;
-
 CREATE TABLE APLICACAO (
     ID NUMBER(10) NOT NULL,
     DESIGNACAO VARCHAR2(255) NOT NULL UNIQUE,
@@ -804,6 +804,28 @@ BEFORE DELETE ON Operacao
 FOR EACH ROW
 BEGIN
     RAISE_APPLICATION_ERROR(-20001, 'Não é possivel apagar Operações.');
+END;
+/
+
+CREATE OR REPLACE TRIGGER PreventUpdateAfterThreeDays
+BEFORE UPDATE ON Operacao
+FOR EACH ROW
+DECLARE
+    dataAtual DATE;
+    plantId NUMBER;
+    operationId NUMBER;
+BEGIN
+    SELECT PlantacaoID INTO plantId FROM OperacaoPlantacao WHERE OperacaoID = :OLD.ID;
+    SELECT COUNT(Op.OperacaoID) INTO operationId FROM OperacaoPlantacao Op, Operacao O WHERE Op.PlantacaoID = plantId AND Op.OperacaoID = O.ID AND O.DataOperacao > :OLD.DataOperacao;
+    IF operationId IS NOT NULL THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Não é possível alterar uma operação que tenha operações posteriores');
+    END IF;
+    IF :NEW.ESTADOID = 3 THEN
+        SELECT CURRENT_DATE INTO dataAtual FROM DUAL;
+        IF (dataAtual - :OLD.DataOperacao) > 3 THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Não é possível alterar uma operação com mais de 3 dias');
+        END IF;
+    END IF;
 END;
 /
 
