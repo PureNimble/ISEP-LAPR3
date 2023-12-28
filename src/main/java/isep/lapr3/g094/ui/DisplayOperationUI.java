@@ -23,6 +23,9 @@ public class DisplayOperationUI implements Runnable {
         options.add(new MenuItem("USBD19 - Lista de aplicações de fator de produção", () -> checkOperation('F')));
         options.add(new MenuItem("USBD20 - Lista de rega mensal", () -> checkOperation('R')));
         options.add(new MenuItem("USBD33 - Lista de culturas com maior consumo de água", () -> checkOperation('A')));
+        options.add(
+                new MenuItem("USBD34 - Lista das substâncias de fatores de produção não usadas no ano civil indicado.",
+                        () -> checkOperation('S')));
 
         int option = 0;
         do {
@@ -37,6 +40,11 @@ public class DisplayOperationUI implements Runnable {
     private void checkOperation(char operationType) {
         if (operationType == 'A') {
             getConsumoByCultura();
+            return;
+        }
+
+        if (operationType == 'S') {
+            getFatorProducaoYear();
             return;
         }
 
@@ -99,6 +107,31 @@ public class DisplayOperationUI implements Runnable {
                 System.out.println("\nResultado:");
                 for (String s : list)
                     System.out.println(s);
+            } else
+                System.out.println("\nSem resultados");
+        } catch (SQLException e) {
+            System.out.println("\nErro na obtenção da lista de operações");
+            System.out.println("Motivo: " + e.getMessage());
+        }
+
+    }
+
+    private void getFatorProducaoYear() {
+        Integer year = Utils.readIntegerFromConsole("Ano civil: ");
+
+        try {
+            Map<String, List<Integer>> map = farmManagerController.getFatorProducaoYear(year);
+
+            if (!map.isEmpty()) {
+                System.out.println("\nResultado:");
+                System.out.println("Fatores de Producao:");
+                for (Map.Entry<String, List<Integer>> entry : map.entrySet()) {
+                    System.out.print("\t -> " + entry.getKey());
+                    for (Integer currentYear : entry.getValue()) {
+                        System.out.print(", " + currentYear);
+                    }
+                    System.out.println();
+                }
             } else
                 System.out.println("\nSem resultados");
         } catch (SQLException e) {

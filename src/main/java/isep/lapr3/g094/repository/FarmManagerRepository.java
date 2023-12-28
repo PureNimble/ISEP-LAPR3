@@ -163,13 +163,13 @@ public class FarmManagerRepository {
 	}
 
 	public int createReceita(String designacao)
-			throws SQLException{
+			throws SQLException {
 
 		CallableStatement callStmt = null;
 		int idReceita;
-		try{
+		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
-			callStmt = connection.prepareCall("{ call registerReceita(?) }");
+			callStmt = connection.prepareCall("{ call registerReceita(?,?) }");
 			callStmt.setString(1, designacao);
 			callStmt.registerOutParameter(2, OracleTypes.NUMBER);
 			callStmt.execute();
@@ -183,21 +183,21 @@ public class FarmManagerRepository {
 		return idReceita;
 	}
 
-	public void addFatorToReceita(int receitaID, int fatorProducaoID, int quantidade, String unidade)
-			throws SQLException{
+	public void addFatorToReceita(int receitaID, int fatorProducaoID, double quantidade, String unidade)
+			throws SQLException {
 
 		CallableStatement callStmt = null;
-		try{
+		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
 			callStmt = connection.prepareCall("{ call addFatorToReceita(?,?,?,?) }");
 			callStmt.setInt(1, receitaID);
 			callStmt.setInt(2, fatorProducaoID);
-			callStmt.setInt(3, quantidade);
+			callStmt.setDouble(3, quantidade);
 			callStmt.setString(4, unidade);
 			callStmt.execute();
 			connection.commit();
 		} finally {
-			if (callStmt != null){
+			if (callStmt != null) {
 				callStmt.close();
 			}
 		}
@@ -872,6 +872,46 @@ public class FarmManagerRepository {
 				}
 			}
 
+		} finally {
+			if (!Objects.isNull(callStmt)) {
+				callStmt.close();
+			}
+			if (!Objects.isNull(resultSet)) {
+				resultSet.close();
+			}
+		}
+
+		return result;
+	}
+
+	public Map<String, List<Integer>> getFatorProducaoYear(int year) throws SQLException {
+		CallableStatement callStmt = null;
+		ResultSet resultSet = null;
+		Map<String, List<Integer>> result = new HashMap<>();
+
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			callStmt = connection.prepareCall("{ ? = call getFatorProducaoYear(?) }");
+			callStmt.registerOutParameter(1, OracleTypes.CURSOR);
+			callStmt.setInt(2, year);
+			callStmt.execute();
+			resultSet = (ResultSet) callStmt.getObject(1);
+			String previousFactor = null;
+			List<Integer> years = null;
+			while (resultSet.next()) {
+				String currentFactor = resultSet.getString(1);
+				if (previousFactor == null || !previousFactor.equals(currentFactor)) {
+					if (years != null) {
+						result.put(previousFactor, years);
+					}
+					years = new ArrayList<>();
+					previousFactor = currentFactor;
+				}
+				years.add(resultSet.getInt(2));
+			}
+			if (years != null) {
+				result.put(previousFactor, years);
+			}
 		} finally {
 			if (!Objects.isNull(callStmt)) {
 				callStmt.close();

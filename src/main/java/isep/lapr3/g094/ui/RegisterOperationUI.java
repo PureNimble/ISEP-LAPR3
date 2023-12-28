@@ -131,7 +131,7 @@ public class RegisterOperationUI implements Runnable {
             boolean cont;
             do{
                 Integer fatorProducaoID = selectFatorProducao();
-                Integer quantidade = Utils.readIntegerFromConsole("Quantidade: ");
+                Double quantidade = Utils.readDoubleFromConsole("Quantidade: ");
                 String unidade = Utils.readLineFromConsole("Unidade: ");
                 try {
                     farmManagerController.addFatorToReceita(receitaID, fatorProducaoID, quantidade, unidade);
@@ -140,7 +140,7 @@ public class RegisterOperationUI implements Runnable {
                     System.out.println("\nErro ao adicionar fator");
                     System.out.println("Motivo: " + e.getMessage());
                 }
-                 cont = Utils.confirm("Deseja adicionar mais um fator?");
+                cont = Utils.confirm("Deseja adicionar mais um fator?");
             } while (cont);
         } catch (SQLException e) {
             System.out.println("\nErro ao inicializar receita");
