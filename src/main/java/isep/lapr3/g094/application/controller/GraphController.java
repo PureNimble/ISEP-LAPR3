@@ -52,8 +52,8 @@ public class GraphController {
         return service.distanceLocations(id1, id2, bigGraph);
     }
 
-    public Map<Location, Criteria> getVerticesIdeais(int numberOfHubs, boolean bigGraph) {
-        return service.getVerticesIdeais(numberOfHubs, bigGraph);
+    public Map<Location, Criteria> getVerticesIdeais(int order, int numberOfHubs, boolean bigGraph) {
+        return service.getVerticesIdeais(order, numberOfHubs, bigGraph);
     }
 
     public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy, boolean bigGraph) {

@@ -113,7 +113,7 @@ public class Service {
         return graphRepository.getGraph(bigGraph);
     }
 
-    public Map<Location, Criteria> getVerticesIdeais(int numberOfHubs, boolean bigGraph) {
+    public Map<Location, Criteria> getVerticesIdeais(int order, int numberOfHubs, boolean bigGraph) {
         Map<Location, Criteria> map = new HashMap<>();
         int numberMinimumPaths = 0;
         int i;
@@ -152,7 +152,7 @@ public class Service {
             }
             entry.getValue().setNumberMinimumPaths(numberMinimumPaths);
         }
-        map = sortByValue(map);
+        map = sortByValue(order, map);
         int numberHubs = numberOfHubs;
         setHubs(0, numberHubs, map);
         return map;
@@ -171,15 +171,15 @@ public class Service {
         }
     }
 
-    private static Map<Location, Criteria> sortByValue(Map<Location, Criteria> map) {
-        // Convert the map to a list of entries
+    private static Map<Location, Criteria> sortByValue(int order, Map<Location, Criteria> map) {
         List<Map.Entry<Location, Criteria>> list = new ArrayList<>(map.entrySet());
 
-        // Sort the list using a custom comparator
-        list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDegree())
+        if (order == 0)
+            list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDegree())
                 .thenComparing(entry -> entry.getValue().getNumberMinimumPaths()).reversed());
-
-        // Convert the sorted list back to a map
+        else{
+            list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDistances()).reversed());        
+        }
         Map<Location, Criteria> sortedMap = new LinkedHashMap<>();
         for (Map.Entry<Location, Criteria> entry : list) {
             sortedMap.put(entry.getKey(), entry.getValue());

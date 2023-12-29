@@ -86,8 +86,12 @@ public class BasketDistributionUI implements Runnable {
         if (bigGraph == null) {
             return;
         }
+        List<String> orders = new ArrayList<>();
+        orders.add("Influência e proximidade");
+        orders.add("Centralidade");
+        int order = Utils.showAndSelectIndex(orders, "\n=========Escolha do critério=========");
         int numberOfHubs = Utils.readIntegerFromConsole("Qual o número de hubs?");
-        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(numberOfHubs, bigGraph);
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(order, numberOfHubs, bigGraph);
         importController.importOpeningHours("esinf/schedules/horarioFuncionamento.csv", bigGraph);
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
@@ -196,7 +200,7 @@ public class BasketDistributionUI implements Runnable {
             return;
         }
         int numberOfHubs = Utils.readIntegerFromConsole("Qual o número de hubs?");
-        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(numberOfHubs, bigGraph);
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(1,numberOfHubs, bigGraph);
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
                 .mapToInt(Location -> Location.getId().length())
@@ -257,7 +261,7 @@ public class BasketDistributionUI implements Runnable {
             return;
         }
         int numberOfClusters = Utils.readIntegerFromConsole("Qual o número de clusters?");
-        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(numberOfClusters, bigGraph);
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(1, numberOfClusters, bigGraph);
 
         Set<Location> listHubs = new LinkedHashSet<>();
         int i = 0;
