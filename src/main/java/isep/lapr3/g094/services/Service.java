@@ -113,7 +113,7 @@ public class Service {
         return graphRepository.getGraph(bigGraph);
     }
 
-    public Map<Location, Criteria> getVerticesIdeais(int numberOfHubs, boolean bigGraph) {
+    public Map<Location, Criteria> getVerticesIdeais(int order, int numberOfHubs, boolean bigGraph) {
         Map<Location, Criteria> map = new HashMap<>();
         int numberMinimumPaths = 0;
         int i;
@@ -152,7 +152,7 @@ public class Service {
             }
             entry.getValue().setNumberMinimumPaths(numberMinimumPaths);
         }
-        map = sortByValue(map);
+        map = sortByValue(order, map);
         int numberHubs = numberOfHubs;
         setHubs(0, numberHubs, map);
         return map;
@@ -171,15 +171,15 @@ public class Service {
         }
     }
 
-    private static Map<Location, Criteria> sortByValue(Map<Location, Criteria> map) {
-        // Convert the map to a list of entries
+    private static Map<Location, Criteria> sortByValue(int order, Map<Location, Criteria> map) {
         List<Map.Entry<Location, Criteria>> list = new ArrayList<>(map.entrySet());
 
-        // Sort the list using a custom comparator
-        list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDegree())
+        if (order == 0)
+            list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDegree())
                 .thenComparing(entry -> entry.getValue().getNumberMinimumPaths()).reversed());
-
-        // Convert the sorted list back to a map
+        else{
+            list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDistances()).reversed());        
+        }
         Map<Location, Criteria> sortedMap = new LinkedHashMap<>();
         for (Map.Entry<Location, Criteria> entry : list) {
             sortedMap.put(entry.getKey(), entry.getValue());
@@ -520,5 +520,31 @@ public class Service {
             return false;
         }
         return true;
+    }
+
+    public MapGraph<Location, Integer> filterGraph(MapGraph<Location, Integer> originalGraph) {
+        MapGraph<Location, Integer> filteredGraph = new MapGraph<>(false);
+    
+        for (Location location : originalGraph.vertices()) {
+            if (location.isHub()) {
+                filteredGraph.addVertex(location);
+            }
+        }
+    
+        for (Location location : filteredGraph.vertices()) {
+            for (Location adjLocation : originalGraph.adjVertices(location)) {
+                if (filteredGraph.validVertex(adjLocation)) {
+                    filteredGraph.addEdge(location, adjLocation, originalGraph.edge(location, adjLocation).getWeight());
+                }
+            }
+        }
+    
+        return filteredGraph;
+    }
+
+    public Pair<Integer, List<Location>> maximumCapacity(MapGraph<Location, Integer> graph, Location origin, Location destination) {
+        Pair<Integer, List<Location>> result = Algorithms.fordFulkerson(graph, origin, destination);
+        Integer dividedFlow = result.getFirst() / 10000;
+        return new Pair<>(dividedFlow, result.getSecond());
     }
 }

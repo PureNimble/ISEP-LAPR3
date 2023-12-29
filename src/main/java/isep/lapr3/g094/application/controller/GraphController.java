@@ -52,8 +52,8 @@ public class GraphController {
         return service.distanceLocations(id1, id2, bigGraph);
     }
 
-    public Map<Location, Criteria> getVerticesIdeais(int numberOfHubs, boolean bigGraph) {
-        return service.getVerticesIdeais(numberOfHubs, bigGraph);
+    public Map<Location, Criteria> getVerticesIdeais(int order, int numberOfHubs, boolean bigGraph) {
+        return service.getVerticesIdeais(order, numberOfHubs, bigGraph);
     }
 
     public Pair<FurthestPoints, Pair<List<Location>, Integer>> getMinimal(int autonomy, boolean bigGraph) {
@@ -101,6 +101,14 @@ public class GraphController {
 
     public boolean idExists(String idOrigem, Boolean bigGraph) {
         return service.idExists(idOrigem, bigGraph);
+    }
+
+    public MapGraph<Location, Integer> filterGraph(MapGraph<Location, Integer> originalGraph) {
+        return service.filterGraph(originalGraph);
+    }
+
+    public Pair<Integer, List<Location>> maximumCapacity(MapGraph<Location, Integer> graph, Location origin, Location destination) {
+        return service.maximumCapacity(graph, origin, destination);
     }
 
     public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, Set<Location> hubList, int numClusters){ return service.getClusters(bigGraph,hubList,numClusters); }
