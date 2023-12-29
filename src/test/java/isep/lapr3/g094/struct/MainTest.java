@@ -722,4 +722,80 @@ public class MainTest {
 
     }
 
+
+    @Test
+    void testMaximumCapacityPathBigGraph() {
+        System.out.println("Testing MaximumCapacityPathBigGraph...");
+
+        Location idOrigem = new Location("CT50");
+        Location idDestino = new Location("CT250");
+        service.getVerticesIdeais(1, 250, true);
+        MapGraph<Location, Integer> graph = service.getGraph(true);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        Pair<Integer, List<Location>> testPair = graphController.maximumCapacity(hubGraph, idOrigem, idDestino);
+        
+        assertTrue(testPair.getSecond().contains(idOrigem));
+        assertTrue(testPair.getSecond().contains(idDestino));
+        assertTrue(testPair.getSecond().contains(new Location("CT60")));
+        assertTrue(testPair.getSecond().contains(new Location("CT228")));
+        assertTrue(testPair.getSecond().contains(new Location("CT133")));
+        assertTrue(testPair.getSecond().contains(new Location("CT113")));
+        assertTrue(testPair.getSecond().contains(new Location("CT147")));
+        assertTrue(testPair.getSecond().contains(new Location("CT203")));
+
+    }
+
+    @Test
+    void testMaximumCapacityBigGraph() {
+        System.out.println("Testing MaximumCapacityBigGraph...");
+
+        Location idOrigem = new Location("CT50");
+        Location idDestino = new Location("CT250");
+        service.getVerticesIdeais(1, 250, true);
+        MapGraph<Location, Integer> graph = service.getGraph(true);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        Pair<Integer, List<Location>> testPair = graphController.maximumCapacity(hubGraph, idOrigem, idDestino);
+        
+        assertEquals(testPair.getFirst(), 3);
+    }
+
+    @Test
+    void testMaximumCapacityPathSmallGraph() {
+        System.out.println("Testing MaximumCapacityPathSmallGraph...");
+
+        Location idOrigem = new Location("CT2");
+        Location idDestino = new Location("CT7");
+        service.getVerticesIdeais(1, 5, false);
+        MapGraph<Location, Integer> graph = service.getGraph(false);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        Pair<Integer, List<Location>> testPair = graphController.maximumCapacity(hubGraph, idOrigem, idDestino);
+        
+        assertTrue(testPair.getSecond().contains(idOrigem));
+        assertTrue(testPair.getSecond().contains(idDestino));
+
+    }
+
+    @Test
+    void testMaximumCapacitySmallGraph() {
+        System.out.println("Testing MaximumCapacitySmallGraph...");
+
+        Location idOrigem = new Location("CT2");
+        Location idDestino = new Location("CT7");
+        service.getVerticesIdeais(1, 5, false);
+        MapGraph<Location, Integer> graph = service.getGraph(false);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        Pair<Integer, List<Location>> testPair = graphController.maximumCapacity(hubGraph, idOrigem, idDestino);
+        
+        assertEquals(testPair.getFirst(), 6);
+    }
+
+    @Test
+    void testMaximumCapacityNoHubs() {
+        System.out.println("Testing MaximumCapacityNoHubs...");
+
+        MapGraph<Location, Integer> graph = service.getGraph(true);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        
+        assertTrue(hubGraph.vertices().isEmpty());
+    }
 }
