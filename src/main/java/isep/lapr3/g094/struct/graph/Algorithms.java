@@ -480,6 +480,7 @@ public class Algorithms {
         return mst;
     }
 
+    /*
     public static <V, E> Graph<V, E> divideGraphN(Graph<V, E> g, Set<V> hubList, Comparator<E> ce,BinaryOperator<E> sum, E zero, int numClusters){
         Map<Edge<V, E>, Integer>  numShortPaths = new LinkedHashMap<>();
         for (Edge<V, E> e : g.edges()){
@@ -496,19 +497,27 @@ public class Algorithms {
         }
         List<Map.Entry<Edge<V, E>, Integer>> sortedMap = new ArrayList<>(numShortPaths.entrySet());
         sortedMap.sort(Map.Entry.comparingByValue(Integer::compareTo));
+        sortedMap = sortedMap.reversed();
+
 
         for(Map.Entry<Edge<V, E>, Integer> entry : sortedMap){
+            int numeroClustersAtuais = 0;
             g.removeEdge(entry.getKey().getVOrig(), entry.getKey().getVDest());
 
-            int numeroClustersAtuais = 0;
             LinkedList<V> visitados = new LinkedList<>();
-            boolean clustersContainHubs = true;
+            boolean clustersContainHubs = false;
 
             for(V vertice : g.vertices()){
                 if (!visitados.contains(vertice)){
                     LinkedList<V> cluster = new LinkedList<>();
-                    clustersContainHubs = createNewCluster(g, vertice, hubList, cluster);
-                    if(!clustersContainHubs){
+                    DepthFirstSearch(g, vertice, cluster);
+                    for(V hub : hubList){
+                        if (cluster.contains(hub)){
+                            clustersContainHubs = true;
+                            break;
+                        }
+                    }
+                    if(!clustersContainHubs || (cluster.size() == g.numVertices())){
                         break;
                     } else {
                         visitados.addAll(cluster);
@@ -524,15 +533,68 @@ public class Algorithms {
 
         return g;
     }
+    */
 
-    private static <V, E> boolean createNewCluster(Graph<V, E> g, V vertice, Set<V> hubList, LinkedList<V> cluster){
-        DepthFirstSearch(g, vertice, cluster);
-        for(V hub : hubList){
-            if(!cluster.contains(hub)){
-                return false;
+    public static <V, E> Graph<V, E> divideGraphN(Graph<V, E> g, Set<V> hubList, Comparator<E> ce,BinaryOperator<E> sum, E zero, int numClusters){
+        List<Map.Entry<Edge<V, E>, Integer>> sortedMap = sortMap(g, ce, sum, zero);
+
+        for (Map.Entry<Edge<V, E>, Integer> entry : sortedMap){
+            Graph<V, E> gBackup = g.clone();
+
+            g.removeEdge(entry.getKey().getVOrig(), entry.getKey().getVDest());
+
+            LinkedList<V> visitados = new LinkedList<>();
+
+            boolean containsHub = true;
+
+            int numClustersAtuais = 0;
+
+            for(V vertice : g.vertices()){
+                if(!visitados.contains(vertice)) {
+                    LinkedList<V> cluster = new LinkedList<>();
+                    DepthFirstSearch(g, vertice, cluster);
+                    if(cluster.size() == g.numVertices()){
+                        break;
+                    } else {
+                        if(Collections.disjoint(cluster, hubList)){
+                            containsHub = false;
+                            break;
+                        } else {
+                            numClustersAtuais++;
+                            visitados.addAll(cluster);
+                        }
+                    }
+                }
+            }
+            if(!containsHub){
+                g = gBackup.clone();
+            }
+            if(numClustersAtuais == numClusters){
+                break;
             }
         }
-        return true;
+        return g;
+    }
+
+    private static <V, E> List<Map.Entry<Edge<V, E>, Integer>> sortMap(Graph<V, E> g, Comparator<E> ce,BinaryOperator<E> sum, E zero){
+        Map<Edge<V, E>, Integer>  numShortPaths = new LinkedHashMap<>();
+        for (Edge<V, E> e : g.edges()){
+            numShortPaths.put(e, 0);
+        }
+
+        for (V vertice : g.vertices()){
+            ArrayList<LinkedList<V>> verticePaths = new ArrayList<>();
+            ArrayList<E> verticeDistance = new ArrayList<>();
+            shortestPaths(g, vertice, ce, sum, zero, verticePaths, verticeDistance);
+            for (LinkedList<V> list : verticePaths){
+                numShortPaths(g, list, numShortPaths);
+            }
+        }
+        List<Map.Entry<Edge<V, E>, Integer>> sortedMap = new ArrayList<>(numShortPaths.entrySet());
+        sortedMap.sort(Map.Entry.comparingByValue(Integer::compareTo));
+        sortedMap = sortedMap.reversed();
+
+        return sortedMap;
     }
 
     private static <V, E> void numShortPaths(Graph<V, E> g, LinkedList<V> listVertices, Map<Edge<V, E>, Integer>  numShortPaths){
