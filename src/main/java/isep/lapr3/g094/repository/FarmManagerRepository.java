@@ -923,4 +923,49 @@ public class FarmManagerRepository {
 
 		return result;
 	}
+
+	public void cancelOperation(int operacaoID) throws SQLException {
+		Statement stmt = null;
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			stmt = connection.createStatement();
+			stmt.executeUpdate("UPDATE OPERACAO SET ESTADOID = 3 WHERE ID = " + operacaoID);
+		} finally {
+			if (stmt != null) {
+				stmt.close();
+			}
+		}
+	}
+
+	public Map<String, Integer> getOperacoes() throws SQLException {
+		Statement stmt = null;
+		ResultSet rs = null;
+		Map<String, Integer> output = new HashMap<>();		
+		try {
+			Connection connection = DatabaseConnection.getInstance().getConnection();
+			stmt = connection.createStatement();
+			rs = stmt.executeQuery("SELECT OP.ID, TOP.DESIGNACAO, OP.DATAOPERACAO, NE.NOMECOMUM || ' ' || C.VARIEDADE AS DESIGNACAOPLANTACAO, E.Designacao AS ESTADO FROM OPERACAO OP, TIPOOPERACAO TOP, NOMEESPECIE NE, CULTURA C, PLANTACAO PL, OPERACAOPLANTACAO OPL, ESTADO E WHERE OP.ID = OPL.OPERACAOID AND OPL.PLANTACAOID = PL.ID AND PL.CULTURAID = C.ID AND C.NOMEESPECIEID = NE.ID AND OP.ESTADOID = E.ID AND E.ID = 1 AND OP.TIPOOPERACAOID = TOP.ID UNION SELECT OP.ID, TOP.DESIGNACAO, OP.DATAOPERACAO, E.DESIGNACAO, ET.Designacao AS ESTADO FROM OPERACAO OP, TIPOOPERACAO TOP, PARCELA P, OPERACAOPARCELA OPAR, ESPACO E, ESTADO ET WHERE OP.ID = OPAR.OPERACAOID AND OPAR.PARCELAESPACOID = P.ESPACOID AND E.ID = P.ESPACOID AND OP.ESTADOID = ET.ID AND ET.ID = 1 AND OP.TIPOOPERACAOID = TOP.ID UNION SELECT OP.ID, TOP.DESIGNACAO, OP.DATAOPERACAO, S.DESIGNACAO, ET.Designacao AS ESTADO FROM OPERACAO OP, TIPOOPERACAO TOP, SETOR S, OPERACAOSETOR OS, ESTADO ET WHERE OP.ID = OS.OPERACAOID AND OS.SETORID = S.ID AND OP.ESTADOID = ET.ID AND ET.ID = 1 AND OP.TIPOOPERACAOID = TOP.ID");
+
+			while (rs.next()) {
+				String key = rs.getString(2) + ", " + rs.getDate(3) + ", " + rs.getString(4) + ", " + rs.getString(5);
+				Integer value = rs.getInt(1);
+				output.put(key, value);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (stmt != null) {
+					stmt.close();
+				}
+				if (rs != null) {
+					rs.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return output;
+	}
+
 }

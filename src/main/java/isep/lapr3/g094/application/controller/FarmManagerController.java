@@ -144,4 +144,12 @@ public class FarmManagerController {
     public Map<String, List<Integer>> getFatorProducaoYear(int year) throws SQLException {
         return farmManagerRepository.getFatorProducaoYear(year);
     }
+
+    public void cancelOperation(int operacaoId) throws SQLException{
+        farmManagerRepository.cancelOperation(operacaoId);
+    }
+
+    public Map<String, Integer> getOperacoes() throws SQLException{
+        return farmManagerRepository.getOperacoes();
+    }
 }
