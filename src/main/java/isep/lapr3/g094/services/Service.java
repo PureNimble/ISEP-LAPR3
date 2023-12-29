@@ -70,14 +70,15 @@ public class Service {
         for (String horario : horarios) {
             String[] line = horario.split(",");
             Location location = graphRepository.locationById(line[0], bigGraph);
-            if (location != null) {
+            if (location != null && location.isHub() == true){
                 LocalTime startHour = LocalTime.parse(line[1]);
                 LocalTime endHour = LocalTime.parse(line[2]);
                 location.setStarHour(startHour);
                 location.setEndHour(endHour);
+                System.out.println("Horário da Localização com ID " + line[0] + " adicionada com sucesso");
             } else {
                 allAdded = false;
-                System.err.println("Localização com ID " + line[0] + " não existe");
+                System.err.println("Horário da Localização com ID " + line[0] + " não existe ou não é um hub");
             }
         }
         return allAdded;

@@ -93,18 +93,14 @@ public class BasketDistributionUI implements Runnable {
         int order = Utils.showAndSelectIndex(orders, "\n=========Escolha do critério=========");
         int numberOfHubs = Utils.readIntegerFromConsole("Qual o número de hubs?");
         Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(order, numberOfHubs, bigGraph);
-        importController.importOpeningHours("esinf/schedules/horarioFuncionamento.csv", bigGraph);
-        // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
                 .mapToInt(Location -> Location.getId().length())
                 .max()
                 .orElse(0), "ID".length());
-        // Calculate the maximum length of the degrees
         int maxDegreeLength = Math.max(idealVertices.values().stream()
                 .mapToInt(criteria -> Integer.toString(criteria.getDegree()).length())
                 .max()
                 .orElse(0), "Grau".length());
-        // Calculate the maximum length of the number of minimum paths
         int maxNumPathsLength = Math.max(idealVertices.values().stream()
                 .mapToInt(criteria -> Integer.toString(criteria.getNumberMinimumPaths()).length())
                 .max()
@@ -128,6 +124,7 @@ public class BasketDistributionUI implements Runnable {
             System.out.printf(formatString, numEmployees, schedule);
             System.out.println("--------------------------------------------------------------------");
         }
+        importController.importOpeningHours("esinf/schedules/horarioFuncionamento.csv", bigGraph);
     }
 
     private void printPaths(int totalDistance, int maxLength) {
@@ -471,7 +468,7 @@ public class BasketDistributionUI implements Runnable {
             return;
         }
         
-        if (Utils.confirm("Deseja ver o grafo?")) {
+        if (Utils.confirm("Deseja ver o grafo?:")) {
             graphController.generateDataCSV(hubGraph);
             String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
             openGraphViewer(filePath);
