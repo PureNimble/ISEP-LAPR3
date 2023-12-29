@@ -12,9 +12,10 @@ public class MainMenuUI implements Runnable {
         List<MenuItem> options = new ArrayList<MenuItem>();
         options.add(new MenuItem("Aceder ao controlador do Sistema de Rega", new IrrigationUI()));
         options.add(new MenuItem("Adicionar informação do sistema legacy", new ImportXlsxFileUI()));
-        options.add(new MenuItem("Equipa de Desenvolvimento", new DevTeamUI()));
         options.add(new MenuItem("Gestor Agricula UI", new FarmManagerUI()));
         options.add(new MenuItem("Rede de Distribuição", new BasketDistributionUI()));
+        options.add(new MenuItem("Equipa de Desenvolvimento", new DevTeamUI()));
+
         int option = 0;
         do {
             option = Utils.showAndSelectIndex(options,

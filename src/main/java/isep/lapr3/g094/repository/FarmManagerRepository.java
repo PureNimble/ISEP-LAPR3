@@ -184,6 +184,7 @@ public class FarmManagerRepository {
 	}
 
 	public void addFatorToReceita(int receitaID, int fatorProducaoID, double quantidade, String unidade)
+
 			throws SQLException {
 
 		CallableStatement callStmt = null;
@@ -212,8 +213,7 @@ public class FarmManagerRepository {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
 			stmt = connection.createStatement();
 			rs = stmt.executeQuery(
-					"SELECT E.ID, E.Designacao, (E.Area - SUM(PL.Quantidade)) AS AvailableArea, E.Unidade FROM Parcela P JOIN ESPACO E ON P.ESPACOID = E.ID JOIN Plantacao PL ON P.ESPACOID = PL.PARCELAESPACOID WHERE PL.DataFinal IS NULL AND PL.UNIDADE = 'ha' GROUP BY E.ID, E.Designacao, E.Unidade");
-
+					"SELECT P.ESPACOID AS ID, E.Designacao,(SELECT SUM(E.AREA) FROM ESPACO E WHERE E.ID = P.ESPACOID) - (SELECT NVL(SUM(PL.QUANTIDADE), 0) FROM PLANTACAO PL WHERE P.ESPACOID = PL.PARCELAESPACOID AND PL.UNIDADE = 'ha' AND (PL.DATAFINAL IS NULL OR PL.DATAFINAL > SYSDATE)) AS QUANTIDADE, E.Unidade FROM PARCELA P, Espaco E WHERE P.ESPACOID = E.ID GROUP BY P.ESPACOID, E.Designacao, E.Unidade");
 			while (rs.next()) {
 				output.put(rs.getString(2) + " - " + rs.getDouble(3) + " " + rs.getString(4), rs.getInt(1));
 			}
@@ -241,7 +241,8 @@ public class FarmManagerRepository {
 			stmt = connection.createStatement();
 			rs = stmt.executeQuery(
 					"SELECT P.ID,NE.NOMECOMUM || ' ' || CU.VARIEDADE AS Cultura, P.DATAINICIAL FROM Plantacao P, CULTURA CU, NOMEESPECIE NE WHERE P.ParcelaEspacoID = "
-							+ parcelaID + " AND P.CULTURAID = CU.ID AND CU.NOMEESPECIEID = NE.ID");
+							+ parcelaID
+							+ " AND P.CULTURAID = CU.ID AND CU.NOMEESPECIEID = NE.ID AND (P.DATAFINAL IS NULL OR P.DATAFINAL > SYSDATE)");
 
 			while (rs.next()) {
 				output.put(rs.getString(2) + " | " + rs.getDate(3), rs.getInt(1));
@@ -866,10 +867,8 @@ public class FarmManagerRepository {
 			callStmt.execute();
 			resultSet = (ResultSet) callStmt.getObject(1);
 			while (resultSet.next()) {
-				while (resultSet.next()) {
-					result.add("Cultura: " + resultSet.getString(1) + " - Consumo: " + resultSet.getString(2)
-							+ " minutos."); // replace 1 with the column index or column name
-				}
+				result.add("Cultura: " + resultSet.getString(1) + " - Consumo: " + resultSet.getString(2)
+						+ " minutos."); // replace 1 with the column index or column name
 			}
 
 		} finally {
@@ -940,11 +939,12 @@ public class FarmManagerRepository {
 	public Map<String, Integer> getOperacoes() throws SQLException {
 		Statement stmt = null;
 		ResultSet rs = null;
-		Map<String, Integer> output = new HashMap<>();		
+		Map<String, Integer> output = new HashMap<>();
 		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
 			stmt = connection.createStatement();
-			rs = stmt.executeQuery("SELECT OP.ID, TOP.DESIGNACAO, OP.DATAOPERACAO, NE.NOMECOMUM || ' ' || C.VARIEDADE AS DESIGNACAOPLANTACAO, E.Designacao AS ESTADO FROM OPERACAO OP, TIPOOPERACAO TOP, NOMEESPECIE NE, CULTURA C, PLANTACAO PL, OPERACAOPLANTACAO OPL, ESTADO E WHERE OP.ID = OPL.OPERACAOID AND OPL.PLANTACAOID = PL.ID AND PL.CULTURAID = C.ID AND C.NOMEESPECIEID = NE.ID AND OP.ESTADOID = E.ID AND E.ID = 1 AND OP.TIPOOPERACAOID = TOP.ID UNION SELECT OP.ID, TOP.DESIGNACAO, OP.DATAOPERACAO, E.DESIGNACAO, ET.Designacao AS ESTADO FROM OPERACAO OP, TIPOOPERACAO TOP, PARCELA P, OPERACAOPARCELA OPAR, ESPACO E, ESTADO ET WHERE OP.ID = OPAR.OPERACAOID AND OPAR.PARCELAESPACOID = P.ESPACOID AND E.ID = P.ESPACOID AND OP.ESTADOID = ET.ID AND ET.ID = 1 AND OP.TIPOOPERACAOID = TOP.ID UNION SELECT OP.ID, TOP.DESIGNACAO, OP.DATAOPERACAO, S.DESIGNACAO, ET.Designacao AS ESTADO FROM OPERACAO OP, TIPOOPERACAO TOP, SETOR S, OPERACAOSETOR OS, ESTADO ET WHERE OP.ID = OS.OPERACAOID AND OS.SETORID = S.ID AND OP.ESTADOID = ET.ID AND ET.ID = 1 AND OP.TIPOOPERACAOID = TOP.ID");
+			rs = stmt.executeQuery(
+					"SELECT OP.ID, TOP.DESIGNACAO, OP.DATAOPERACAO, NE.NOMECOMUM || ' ' || C.VARIEDADE AS DESIGNACAOPLANTACAO, E.Designacao AS ESTADO FROM OPERACAO OP, TIPOOPERACAO TOP, NOMEESPECIE NE, CULTURA C, PLANTACAO PL, OPERACAOPLANTACAO OPL, ESTADO E WHERE OP.ID = OPL.OPERACAOID AND OPL.PLANTACAOID = PL.ID AND PL.CULTURAID = C.ID AND C.NOMEESPECIEID = NE.ID AND OP.ESTADOID = E.ID AND E.ID = 1 AND OP.TIPOOPERACAOID = TOP.ID UNION SELECT OP.ID, TOP.DESIGNACAO, OP.DATAOPERACAO, E.DESIGNACAO, ET.Designacao AS ESTADO FROM OPERACAO OP, TIPOOPERACAO TOP, PARCELA P, OPERACAOPARCELA OPAR, ESPACO E, ESTADO ET WHERE OP.ID = OPAR.OPERACAOID AND OPAR.PARCELAESPACOID = P.ESPACOID AND E.ID = P.ESPACOID AND OP.ESTADOID = ET.ID AND ET.ID = 1 AND OP.TIPOOPERACAOID = TOP.ID UNION SELECT OP.ID, TOP.DESIGNACAO, OP.DATAOPERACAO, S.DESIGNACAO, ET.Designacao AS ESTADO FROM OPERACAO OP, TIPOOPERACAO TOP, SETOR S, OPERACAOSETOR OS, ESTADO ET WHERE OP.ID = OS.OPERACAOID AND OS.SETORID = S.ID AND OP.ESTADOID = ET.ID AND ET.ID = 1 AND OP.TIPOOPERACAOID = TOP.ID");
 
 			while (rs.next()) {
 				String key = rs.getString(2) + ", " + rs.getDate(3) + ", " + rs.getString(4) + ", " + rs.getString(5);
@@ -967,5 +967,4 @@ public class FarmManagerRepository {
 		}
 		return output;
 	}
-
 }
