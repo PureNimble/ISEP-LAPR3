@@ -103,5 +103,13 @@ public class GraphController {
         return service.idExists(idOrigem, bigGraph);
     }
 
+    public MapGraph<Location, Integer> filterGraph(MapGraph<Location, Integer> originalGraph) {
+        return service.filterGraph(originalGraph);
+    }
+
+    public Pair<Integer, List<Location>> maximumCapacity(MapGraph<Location, Integer> graph, Location origin, Location destination) {
+        return service.maximumCapacity(graph, origin, destination);
+    }
+
     public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, Set<Location> hubList, int numClusters){ return service.getClusters(bigGraph,hubList,numClusters); }
 }

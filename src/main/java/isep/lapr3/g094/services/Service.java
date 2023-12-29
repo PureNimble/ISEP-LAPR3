@@ -521,4 +521,30 @@ public class Service {
         }
         return true;
     }
+
+    public MapGraph<Location, Integer> filterGraph(MapGraph<Location, Integer> originalGraph) {
+        MapGraph<Location, Integer> filteredGraph = new MapGraph<>(false);
+    
+        for (Location location : originalGraph.vertices()) {
+            if (location.isHub()) {
+                filteredGraph.addVertex(location);
+            }
+        }
+    
+        for (Location location : filteredGraph.vertices()) {
+            for (Location adjLocation : originalGraph.adjVertices(location)) {
+                if (filteredGraph.validVertex(adjLocation)) {
+                    filteredGraph.addEdge(location, adjLocation, originalGraph.edge(location, adjLocation).getWeight());
+                }
+            }
+        }
+    
+        return filteredGraph;
+    }
+
+    public Pair<Integer, List<Location>> maximumCapacity(MapGraph<Location, Integer> graph, Location origin, Location destination) {
+        Pair<Integer, List<Location>> result = Algorithms.fordFulkerson(graph, origin, destination);
+        Integer dividedFlow = result.getFirst() / 10000;
+        return new Pair<>(dividedFlow, result.getSecond());
+    }
 }

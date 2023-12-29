@@ -53,6 +53,7 @@ public class BasketDistributionUI implements Runnable {
                 options.add(new MenuItem("USEI07 - Percurso de entrega que maximiza o número de hubs pelo qual passa",
                         this::maximizedPath));
                 options.add(new MenuItem("USEI09 - Organizar as localidades do grafo", this::getClusters));
+                options.add(new MenuItem("USEI10 - Rede que permita transportar o número máximo de cabazes", this::maximumCapacity));
                 options.add(new MenuItem("USEI11 - Adicionar horários", this::addSchedule));
             }
 
@@ -186,7 +187,7 @@ public class BasketDistributionUI implements Runnable {
         } else {
             System.out.println("Erro ao criar o grafo");
         }
-        Utils.confirm("Deseja ver o grafo? (s/n):");
+        Utils.confirm("Deseja ver o grafo?:");
         if (true) {
             graphController.generateDataCSV(graph);
             String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
@@ -278,7 +279,7 @@ public class BasketDistributionUI implements Runnable {
         } else {
             System.out.println("Erro ao criar o grafo");
         }
-        Utils.confirm("Deseja ver o grafo? (s/n):");
+        Utils.confirm("Deseja ver o grafo?:");
         if (true) {
             graphController.generateDataCSV(graph);
             String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
@@ -458,4 +459,50 @@ public class BasketDistributionUI implements Runnable {
         }
     }
 
+    private void maximumCapacity() {
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
+        MapGraph<Location, Integer> graph = graphController.getGraph(bigGraph);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        if (hubGraph.vertices().isEmpty()) {
+            System.out.println("Erro ao filtrar o grafo");
+            return;
+        }
+        
+        if (Utils.confirm("Deseja ver o grafo?")) {
+            graphController.generateDataCSV(hubGraph);
+            String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
+            openGraphViewer(filePath);
+        }
+        
+        String idOrigem;
+        String idDestino;
+        do {
+            idOrigem = Utils.readLineFromConsole("Escreva o ID do HUB de origem: (CT**)").toUpperCase();
+        } while ((!idOrigem.contains("CT")) || (!hubGraph.validVertex(new Location(idOrigem))));
+        do {
+            idDestino = Utils.readLineFromConsole("Escreva o ID do HUB de destino: (CT**)").toUpperCase();
+        } while ((!idDestino.contains("CT")) || (!hubGraph.validVertex(new Location(idDestino))));
+
+        Pair<Integer, List<Location>> result = graphController.maximumCapacity(hubGraph, new Location(idOrigem), new Location(idDestino));
+        if (result == null) {
+            System.out.println("--------------------------");
+            System.out.println("| Não existem caminhos ! |");
+            System.out.println("--------------------------");
+            return;
+        }
+        System.out.println("Hub de Origem: " + idOrigem);
+        System.out.println("Hub de Destino: " + idDestino);
+        System.out.println("Capacidade Máxima: " + result.getFirst());
+        System.out.println("Caminho: ");
+
+        for (int i = 0; i < result.getSecond().size(); i++) {
+            System.out.print(result.getSecond().get(i).getId());
+            if (i < result.getSecond().size() - 1) {
+                System.out.print(" -> ");
+            }
+        }
+    }
 }

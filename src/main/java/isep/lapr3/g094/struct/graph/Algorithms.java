@@ -543,4 +543,67 @@ public class Algorithms {
             numShortPaths.put(g.edge(vOrigin, vDest), currentNum + 1);
         }
     }
+
+    public static <V, E> Pair<Integer, List<V>> fordFulkerson(Graph<V, E> g, V source, V sink) {
+        int maxFlow = 0;
+        List<V> maxFlowPath = new ArrayList<>();
+
+        Map<V, Map<V, Integer>> residualGraph = new HashMap<>();
+        for (V vertex : g.vertices()) {
+            residualGraph.put(vertex, new HashMap<>());
+            for (V adjVertex : g.adjVertices(vertex)) {
+                Edge<V, E> edge = g.edge(vertex, adjVertex);
+                residualGraph.get(vertex).put(adjVertex, (Integer) edge.getWeight());
+            }
+        }
+
+        Map<V, V> parent = new HashMap<>();
+
+        while (bfs(residualGraph, source, sink, parent)) {
+            int pathFlow = Integer.MAX_VALUE;
+            List<V> path = new ArrayList<>();
+            for (V v = sink; v != source; v = parent.get(v)) {
+                V u = parent.get(v);
+                pathFlow = Math.min(pathFlow, residualGraph.get(u).get(v));
+                path.add(0, v);
+            }
+            path.add(0, source);
+
+            for (V v = sink; v != source; v = parent.get(v)) {
+                V u = parent.get(v);
+                residualGraph.get(u).put(v, residualGraph.get(u).get(v) - pathFlow);
+                residualGraph.get(v).put(u, residualGraph.get(v).getOrDefault(u, 0) + pathFlow);
+            }
+
+            maxFlow += pathFlow;
+            maxFlowPath = path;
+        }
+
+        return new Pair<>(maxFlow, maxFlowPath);
+    }
+    
+    private static <V> boolean bfs(Map<V, Map<V, Integer>> residualGraph, V source, V sink, Map<V, V> parent) {
+        Set<V> visited = new HashSet<>();
+        Queue<V> queue = new LinkedList<>();
+        queue.add(source);
+        visited.add(source);
+    
+        while (!queue.isEmpty()) {
+            V vertex = queue.poll();
+            for (Map.Entry<V, Integer> entry : residualGraph.get(vertex).entrySet()) {
+                V adjVertex = entry.getKey();
+                Integer capacity = entry.getValue();
+                if (!visited.contains(adjVertex) && capacity > 0) {
+                    queue.add(adjVertex);
+                    visited.add(adjVertex);
+                    parent.put(adjVertex, vertex);
+                    if (adjVertex.equals(sink)) {
+                        return true;
+                    }
+                }
+            }
+        }
+    
+        return false;
+    }
 }
