@@ -111,5 +111,5 @@ public class GraphController {
         return service.maximumCapacity(graph, origin, destination);
     }
 
-    public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, Set<Location> hubList, int numClusters){ return service.getClusters(bigGraph,hubList,numClusters); }
+    public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, Set<Location> hubList, int numClusters){ return service.getClusters(bigGraph,numClusters); }
 }

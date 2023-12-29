@@ -316,9 +316,19 @@ public class Service {
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
 
-    public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, Set<Location> hubList, int numClusters){
+    public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, int numClusters){
         Map<Location, Map<Location, Integer>> map = new HashMap<>();
         MapGraph<Location, Integer> graph = getGraph(bigGraph);
+        Set<Location> hubList = new LinkedHashSet<>();
+        for (Location location : graph.getVertices()){
+            if (location.isHub()){
+                hubList.add(location);
+            }
+        }
+        if(hubList.size() < numClusters){
+            System.out.println("O número de clusters não pode ser maior que o número de hubs do grafo!");
+            return null;
+        }
         Graph<Location, Integer> clusters = Algorithms.divideGraphN(graph, hubList, Integer::compare, Integer::sum, 0, numClusters);
         for (Edge<Location, Integer> edge : clusters.edges()) {
             Location location = edge.getVDest();

@@ -270,17 +270,19 @@ public class BasketDistributionUI implements Runnable {
         }
 
         Map<Location, Map<Location, Integer>> clusters = graphController.getClusters(bigGraph, listHubs, numberOfClusters);
-        MapGraph<Location, Integer> graph = new MapGraph<>(false);
-        if (graphController.convertMapToMapGraph(clusters, graph)) {
-            System.out.println("Grafo criado com sucesso");
-        } else {
-            System.out.println("Erro ao criar o grafo");
-        }
-        Utils.confirm("Deseja ver o grafo?:");
-        if (true) {
-            graphController.generateDataCSV(graph);
-            String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
-            openGraphViewer(filePath);
+        if(clusters != null) {
+            MapGraph<Location, Integer> graph = new MapGraph<>(false);
+            if (graphController.convertMapToMapGraph(clusters, graph)) {
+                System.out.println("Grafo criado com sucesso");
+            } else {
+                System.out.println("Erro ao criar o grafo");
+            }
+            Utils.confirm("Deseja ver o grafo?:");
+            if (true) {
+                graphController.generateDataCSV(graph);
+                String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
+                openGraphViewer(filePath);
+            }
         }
     }
 
