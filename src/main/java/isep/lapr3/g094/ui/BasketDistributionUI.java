@@ -269,21 +269,43 @@ public class BasketDistributionUI implements Runnable {
             if(i >= numberOfClusters) break;
         }
 
-        Map<Location, Map<Location, Integer>> clusters = graphController.getClusters(bigGraph, listHubs, numberOfClusters);
-        if(clusters != null) {
-            MapGraph<Location, Integer> graph = new MapGraph<>(false);
-            if (graphController.convertMapToMapGraph(clusters, graph)) {
-                System.out.println("Grafo criado com sucesso");
-            } else {
-                System.out.println("Erro ao criar o grafo");
-            }
-            Utils.confirm("Deseja ver o grafo?:");
-            if (true) {
-                graphController.generateDataCSV(graph);
-                String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
-                openGraphViewer(filePath);
-            }
+        Map<Location, LinkedList<Location>> clusters = graphController.getClusters(bigGraph, numberOfClusters, listHubs);
+        if (clusters != null){
+            System.out.println("Clusters criados com sucesso");
+            selectCluster(clusters);
+        } else {
+            System.out.println("Erro a criar clusters!");
         }
+    }
+
+    private void selectCluster(Map<Location, LinkedList<Location>> clusters) {
+
+        List<Location> hubList = new ArrayList<>(clusters.keySet());
+
+        int option;
+
+        do {
+            System.out.println("Clusters:");
+            for (int i = 0; i < hubList.size(); i++) {
+                System.out.printf("%d - Hub %s\n", i + 1, hubList.get(i).getId());
+            }
+
+            option = Utils.readIntegerFromConsole("Selecione o cluster que quer ver (0 para sair do menu)");
+            if (option > 0 && option <= hubList.size()){
+                Location selectedHub = hubList.get(option - 1);
+                printCluster(selectedHub, clusters.get(selectedHub));
+            }
+        } while (option != 0);
+    }
+
+    private void printCluster(Location hub, LinkedList<Location> locations){
+        System.out.printf("Cluster do hub %s\n", hub.getId());
+
+        System.out.println("Locations:");
+        for (Location location : locations){
+            System.out.println(location.getId());
+        }
+        System.out.println();
     }
 
     private void getAllPathsWithAutonomy() {

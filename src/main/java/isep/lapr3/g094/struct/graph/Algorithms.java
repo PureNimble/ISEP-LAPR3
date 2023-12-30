@@ -535,7 +535,7 @@ public class Algorithms {
     }
     */
 
-    public static <V, E> Graph<V, E> divideGraphN(Graph<V, E> g, Set<V> hubList, Comparator<E> ce,BinaryOperator<E> sum, E zero, int numClusters){
+    public static <V, E> Map<V, LinkedList<V>> divideGraphN(Graph<V, E> g, Set<V> hubList, Comparator<E> ce,BinaryOperator<E> sum, E zero, int numClusters){
         List<Map.Entry<Edge<V, E>, Integer>> sortedMap = sortMap(g, ce, sum, zero);
 
         for (Map.Entry<Edge<V, E>, Integer> entry : sortedMap){
@@ -573,7 +573,18 @@ public class Algorithms {
                 break;
             }
         }
-        return g;
+
+        return createClusterLists(g, hubList);
+    }
+
+    private static <V, E> Map<V, LinkedList<V>> createClusterLists(Graph<V, E> g, Set<V> hubList){
+        Map<V, LinkedList<V>> returnMap = new HashMap<>();
+        for (V hub : hubList){
+            LinkedList<V> cluster = new LinkedList<>();
+            DepthFirstSearch(g, hub, cluster);
+            returnMap.put(hub, cluster);
+        }
+        return returnMap;
     }
 
     private static <V, E> List<Map.Entry<Edge<V, E>, Integer>> sortMap(Graph<V, E> g, Comparator<E> ce,BinaryOperator<E> sum, E zero){

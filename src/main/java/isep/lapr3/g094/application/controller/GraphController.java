@@ -2,6 +2,7 @@ package isep.lapr3.g094.application.controller;
 
 import java.time.LocalTime;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,5 +112,5 @@ public class GraphController {
         return service.maximumCapacity(graph, origin, destination);
     }
 
-    public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, Set<Location> hubList, int numClusters){ return service.getClusters(bigGraph,numClusters); }
+    public Map<Location, LinkedList<Location>> getClusters(boolean bigGraph, int numClusters, Set<Location> hubList){ return service.getClusters(bigGraph,numClusters, hubList); }
 }

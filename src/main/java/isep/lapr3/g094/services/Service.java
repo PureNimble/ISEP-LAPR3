@@ -316,45 +316,15 @@ public class Service {
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
 
-    public Map<Location, Map<Location, Integer>> getClusters(boolean bigGraph, int numClusters){
-        Map<Location, Map<Location, Integer>> map = new HashMap<>();
+    public Map<Location, LinkedList<Location>> getClusters(boolean bigGraph, int numClusters, Set<Location> hubList){
         MapGraph<Location, Integer> graph = getGraph(bigGraph);
-        Set<Location> hubList = new LinkedHashSet<>();
-        for (Location location : graph.getVertices()){
-            if (location.isHub()){
-                hubList.add(location);
-            }
-        }
         if(hubList.size() < numClusters){
             System.out.println("O número de clusters não pode ser maior que o número de hubs do grafo!");
             return null;
         }
-        Graph<Location, Integer> clusters = Algorithms.divideGraphN(graph, hubList, Integer::compare, Integer::sum, 0, numClusters);
-        for (Edge<Location, Integer> edge : clusters.edges()) {
-            Location location = edge.getVDest();
-            Location location1 = edge.getVOrig();
-            String locationId = location.getId();
-            String location1Id = location1.getId();
-            int distance = edge.getWeight();
-            if (locationId.compareTo(location1Id) < 0) {
-                if (map.containsKey(location)) {
-                    map.get(location).put(location1, distance);
-                } else {
-                    Map<Location, Integer> map1 = new HashMap<>();
-                    map1.put(location1, distance);
-                    map.put(location, map1);
-                }
-            } else {
-                if (map.containsKey(location1)) {
-                    map.get(location1).put(location, distance);
-                } else {
-                    Map<Location, Integer> map1 = new HashMap<>();
-                    map1.put(location, distance);
-                    map.put(location1, map1);
-                }
-            }
-        }
-        return map;
+        Map<Location, LinkedList<Location>> clusters = Algorithms.divideGraphN(graph, hubList, Integer::compare, Integer::sum, 0, numClusters);
+
+        return clusters;
     }
 
     public Map<List<Pair<Location, Integer>>, Integer> allPathsWithLimit(String vOrigin, String vDest,
