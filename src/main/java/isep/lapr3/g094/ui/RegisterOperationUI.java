@@ -303,7 +303,10 @@ public class RegisterOperationUI implements Runnable {
         try {
             Map<String, Integer> setores = farmManagerController.getSetor();
 
-            List<String> setorList = new ArrayList<String>(setores.keySet());
+            List<String> setorList = new ArrayList<String>();
+            for (String setor : setores.keySet()) {
+                setorList.add(setores.get(setor) + " - " + setor);
+            }
 
             String option = (String) Utils.showAndSelectOne(setorList, "\nLista de Setores:");
             if (option != null)
