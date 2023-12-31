@@ -4,9 +4,10 @@ import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
 
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.function.BinaryOperator;
-
 public class Algorithms {
 
     public static <V, E> LinkedList<V> BreadthFirstSearch(Graph<V, E> g, V vert) {
@@ -231,35 +232,127 @@ public class Algorithms {
         return paths;
     }
 
-    public static <V, E> void allPathsWithAutonomyMax(Graph<V, E> g, V vOrig, V vDest, double maxAutonomy, ArrayList<LinkedList<Pair<V, Double>>> paths) {
 
-        LinkedList<Pair<V, Double>> path = new LinkedList<>();
-        boolean[] visited = new boolean[g.numVertices()];
+    @SuppressWarnings("unchecked")
+    public static <V, E> boolean shortestPathsConstrained(Graph<V, E> g, V vOrig,
+            Comparator<E> ce, BinaryOperator<E> sum, BinaryOperator<E> subtract, E zero,
+            ArrayList<LinkedList<V>> paths, ArrayList<E> dists, ArrayList<LinkedList<LocalTime>> arriveTimes, ArrayList<LinkedList<LocalTime>> departTimes, ArrayList<LinkedList<LocalTime>> afterChargeTimes, ArrayList<LinkedList<LocalTime>> descargaTimes,E autonomy, LocalTime time, double velocity, LocalTime maxHour) {
 
-        path.add(new Pair<>(vOrig, 0.0));
-        allPathsWithAutonomyMax(g, vOrig, vDest, visited, path, paths, maxAutonomy);
+        if (!g.validVertex(vOrig)) {
+            return false;
+        }
+        int vertices = g.numVertices();
+        boolean[] visited = new boolean[vertices];
+        V[] pathKeys = (V[]) new Object[vertices];
+        E[] dist = (E[]) new Object[vertices];
+        LocalTime[] arriveTime = new LocalTime[vertices];
+        LocalTime[] departTime = new LocalTime[vertices];
+        LocalTime[] afterChargeTime = new LocalTime[vertices];
+        LocalTime[] descargaTime = new LocalTime[vertices];
+        shortestPathDijkstraConstrained(g, vOrig, ce, sum, subtract, zero, visited, pathKeys, arriveTime, departTime, afterChargeTime, descargaTime, dist, autonomy, time, velocity, maxHour);
+
+        dists.clear();
+        paths.clear();
+        arriveTimes.clear();
+        departTimes.clear();
+        afterChargeTimes.clear();
+        descargaTimes.clear();
+        for (V v : g.vertices()) {
+            dists.add(dist[g.key(v)]);
+            LinkedList<V> shortPath = new LinkedList<>();
+            getPath(g, vOrig, v, pathKeys, shortPath);
+            paths.add(shortPath);
+            LinkedList<LocalTime> arriveTimePath = new LinkedList<>();
+            getTimes(g, vOrig, v, pathKeys, arriveTimePath, arriveTime);
+            arriveTimes.add(arriveTimePath);
+            LinkedList<LocalTime> departTimePath = new LinkedList<>();
+            getTimes(g, vOrig, v, pathKeys, departTimePath, departTime);
+            departTimes.add(departTimePath);
+            LinkedList<LocalTime> afterChargeTimePath = new LinkedList<>();
+            getTimes(g, vOrig, v, pathKeys, afterChargeTimePath, afterChargeTime);
+            afterChargeTimes.add(afterChargeTimePath);
+            LinkedList<LocalTime> descargaTimePath = new LinkedList<>();
+            getTimes(g, vOrig, v, pathKeys, descargaTimePath, descargaTime);
+            descargaTimes.add(descargaTimePath);
+        }
+
+        return true;
     }
 
-    private static <V, E> void allPathsWithAutonomyMax(Graph<V, E> g, V vOrig, V vDest, boolean[] visited,
-                LinkedList<Pair<V, Double>> path, ArrayList<LinkedList<Pair<V, Double>>> paths, double maxAutonomy) {
+    private static <V, E> void shortestPathDijkstraConstrained(Graph<V, E> g, V vOrig,
+            Comparator<E> ce, BinaryOperator<E> sum, BinaryOperator<E> subtract, E zero,
+            boolean[] visited, V[] pathKeys, LocalTime[] arriveTimes, LocalTime[] departTimes, LocalTime[] afterChargeTimes, LocalTime[] descargaTimes, E[] dist, E autonomy, LocalTime time, double velocity, LocalTime maxHour) {
+        
+        E duringAutonomy = autonomy;
+        double gainedAutonomyPerMinute = 1016.6666666667;
+        int vertices = g.numVertices();
+        for (int i = 0; i < vertices; i++) {
+            dist[i] = null;
+            pathKeys[i] = null;
+            visited[i] = false;
+        }
+        dist[g.key(vOrig)] = zero;
 
-        visited[g.key(vOrig)] = true;
+        while (vOrig != null) {
+            visited[g.key(vOrig)] = true;
+            arriveTimes[g.key(vOrig)] = time;
+            departTimes[g.key(vOrig)] = time;
+            
+            for (V vAdj : g.adjVertices(vOrig)) {
+                LocalTime currentTime = time;
+                LocalTime pathTime = LocalTime.of(0, 0);
+                LocalTime pathTimeMax = LocalTime.of(20, 0);
+                boolean didCharge = false;
+                E edgeWeight = g.edge(vOrig, vAdj).getWeight();
+                if (ce.compare(edgeWeight, autonomy) > 0 || vAdj.equals(vOrig)) {
+                    continue;
+                }
+                if (ce.compare(edgeWeight, duringAutonomy) > 0) {
+                    time = time.plus(Duration.ofMinutes((long) (Math.round((float) ((Integer) subtract.apply(autonomy, duringAutonomy)).intValue()) / gainedAutonomyPerMinute)));
+                    pathTime = pathTime.plus(Duration.ofMinutes((long) (Math.round((float) ((Integer) subtract.apply(autonomy, duringAutonomy)).intValue()) / gainedAutonomyPerMinute)));
+                    duringAutonomy = autonomy;
+                    didCharge = true;         
+                }
+                LocalTime timeBeforeTravel = time;
+                time = time.plus(Duration.ofMinutes((long) (60 * ((double) ((Integer) edgeWeight).intValue() / 1000 / velocity))));
+                pathTime = pathTime.plus(Duration.ofMinutes((long) (60 * ((double) ((Integer) edgeWeight).intValue() / 1000 / velocity))));            
+                LocalTime endHour = ((Location) vAdj).getEndHour();
+                if ((endHour != null && time.isAfter(endHour)) || time.isAfter(maxHour) || pathTime.isAfter(pathTimeMax)) {
+                    time = currentTime;
+                    continue;
+                }
+                if (didCharge) {
+                    afterChargeTimes[g.key(vAdj)] = timeBeforeTravel;
+                }
+                arriveTimes[g.key(vAdj)] = time;
+                if (((Location) vAdj).isHub()) {
+                    time = time.plus(Duration.ofMinutes(new Random().nextInt(10) + 1));
+                    pathTime = pathTime.plus(Duration.ofMinutes(new Random().nextInt(10) + 1));
+                }
+                descargaTimes[g.key(vAdj)] = time;
+                E oldDist = dist[g.key(vAdj)];
+                E newDist = sum.apply(dist[g.key(vOrig)], edgeWeight);
 
-        if (vOrig.equals(vDest)) {
-            paths.add(new LinkedList<>(path));
-        } else {
-            for (V adj : g.adjVertices(vOrig)) {
-                Edge<V, E> edge = g.edge(vOrig, adj);
-                double edgeWeight = ((Number) edge.getWeight()).doubleValue();
-                if (!visited[g.key(adj)] && edgeWeight <= maxAutonomy) {
-                    path.add(new Pair<>(adj, edgeWeight));
-                    allPathsWithAutonomyMax(g, adj, vDest, visited, path, paths, maxAutonomy);
-                    path.removeLast();
+                if (oldDist == null || ce.compare(newDist, oldDist) < 0) {
+                    dist[g.key(vAdj)] = newDist;
+                    pathKeys[g.key(vAdj)] = vOrig;
+                    departTimes[g.key(vAdj)] = time;
+
+                    duringAutonomy = subtract.apply(duringAutonomy, edgeWeight);
+                }
+            }
+
+            vOrig = null;
+            E minDist = null;
+            for (V v : g.vertices()) {
+                if (visited[g.key(v)] == false && dist[g.key(v)] != null) {
+                    if (vOrig == null || ce.compare(dist[g.key(v)], minDist) < 0) {
+                        minDist = dist[g.key(v)];
+                        vOrig = v;
+                    }
                 }
             }
         }
-
-        visited[g.key(vOrig)] = false;
     }
 
     private static <V, E> void getPath(Graph<V, E> g, V vOrig, V vDest,
@@ -284,6 +377,29 @@ public class Algorithms {
             vControl = pathKeys[g.key(vControl)];
         }
     }
+
+    private static <V, E> void getTimes(Graph<V, E> g, V vOrig, V vDest,
+                V[] pathKeys, LinkedList<LocalTime> arriveTimes, LocalTime[] times) {
+
+            if (!vOrig.equals(vDest) && pathKeys[g.key(vDest)] == null) {
+                return;
+            }
+
+            arriveTimes.push(times[g.key(vDest)]);
+            V vControl = pathKeys[g.key(vDest)];
+
+            while (vControl != null) {
+                arriveTimes.push(times[g.key(vControl)]);
+                int key = g.key(vControl);
+
+                if (key < 0) {
+                    arriveTimes.removeFirst();
+                    return;
+                }
+
+                vControl = pathKeys[g.key(vControl)];
+            }
+        }
 
     @SuppressWarnings("unchecked")
     public static <V, E> MatrixGraph<V, E> minDistGraph(Graph<V, E> g, Comparator<E> ce, BinaryOperator<E> sum) {
