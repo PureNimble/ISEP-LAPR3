@@ -4,9 +4,9 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
-import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.io.File;
@@ -21,6 +21,7 @@ import isep.lapr3.g094.struct.graph.Algorithms;
 import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.Edge;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
+import net.bytebuddy.dynamic.scaffold.MethodGraph.Linked;
 
 public class Service {
 
@@ -472,26 +473,72 @@ public class Service {
         return latestFile;
     }
 
-    public void maximizedPath(String idOrigem, LocalTime time, double autonomy, int velocity, Boolean bigGraph) {
+    public void maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph) {
         Location curLocation = graphRepository.locationById(idOrigem, bigGraph);
-        Graph<Location, Integer> graph = getGraph(bigGraph); 
-        ArrayList<LinkedList<Pair<Location, Double>>> paths = new ArrayList<>();
-        for (Location location : graph.vertices()) {
-            Algorithms.allPathsWithAutonomyMax(graph, curLocation, location, autonomy, paths);                
+        Graph<Location, Integer> graph = getGraph(bigGraph);
+        ArrayList<LinkedList<Location>> locationPaths = new ArrayList<>();
+        ArrayList<Integer> locationDistance = new ArrayList<>();
+        ArrayList<LinkedList<LocalTime>> arriveTimes = new ArrayList<>();
+        ArrayList<LinkedList<LocalTime>> departTimes = new ArrayList<>();
+        ArrayList<LinkedList<LocalTime>> afterChargeTimes = new ArrayList<>();
+        ArrayList<LinkedList<LocalTime>> descargaTimes = new ArrayList<>();
+        BinaryOperator<Integer> subtract = (a, b) -> a - b;
+        LocalTime maxHour = getMaxHourToSearch(bigGraph);
+        Algorithms.shortestPathsConstrained(graph, curLocation, Integer::compare, Integer::sum, subtract, 0, locationPaths, locationDistance, arriveTimes, departTimes, afterChargeTimes, descargaTimes, autonomy, time, velocity, maxHour);
+        LinkedList<Location> topPath = new LinkedList<>();
+        LinkedList<LocalTime> topArriveTimes = new LinkedList<>();
+        LinkedList<LocalTime> topDepartTimes = new LinkedList<>();
+        LinkedList<LocalTime> topAfterChargeTimes = new LinkedList<>();
+        LinkedList<LocalTime> topDescargaTimes = new LinkedList<>();
+        int topDistance = 0;
+        int maxHubs = -1;
+        for (int i = 0; i < locationPaths.size(); i++) {
+            int totalHubs = 0;
+            for(int j = 0; j < locationPaths.get(i).size(); j++){
+                if(locationPaths.get(i).get(j).isHub()){
+                    totalHubs++;
+                }
+            }
+            if(totalHubs > maxHubs){
+                maxHubs = totalHubs;
+                topPath.clear();
+                topArriveTimes.clear();
+                topDepartTimes.clear();
+                topAfterChargeTimes.clear();
+                topDescargaTimes.clear();
+                topDistance = 0;
+                for(int j = 0; j < locationPaths.get(i).size(); j++){
+                    topPath.add(locationPaths.get(i).get(j));
+                    topArriveTimes.add(arriveTimes.get(i).get(j));
+                    topDepartTimes.add(departTimes.get(i).get(j));
+                    topAfterChargeTimes.add(afterChargeTimes.get(i).get(j));
+                    topDescargaTimes.add(descargaTimes.get(i).get(j));
+                    Integer distance = locationDistance.get(j);
+                    if (distance != null) {
+                        topDistance += distance;
+                    }
+                }
+            }
         }
+        for (int i = 0; i < topPath.size(); i++) {
+            System.out.println("Localização: " + topPath.get(i).getId());
+            System.out.println("Hora de chegada: " + topArriveTimes.get(i));
+            System.out.println("Hora de partida: " + topDepartTimes.get(i));
+            System.out.println("Hora de carregamento: " + topAfterChargeTimes.get(i));
+            System.out.println("Hora de descarga: " + topDescargaTimes.get(i));
+            System.out.println("Distância: " + graph.edge(topPath.get(i), topPath.get(i + 1)).getWeight());
+        }
+        System.out.println("Distância total: " + topDistance);
     }
 
-    private Duration unloadingTime() {
-        return Duration.ofMinutes(new Random().nextInt(10) + 1);
-    }
-
-    private Duration chargingTime(int autonomy, int leftAutonomy) {
-        double gainedAutonomyPerMinute = 1016.6666666667;
-        return Duration.ofMinutes(Math.round((autonomy - leftAutonomy) / gainedAutonomyPerMinute));
-    }
-
-    private Duration travelTime(int distance, int velocity) {
-        return Duration.ofMinutes((long) (60 * ((double) distance / velocity)));
+    private LocalTime getMaxHourToSearch(Boolean bigGraph) {
+        LocalTime maxHour = LocalTime.of(0, 1);
+        for (Location location : graphRepository.getGraph(bigGraph).vertices()) {
+            if (location.getEndHour() != null && location.getEndHour().isAfter(maxHour)) {
+                maxHour = location.getEndHour();
+            }
+        }
+        return maxHour;
     }
 
     public boolean idExists(String idOrigem, Boolean bigGraph) {
