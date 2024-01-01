@@ -43,5 +43,5 @@ array_to_vec:
 
 end:
     popq %rdx                     # restore read index
-    movl %r10d, (%rdx)            # write return value to write index    
+    incl (%rdx)
     ret                           #return

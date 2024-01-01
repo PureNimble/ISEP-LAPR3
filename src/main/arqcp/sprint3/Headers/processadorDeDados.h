@@ -1,6 +1,6 @@
 #ifndef PROCESSADORDEDADOS_H
 #define PROCESSADORDEDADOS_H
-
+#include <stdbool.h>
 // Estrutura dos sensores
 typedef struct
 {
@@ -17,10 +17,11 @@ typedef struct
     unsigned short write_counter;                 // 2 bytes
     unsigned short id;                            // 2 bytes
     unsigned short medianIndex;                   // 2 bytes
+    bool isError;                                 // 1 byte
 } Sensor;
 
 // main function
-void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath, int numberOfSensors);
+void processadorDeDados(char *valuePath, char *configPath, char *outputPath, int numberOfReads);
 // get the number of lines in a file (configFile)
 int numberOfLines(char *path);
 // create sensors
@@ -42,7 +43,17 @@ void printAllSensors(Sensor *sensors, int count);
 // free sensors
 void freeSensors(Sensor *sensors, int count);
 
-void moving_median(Sensor *sensors);
-
 void printString(char *string);
+
+void moving_median(Sensor *sensors, int numberOfReads);
+
+int doesDirectoryExist(const char *path);
+void removeFilenameFromPath(char *path);
+
+void serialize(Sensor *sensor, char *directoryPath, char **output);
+
+void createOutputFile(char *directoryPath, char **output, int numberOfSensors);
+
+char *insert_at_start(char *original, char *to_insert);
+
 #endif
