@@ -1,5 +1,6 @@
 package isep.lapr3.g094.struct;
 
+import isep.lapr3.g094.struct.graph.Edge;
 import isep.lapr3.g094.struct.graph.Graph;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -886,7 +887,7 @@ public class MainTest {
                 return edge != null ? (int) edge.getWeight() : 0;
             })
             .sum();
-        
+
         int outFlowCT296 = testPair.getSecond().vertices().stream()
             .mapToInt(location -> {
                 Edge<Location, Integer> edge = testPair.getSecond().edge(idCT14, location);
@@ -933,4 +934,33 @@ public class MainTest {
 
         assertTrue(hubGraph.vertices().isEmpty());
     }
+
+
+
+    @Test
+    void testDivideGraphNWith3Clusters() {
+        System.out.println("Testing DivideGraphN...");
+
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(1, 3, true);
+        Set<Location> listHubs = new LinkedHashSet<>();
+        int i = 0;
+        for(Map.Entry<Location, Criteria> entry : idealVertices.entrySet()){
+            listHubs.add(entry.getKey());
+            i++;
+            if(i >= 3) break;
+        }
+
+        Map<Location, LinkedList<Location>> clusters = service.getClusters(true, 3, listHubs);
+
+        assertTrue(clusters.keySet().containsAll(listHubs));
+
+        int[] expected = {316, 4, 3};
+        int u = 0;
+        for(Map.Entry<Location, LinkedList<Location>> cluster : clusters.entrySet()){
+            assertEquals(expected[u], cluster.getValue().size());
+            u++;
+        }
+    }
+
+
 }
