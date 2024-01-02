@@ -108,7 +108,7 @@ public class GraphController {
         return service.filterGraph(originalGraph);
     }
 
-    public Pair<Integer, List<Location>> maximumCapacity(MapGraph<Location, Integer> graph, Location origin, Location destination) {
+    public Pair<Integer, MapGraph<Location, Integer>> maximumCapacity(MapGraph<Location, Integer> graph, Location origin, Location destination) {
         return service.maximumCapacity(graph, origin, destination);
     }
 
@@ -116,5 +116,13 @@ public class GraphController {
 
     public boolean checkHours(LocalTime time, boolean bigGraph) {
         return service.checkHours(time, bigGraph);
+    }
+
+    public List<Location> deliveryCircuitPath(String idOrigem, int nHubs, Boolean bigGraph) {
+        return service.deliveryCircuitPath(idOrigem, nHubs, bigGraph);
+    }
+
+    public int getDistance(Location location, Location location1, Boolean bigGraph) {
+        return service.getDistance(location, location1, bigGraph);
     }
 }

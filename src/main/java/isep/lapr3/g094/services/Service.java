@@ -70,7 +70,7 @@ public class Service {
         for (String horario : horarios) {
             String[] line = horario.split(",");
             Location location = graphRepository.locationById(line[0], bigGraph);
-            if (location != null && location.isHub() == true){
+            if (location != null && location.isHub() == true) {
                 LocalTime startHour = LocalTime.parse(line[1]);
                 LocalTime endHour = LocalTime.parse(line[2]);
                 location.setStarHour(startHour);
@@ -177,9 +177,10 @@ public class Service {
 
         if (order == 0)
             list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDegree())
-                .thenComparing(entry -> entry.getValue().getNumberMinimumPaths()).reversed());
-        else{
-            list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDistances()).reversed());        
+                    .thenComparing(entry -> entry.getValue().getNumberMinimumPaths()).reversed());
+        else {
+            list.sort(Comparator.comparing((Map.Entry<Location, Criteria> entry) -> entry.getValue().getDistances())
+                    .reversed());
         }
         Map<Location, Criteria> sortedMap = new LinkedHashMap<>();
         for (Map.Entry<Location, Criteria> entry : list) {
@@ -535,28 +536,74 @@ public class Service {
 
     public MapGraph<Location, Integer> filterGraph(MapGraph<Location, Integer> originalGraph) {
         MapGraph<Location, Integer> filteredGraph = new MapGraph<>(false);
-    
+
         for (Location location : originalGraph.vertices()) {
             if (location.isHub()) {
                 filteredGraph.addVertex(location);
             }
         }
-    
+
         for (Location location : filteredGraph.vertices()) {
             for (Location adjLocation : originalGraph.adjVertices(location)) {
                 if (filteredGraph.validVertex(adjLocation)) {
-                    filteredGraph.addEdge(location, adjLocation, originalGraph.edge(location, adjLocation).getWeight());
+                    Integer weight = (originalGraph.edge(location, adjLocation).getWeight()/10000);
+                    filteredGraph.addEdge(location, adjLocation, weight);
                 }
             }
         }
-    
+
         return filteredGraph;
     }
 
-    public Pair<Integer, List<Location>> maximumCapacity(MapGraph<Location, Integer> graph, Location origin, Location destination) {
-        Pair<Integer, List<Location>> result = Algorithms.fordFulkerson(graph, origin, destination);
-        Integer dividedFlow = result.getFirst() / 10000;
-        return new Pair<>(dividedFlow, result.getSecond());
+    public Pair<Integer, MapGraph<Location, Integer>> maximumCapacity(MapGraph<Location, Integer> graph,
+            Location origin, Location destination) {
+        
+        Pair<Integer, Map<Location, Map<Location, Integer>>> result = Algorithms.fordFulkerson(graph, origin,
+                destination);
+
+        Map<Location, Map<Location, Integer>> residualGraph = result.getSecond();
+
+        MapGraph<Location, Integer> maxFlowGraph = new MapGraph<>(true);
+
+        for (Location vertex : residualGraph.keySet()) {
+            for (Location adjVertex : residualGraph.get(vertex).keySet()) {
+                Edge<Location, Integer> edge = graph.edge(vertex, adjVertex);
+                if (edge != null) {
+                    Integer originalCapacity = edge.getWeight();
+                    Integer residualCapacity = residualGraph.get(vertex).get(adjVertex);
+                    if (originalCapacity != null && residualCapacity != null) {
+                        Integer flowOnEdge = originalCapacity - residualCapacity;
+                        if(flowOnEdge > 0) {
+                            maxFlowGraph.addVertex(vertex);
+                            maxFlowGraph.addVertex(adjVertex);
+                            maxFlowGraph.addEdge(vertex, adjVertex, flowOnEdge);
+                        } else if (flowOnEdge < 0) {
+                            maxFlowGraph.addVertex(adjVertex);
+                            maxFlowGraph.addVertex(vertex);
+                            maxFlowGraph.addEdge(adjVertex, vertex, -flowOnEdge);
+                        }
+                    }
+                }
+            }
+        }
+
+        return new Pair<>(result.getFirst(), maxFlowGraph);
+    }
+
+    public MapGraph<Location, Integer> transformToDirectedOneWay(MapGraph<Location, Integer> undirectedGraph) {
+        MapGraph<Location, Integer> directedGraph = new MapGraph<>(false);
+
+        for (Location location : undirectedGraph.vertices()) {
+            directedGraph.addVertex(location);
+            for (Location adjLocation : undirectedGraph.adjVertices(location)) {
+                if (location.getId().compareTo(adjLocation.getId()) < 0) {
+                    Integer weight = undirectedGraph.edge(location, adjLocation).getWeight();
+                    directedGraph.addEdge(location, adjLocation, weight);
+                }
+            }
+        }
+
+        return directedGraph;
     }
 
     public boolean checkHours(LocalTime time, boolean bigGraph) {
@@ -579,5 +626,43 @@ public class Service {
         }
         System.out.println("O serviço ainda não começou! Insira uma hora entre " + minHour + " e " + maxHour + "");
         return true;
+    }
+
+    public List<Location> deliveryCircuitPath(String idOrigem, int nHubs, Boolean bigGraph) {
+        if(!idExists(idOrigem, bigGraph)){
+            return null;
+        }
+        if(nHubs < 0 || nHubs > 7 || nHubs < 5){
+            return null;
+        }
+
+        List<List<Location>> paths = Algorithms.allPathsN(graphRepository.getGraph(bigGraph),
+                graphRepository.locationById(idOrigem, bigGraph),graphRepository.locationById(idOrigem, bigGraph), nHubs);
+        int maxCollaborations = 0;
+        int minDistance = Integer.MAX_VALUE;
+        List<Location> bestPath = new ArrayList<>();
+        for (List<Location> path : paths) {
+            int totalCollaborations = 0;
+            int totalDistance = 0;
+            for (int i = 0; i < path.size() - 1; i++) {
+                Location location1 = path.get(i);
+                Location location2 = path.get(i + 1);
+                totalCollaborations += location1.getNumEmployees();
+                totalDistance += graphRepository.distanceLocations(location1, location2, bigGraph);
+            }
+            if (totalCollaborations > maxCollaborations) {
+                maxCollaborations = totalCollaborations;
+                minDistance = totalDistance;
+                bestPath = path;
+            } else if (totalCollaborations == maxCollaborations && totalDistance < minDistance) {
+                minDistance = totalDistance;
+                bestPath = path;
+            }
+        }
+        return bestPath;
+    }
+
+    public int getDistance(Location location, Location location1, Boolean bigGraph) {
+        return graphRepository.distanceLocations(location, location1, bigGraph);
     }
 }

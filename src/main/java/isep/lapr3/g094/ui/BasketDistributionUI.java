@@ -50,12 +50,15 @@ public class BasketDistributionUI implements Runnable {
                         this::getMinimal));
                 options.add(new MenuItem("USEI04 - Determinar a rede de caminhos mínimos", this::getMinimalPaths));
                 options.add(new MenuItem("USEI05 - Dividir a rede em N clusters", this::divideDistribution));
-                options.add(new MenuItem("USEI06 - Percursos possivel entre os dois locais, com uma dada autonomia",
-                        this::getAllPathsWithAutonomy));
-                options.add(new MenuItem("USEI07 - Percurso de entrega que maximiza o número de hubs pelo qual passa",
-                        this::maximizedPath));
+                options.add(new MenuItem("USEI06 - Percursos possivel entre os dois locais, com uma dada " +
+                        "autonomia", this::getAllPathsWithAutonomy));
+                options.add(new MenuItem("USEI07 - Percurso de entrega que maximiza o número de hubs pelo " +
+                        "qual passa", this::maximizedPath));
+                options.add(new MenuItem("USEI08 - Percurso de entrega de N hubs com maior número de " +
+                        "colaboradores", this::deliveryCircuitPath));
                 options.add(new MenuItem("USEI09 - Organizar as localidades do grafo", this::getClusters));
-                options.add(new MenuItem("USEI10 - Rede que permita transportar o número máximo de cabazes", this::maximumCapacity));
+                options.add(new MenuItem("USEI10 - Rede que permita transportar o número máximo de " +
+                        "cabazes", this::maximumCapacity));
                 options.add(new MenuItem("USEI11 - Adicionar horários", this::addSchedule));
             }
 
@@ -448,6 +451,65 @@ public class BasketDistributionUI implements Runnable {
         System.out.println("Tempo Total: " + formatDuration(Duration.between(time, topArriveTimes.getLast())));
     }
 
+    /**Encontrar para um produtor o circuito de entrega que parte de um local origem, passa por N hubs com maior número
+    de colaboradores uma só vez e volta ao local origem minimizando a distância total percorrida. Considere como número
+    de hubs: 5, 6 e 7.
+
+    Critério de Aceitação: Devolver o local de origem do circuito, os locais de passagem (sendo um hub, indicar o
+    respetivo número de colaboradores), a distância entre todos os locais do percurso, a distância total, o número de
+    carregamentos e o tempo total do circuito (discriminando o tempo afeto aos carregamentos do veículo,
+    ao percurso e ao tempo de descarga dos cestos em cada hub).
+
+     Critérios principais: Passar por ponto de origem: ponto final --> ponto inicial sem repetir caminhos ✔️
+                           Passar por N hubs uma unica vez ✔️
+                           Maior numero de colaboradores ✔️
+                           Minimizar a distância total percorrida ✔️
+     Critérios secundários: Tempo total do circuito
+                            Número de carregamentos
+    */
+    private void deliveryCircuitPath(){
+        Boolean bigGraph = graphOption();
+        if (bigGraph == null) {
+            return;
+        }
+        String idOrigem;
+        int nHubs;
+        do {
+            idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem: (CT**)").toUpperCase();
+        } while ((!idOrigem.contains("CT")) || (!idExists(idOrigem, bigGraph)));
+        do {
+            nHubs = Utils.readIntegerFromConsole("Escreva o número de hubs (5, 6 e 7): ");
+        } while (nHubs < 5 || nHubs > 7);
+        List<Location> bestPath = graphController.deliveryCircuitPath(idOrigem, nHubs, bigGraph);
+        if(bestPath.size() < nHubs - 1){
+            System.out.println("Não foi possível encontrar um caminho!");
+            return;
+        }
+        System.out.println("Localização de Origem: " + idOrigem);
+        System.out.println("Número de Hubs: " + nHubs);
+        int totalDistance = 0;
+        int numCollaborations = 0;
+        for (int i = 0; i < bestPath.size(); i++) {
+            System.out.println("+-----------------+");
+            System.out.println("| ID: " + bestPath.get(i).getId() + "          |");
+            System.out.println("| Colaboradores: " + bestPath.get(i).getNumEmployees() + " |");
+            if (i < bestPath.size() - 1) {
+                System.out.println("| Distância: " + graphController.getDistance(bestPath.get(i), bestPath.get(i+1),
+                        bigGraph) + " m |");
+                totalDistance += graphController.getDistance(bestPath.get(i), bestPath.get(i+1), bigGraph);
+            }
+            System.out.println("+-----------------+");
+            numCollaborations += bestPath.get(i).getNumEmployees();
+            if (i < bestPath.size() - 1) {
+                System.out.println("  |");
+                System.out.println("  v");
+            }
+        }
+        System.out.println("\nNúmero de Colaboradores: " + numCollaborations);
+        System.out.println("\nDistância Total: " + totalDistance + "m");
+        //dar print do tempo de carregamento, tempo de viagem e tempo total
+    }
+
     private String formatDuration(Duration duration) {
         long hours = duration.toHours();
         int minutes = duration.toMinutesPart();
@@ -579,23 +641,20 @@ public class BasketDistributionUI implements Runnable {
             idDestino = Utils.readLineFromConsole("Escreva o ID do HUB de destino: (CT**)").toUpperCase();
         } while ((!idDestino.contains("CT")) || (!hubGraph.validVertex(new Location(idDestino))));
 
-        Pair<Integer, List<Location>> result = graphController.maximumCapacity(hubGraph, new Location(idOrigem), new Location(idDestino));
-        if (result == null) {
-            System.out.println("--------------------------");
-            System.out.println("| Não existem caminhos ! |");
-            System.out.println("--------------------------");
-            return;
-        }
+        Pair<Integer, MapGraph<Location, Integer>> result = graphController.maximumCapacity(hubGraph, new Location(idOrigem), new Location(idDestino));
         System.out.println("Hub de Origem: " + idOrigem);
         System.out.println("Hub de Destino: " + idDestino);
+        if (result == null || result.getFirst() == 0) {
+            System.out.println("----------------------");
+            System.out.println("| Não existe fluxo ! |");
+            System.out.println("----------------------");
+            return;
+        }
         System.out.println("Capacidade Máxima: " + result.getFirst());
-        System.out.println("Caminho: ");
-
-        for (int i = 0; i < result.getSecond().size(); i++) {
-            System.out.print(result.getSecond().get(i).getId());
-            if (i < result.getSecond().size() - 1) {
-                System.out.print(" -> ");
-            }
+        if (Utils.confirm("Deseja ver o grafo?:")) {
+            graphController.generateDataCSV(result.getSecond());
+            String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
+            openGraphViewer(filePath);
         }
     }
 }

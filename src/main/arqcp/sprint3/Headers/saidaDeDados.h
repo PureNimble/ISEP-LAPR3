@@ -23,5 +23,10 @@ typedef struct
 void saidaDeDados(char *directoryPath, char *outputPath, long frequency);
 void createSensor(Sensors *sensor, char *path);
 void findFile(char *path);
+char *insert_at_start(char *original, char *to_insert);
+int numberOfLines(char *path);
+void printAllSensors(Sensors *ptrSensores, char *path, int NUM_SENSORS);
+void createSaidaFile(char *directoryPath, char **output, int numberOfSensors);
+void serializeSaida(Sensor *sensor, char *directoryPath, char **output);
 
 #endif
