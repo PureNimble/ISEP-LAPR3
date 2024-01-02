@@ -627,4 +627,42 @@ public class Service {
         System.out.println("O serviço ainda não começou! Insira uma hora entre " + minHour + " e " + maxHour + "");
         return true;
     }
+
+    public List<Location> deliveryCircuitPath(String idOrigem, int nHubs, Boolean bigGraph) {
+        if(!idExists(idOrigem, bigGraph)){
+            return null;
+        }
+        if(nHubs < 0 || nHubs > 7 || nHubs < 5){
+            return null;
+        }
+
+        List<List<Location>> paths = Algorithms.allPathsN(graphRepository.getGraph(bigGraph),
+                graphRepository.locationById(idOrigem, bigGraph),graphRepository.locationById(idOrigem, bigGraph), nHubs);
+        int maxCollaborations = 0;
+        int minDistance = Integer.MAX_VALUE;
+        List<Location> bestPath = new ArrayList<>();
+        for (List<Location> path : paths) {
+            int totalCollaborations = 0;
+            int totalDistance = 0;
+            for (int i = 0; i < path.size() - 1; i++) {
+                Location location1 = path.get(i);
+                Location location2 = path.get(i + 1);
+                totalCollaborations += location1.getNumEmployees();
+                totalDistance += graphRepository.distanceLocations(location1, location2, bigGraph);
+            }
+            if (totalCollaborations > maxCollaborations) {
+                maxCollaborations = totalCollaborations;
+                minDistance = totalDistance;
+                bestPath = path;
+            } else if (totalCollaborations == maxCollaborations && totalDistance < minDistance) {
+                minDistance = totalDistance;
+                bestPath = path;
+            }
+        }
+        return bestPath;
+    }
+
+    public int getDistance(Location location, Location location1, Boolean bigGraph) {
+        return graphRepository.distanceLocations(location, location1, bigGraph);
+    }
 }

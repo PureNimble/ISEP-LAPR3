@@ -117,4 +117,12 @@ public class GraphController {
     public boolean checkHours(LocalTime time, boolean bigGraph) {
         return service.checkHours(time, bigGraph);
     }
+
+    public List<Location> deliveryCircuitPath(String idOrigem, int nHubs, Boolean bigGraph) {
+        return service.deliveryCircuitPath(idOrigem, nHubs, bigGraph);
+    }
+
+    public int getDistance(Location location, Location location1, Boolean bigGraph) {
+        return service.getDistance(location, location1, bigGraph);
+    }
 }

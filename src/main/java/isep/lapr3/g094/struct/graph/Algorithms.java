@@ -8,6 +8,8 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
+
 public class Algorithms {
 
     public static <V, E> LinkedList<V> BreadthFirstSearch(Graph<V, E> g, V vert) {
@@ -830,5 +832,43 @@ public class Algorithms {
         }
 
         return false;
+    }
+
+    //Give me an algorithm to find the paths between N hubs from a given vertex Origin that is it the vertex Final
+    public static <V, E> List<List<V>> allPathsN(Graph<V, E> g, V vOrig, V vDest, int n) {
+        List<List<V>> paths = new ArrayList<>();
+        List<V> hubs = new ArrayList<>();
+        for (V v : g.vertices()) {
+            if (((Location) v).isHub() && !v.equals(vOrig)) {
+                hubs.add(v);
+            }
+        }
+        depthFirstSearchWithHubs(g, vOrig, vDest, n, hubs, new ArrayList<>(Collections.singletonList(vOrig)), paths,
+                new HashSet<>());
+        return paths;
+    }
+
+    public static <V, E> void depthFirstSearchWithHubs(Graph<V, E> g, V v, V vDest, int n, List<V> hubs,
+            List<V> path, List<List<V>> paths, Set<V> visited) {
+        visited.add(v); // Mark vertex as visited
+
+        for (V vAdj : g.adjVertices(v)) {
+            if (!visited.contains(vAdj)) { // Skip if vertex has been visited
+                path.add(vAdj);
+                if (hubs.contains(vAdj) && !vAdj.equals(vDest)) {
+                    n--;
+                }
+                if (n >= 0 && !vAdj.equals(vDest) || vAdj.equals(vDest) && n == 0) {
+                    if (vAdj.equals(vDest) && n == 0) {
+                        paths.add(new ArrayList<>(path)); // Add a copy of the current path to paths
+                    }
+                    depthFirstSearchWithHubs(g, vAdj, vDest, n, hubs, path, paths, new HashSet<>(visited)); // Pass a copy of visited set
+                }
+                path.remove(path.size() - 1);
+                if (hubs.contains(vAdj) && !vAdj.equals(vDest)) {
+                    n++;
+                }
+            }
+        }
     }
 }
