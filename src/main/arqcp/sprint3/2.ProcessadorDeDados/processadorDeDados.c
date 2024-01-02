@@ -28,7 +28,7 @@
 pid_t fatherPid;
 void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath, int numberOfReads, pid_t pid)
 {
-    fatherPid = fatherPid;
+    fatherPid = pid;
     configPath = insert_at_start(configPath, "../");
     directoryPath = insert_at_start(directoryPath, "../");
 

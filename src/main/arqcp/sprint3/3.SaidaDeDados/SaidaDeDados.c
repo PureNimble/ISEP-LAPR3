@@ -1,8 +1,8 @@
 #include "../Headers/saidaDeDados.h"
-#include "../Headers/processadorDeDados.h"
 // C library headers
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 
 #include <string.h>
 
@@ -31,11 +31,17 @@
 #include <stdlib.h>
 // time
 #include <time.h>
-void saidaDeDados(char *directoryPath, char *outputPath, long frequency)
-{
-    directoryPath = insert_at_start(directoryPath, "../");
 
-    outputPath = insert_at_start(outputPath, "../");
+pid_t fatherPid_saida;
+time_t latest_creation_time = 0;
+char latest_file_name[256];
+void saidaDeDados(char *directoryPath, char *outputPath, long frequency, pid_t pid)
+{
+
+    fatherPid_saida = pid;
+    directoryPath = insert_at_start_saida(directoryPath, "../");
+
+    outputPath = insert_at_start_saida(outputPath, "../");
 
     Sensors *ptrSensores = (Sensors *)malloc(1 * sizeof(Sensors));
 
@@ -50,6 +56,10 @@ void saidaDeDados(char *directoryPath, char *outputPath, long frequency)
 
 }
 
+int compare(const void *a, const void *b) {
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
 char *insert_at_end(char *original, char *to_insert)
 {
     // Allocate memory for the new string
@@ -57,7 +67,7 @@ char *insert_at_end(char *original, char *to_insert)
     if (new_string == NULL)
     {
         fprintf(stderr, "Failed to allocate memory\n");
-        killProcess(fatherPid, SIGUSR1);
+        killProcess_saida(fatherPid_saida, SIGUSR1);
 
         exit(1);
     }
@@ -69,53 +79,51 @@ char *insert_at_end(char *original, char *to_insert)
     return new_string;
 }
 
+
 void* doOutput(Sensors *ptrSensores, char *directoryPath, char *outputPath, long frequency) {
     while (1) {
-        time_t latest_creation_time = 0;
-        char latest_file_name[256];
-
-        if (ftw(directoryPath, process_file, 10) == -1) {
-                perror("ftw");
-                exit(EXIT_FAILURE);
+        DIR *dir;
+        struct dirent *entry;
+        struct stat file_stat;
+        dir = opendir(directoryPath);
+        char **files = NULL;
+        int num_files = 0;
+        while ((entry = readdir(dir)) != NULL) {
+            if (entry->d_type == DT_REG) {
+                // Regular file
+                num_files++;
+                files = (char **)realloc(files, num_files * sizeof(char *));
+                files[num_files - 1] = strdup(entry->d_name);
             }
+        }
+        closedir(dir);
 
-            if (latest_creation_time == 0) {
-                printf("No files found in the directory.\n");
-            } else {
+        qsort(files, num_files, sizeof(char *), compare);
 
                 directoryPath = insert_at_end(directoryPath, latest_file_name);
                 directoryPath = insert_at_end(directoryPath, ".txt");
+                int const NUM_SENSORS = numberOfLines_saida(directoryPath);
                 createSensor(ptrSensores, directoryPath);
 
-                serializeAllSensors(ptrSensores, NUM_SENSORS);
+                serializeAllSensors(ptrSensores, outputPath, NUM_SENSORS);
 
-                freeSensors(ptrSensores, NUM_SENSORS);
+                freeSensor(ptrSensores, NUM_SENSORS);
 
-            }
+
         usleep(frequency / 1000);
     }
     return NULL;
 }
 
-int process_file(const char *file_path, const struct stat *info, const int typeflag, struct FTW *pathinfo) {
-    if (typeflag == FTW_F) {  // Only process regular files
-        if (info->st_ctime > latest_creation_time) {
-            latest_creation_time = info->st_ctime;
-            strncpy(latest_file_name, file_path, sizeof(latest_file_name) - 1);
-            latest_file_name[sizeof(latest_file_name) - 1] = '\0';
-        }
-    }
-    return 0;
-}
 
-char *insert_at_start(char *original, char *to_insert)
+char *insert_at_start_saida(char *original, char *to_insert)
 {
     // Allocate memory for the new string
     char *new_string = malloc(strlen(original) + strlen(to_insert) + 1);
     if (new_string == NULL)
     {
         fprintf(stderr, "Failed to allocate memory\n");
-        killProcess(fatherPid, SIGUSR1);
+        killProcess_saida(fatherPid_saida, SIGUSR1);
 
         exit(1);
     }
@@ -128,7 +136,7 @@ char *insert_at_start(char *original, char *to_insert)
 }
 
 
-int numberOfLines(char *path)
+int numberOfLines_saida(char *path)
 {
     FILE *file = fopen(path, "r");
     if (file == NULL)
@@ -152,7 +160,7 @@ int numberOfLines(char *path)
 void createSensor(Sensors *ptr, char *path)
 {
     findFile(path);
-    FILE *fp = fopen(directoryPath, "r");
+    FILE *fp = fopen(path, "r");
     if (fp == NULL)
     {
         printf("Erro ao abrir o ficheiro\n");
@@ -187,11 +195,11 @@ void serializeAllSensors(Sensors *ptrSensores, char *path, int NUM_SENSORS){
     findFile(path);
 
     char *output[NUM_SENSORS];
-     for (i = 0; i < NUM_SENSORS; i++)
+     for (int i = 0; i < NUM_SENSORS; i++)
      {
-            serializeSaida(&ptrSensores[i], directoryPath, &output[i]);
+            serializeSaida(&ptrSensores[i], path, &output[i]);
      }
-     createSaidaFile(directoryPath, output, NUM_SENSORS);
+     createSaidaFile(path, output, NUM_SENSORS);
 }
 
 void createSaidaFile(char *directoryPath, char **output, int numberOfSensors)
@@ -208,9 +216,9 @@ void createSaidaFile(char *directoryPath, char **output, int numberOfSensors)
     if (path == NULL)
     {
         printf("Erro ao alocar memória\n");
-        killProcess(fatherPid, SIGUSR1);
+        killProcess_saida(fatherPid_saida, SIGUSR1);
     }
-    if (!doesDirectoryExist(directoryPath))
+    if (!doesDirectoryExist_saida(directoryPath))
         mkdir(directoryPath, 0777);
     strcpy(path, directoryPath);
     strcat(path, buffer);
@@ -218,7 +226,7 @@ void createSaidaFile(char *directoryPath, char **output, int numberOfSensors)
     if (file == NULL)
     {
         printf("Caminho invalido: %s\n", path);
-        killProcess(fatherPid, SIGUSR1);
+        killProcess_saida(fatherPid_saida, SIGUSR1);
     }
     for (i = 0; i < numberOfSensors; i++)
     {
@@ -238,25 +246,25 @@ void createSaidaFile(char *directoryPath, char **output, int numberOfSensors)
 
 void serializeSaida(Sensors *sensor, char *directoryPath, char **output)
 {
-    char string[100];
+    char str[100];
     int mediana = sensor->median;
 
-    char med[100];
+    char med[37];
     sprintf(str, "%d", mediana);
 
     int position = strlen(med) - 1;
     memmove(str + position + 1, str + position, strlen(str) - position);
     str[position] = '.';
 
-    sprintf(string, "ID: %d, Write Counter: %d, Sensor type: %s, Sensor Unit:%s, Mediana: %s#\n", sensor->id, sensor->write_counter, sensor->sensor_type, sensor->unit, med);
+    sprintf(str, "ID: %d, Write Counter: %d, Sensor type: %s, Sensor Unit:%s, Mediana: %s#\n", sensor->id, sensor->write_counter, sensor->sensor_type, sensor->unit, med);
 
-    *output = (char *)calloc(strlen(string), sizeof(char));
+    *output = (char *)calloc(strlen(str), sizeof(char));
     if (*output == NULL)
     {
         printf("Erro ao alocar memória\n");
-        killProcess(fatherPid, SIGUSR1);
+        killProcess_saida(fatherPid_saida, SIGUSR1);
     }
-    strcpy(*output, string);
+    strcpy(*output, str);
 }
 
 
@@ -275,4 +283,34 @@ void findFile(char *path)
         }
         closedir(d);
     }
+}
+
+int doesDirectoryExist_saida(const char *path)
+{
+    struct stat statbuf;
+    if (stat(path, &statbuf) != -1)
+    {
+        if (S_ISDIR(statbuf.st_mode))
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void freeSensor(Sensors *sensors, int count)
+{
+    for (int i = 0; i < count; i++)
+    {
+        free(sensors[i].sensor_type);
+        free(sensors[i].unit);
+    }
+    free(sensors);
+}
+
+void killProcess_saida()
+{
+    kill(fatherPid_saida, SIGUSR1);
+
+    exit(0);
 }
