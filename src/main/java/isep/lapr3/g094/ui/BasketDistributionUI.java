@@ -10,11 +10,13 @@ import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
+import oracle.net.aso.b;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
 
@@ -386,10 +388,75 @@ public class BasketDistributionUI implements Runnable {
         do {
             idOrigem = Utils.readLineFromConsole("Escreva o ID da localização de origem: (CT**)").toUpperCase();
         } while ((!idOrigem.contains("CT")) || (!idExists(idOrigem, bigGraph)));
-        time = Utils.readTimeFromConsole("Escreva a hora de partida: (HH:MM)");
+        do {
+            time = Utils.readTimeFromConsole("Escreva a hora de partida: (HH:MM)");
+        } while (checkHours(time, bigGraph));
         int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
         int velocity = Utils.readIntegerFromConsole("Qual a velocidade média do veículo?(km/h)");
-        graphController.maximizedPath(idOrigem, time, autonomy * 1000, velocity, bigGraph);
+        int numCharges = 0;
+        LinkedList<Location> topPath = new LinkedList<>();
+        LinkedList<LocalTime> topArriveTimes = new LinkedList<>();
+        LinkedList<LocalTime> topDepartTimes = new LinkedList<>();
+        LinkedList<LocalTime> topAfterChargeTimes = new LinkedList<>();
+        LinkedList<LocalTime> topDescargaTimes = new LinkedList<>();
+        int topDistance = graphController.maximizedPath(idOrigem, time, autonomy * 1000, velocity, bigGraph, topPath, topArriveTimes,
+                topDepartTimes, topAfterChargeTimes, topDescargaTimes);
+        System.out.println("Localização de Origem: " + idOrigem);
+        System.out.println("Hora de Partida: " + time);
+        System.out.println("Autonomia: " + autonomy + "km");
+        System.out.println("Velocidade Média: " + velocity + "km/h");
+        for (int i = 0; i < topPath.size(); i++) {
+            System.out.println("+-----------------+");
+            System.out.println("| ID: " + topPath.get(i).getId() + "    |");
+            System.out.println("| Arrive: " + topArriveTimes.get(i) + " |");
+            if (topPath.get(i).isHub() && !topPath.get(i).getId().equals(idOrigem)) {
+                System.out.println("| Depart: " + topDepartTimes.get(i) + " |");
+            }
+            System.out.println("+-----------------+");
+            if (i < topPath.size() - 1) {
+                System.out.println("  |");
+                System.out.println("  v");
+            }
+        }
+        Duration chargeDuration = Duration.ZERO;
+        Duration travDuration = Duration.ZERO;
+        for (int i = 1; i < topAfterChargeTimes.size(); i++) {
+            if (!topAfterChargeTimes.get(i).equals(topDepartTimes.get(i-1))) {
+                numCharges++;
+                Duration duration = Duration.between(topDepartTimes.get(i-1), topAfterChargeTimes.get(i));
+                chargeDuration = chargeDuration.plus(duration);
+            }
+        }
+        
+        System.out.println("\nNúmero de Carregamentos: " + numCharges);
+        System.out.println("\nDistância Total: " + topDistance + "m");
+        System.out.println("Tempo de carregamento: " + formatDuration(chargeDuration) + "\n");
+        for (int i = 1; i < topDescargaTimes.size(); i++) {
+            if (!topDescargaTimes.get(i).equals(topArriveTimes.get(i))) {
+                Duration duration = Duration.between(topArriveTimes.get(i), topDescargaTimes.get(i));
+                System.out.println("Tempo de descarga dos cestos no hub " + topPath.get(i).getId() + ": " + formatDuration(duration));
+            }
+        }
+        for (int i = 1; i < topArriveTimes.size(); i++) {
+            Duration duration = Duration.ZERO;
+            if (!topAfterChargeTimes.get(i).equals(topDepartTimes.get(i-1))) {
+                duration = Duration.between(topDepartTimes.get(i-1), topAfterChargeTimes.get(i));
+            }
+            travDuration = travDuration.plus(Duration.between(topDepartTimes.get(i-1), topArriveTimes.get(i)).minus(duration));
+        }
+        System.out.println("\nTempo de viagem: " + formatDuration(travDuration));
+        System.out.println("Tempo Total: " + formatDuration(Duration.between(time, topArriveTimes.getLast())));
+    }
+
+    private String formatDuration(Duration duration) {
+        long hours = duration.toHours();
+        int minutes = duration.toMinutesPart();
+        int seconds = duration.toSecondsPart();
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    private boolean checkHours(LocalTime time, Boolean bigGraph) {
+        return graphController.checkHours(time, bigGraph);
     }
 
     private boolean idExists(String idOrigem, Boolean bigGraph) {

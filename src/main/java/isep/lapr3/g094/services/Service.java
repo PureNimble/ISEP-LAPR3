@@ -21,7 +21,6 @@ import isep.lapr3.g094.struct.graph.Algorithms;
 import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.Edge;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
-import net.bytebuddy.dynamic.scaffold.MethodGraph.Linked;
 
 public class Service {
 
@@ -473,8 +472,9 @@ public class Service {
         return latestFile;
     }
 
-    public void maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph) {
+    public int maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph, LinkedList<Location> topPath, LinkedList<LocalTime> topArriveTimes, LinkedList<LocalTime> topDepartTimes, LinkedList<LocalTime> topAfterChargeTimes, LinkedList<LocalTime> topDescargaTimes) {
         Location curLocation = graphRepository.locationById(idOrigem, bigGraph);
+        int topDistance = 0;
         Graph<Location, Integer> graph = getGraph(bigGraph);
         ArrayList<LinkedList<Location>> locationPaths = new ArrayList<>();
         ArrayList<Integer> locationDistance = new ArrayList<>();
@@ -485,12 +485,6 @@ public class Service {
         BinaryOperator<Integer> subtract = (a, b) -> a - b;
         LocalTime maxHour = getMaxHourToSearch(bigGraph);
         Algorithms.shortestPathsConstrained(graph, curLocation, Integer::compare, Integer::sum, subtract, 0, locationPaths, locationDistance, arriveTimes, departTimes, afterChargeTimes, descargaTimes, autonomy, time, velocity, maxHour);
-        LinkedList<Location> topPath = new LinkedList<>();
-        LinkedList<LocalTime> topArriveTimes = new LinkedList<>();
-        LinkedList<LocalTime> topDepartTimes = new LinkedList<>();
-        LinkedList<LocalTime> topAfterChargeTimes = new LinkedList<>();
-        LinkedList<LocalTime> topDescargaTimes = new LinkedList<>();
-        int topDistance = 0;
         int maxHubs = -1;
         for (int i = 0; i < locationPaths.size(); i++) {
             int totalHubs = 0;
@@ -520,15 +514,7 @@ public class Service {
                 }
             }
         }
-        for (int i = 0; i < topPath.size(); i++) {
-            System.out.println("Localização: " + topPath.get(i).getId());
-            System.out.println("Hora de chegada: " + topArriveTimes.get(i));
-            System.out.println("Hora de partida: " + topDepartTimes.get(i));
-            System.out.println("Hora de carregamento: " + topAfterChargeTimes.get(i));
-            System.out.println("Hora de descarga: " + topDescargaTimes.get(i));
-            System.out.println("Distância: " + graph.edge(topPath.get(i), topPath.get(i + 1)).getWeight());
-        }
-        System.out.println("Distância total: " + topDistance);
+        return topDistance;
     }
 
     private LocalTime getMaxHourToSearch(Boolean bigGraph) {
@@ -574,5 +560,27 @@ public class Service {
         Pair<Integer, List<Location>> result = Algorithms.fordFulkerson(graph, origin, destination);
         Integer dividedFlow = result.getFirst() / 10000;
         return new Pair<>(dividedFlow, result.getSecond());
+    }
+
+    public boolean checkHours(LocalTime time, boolean bigGraph) {
+        LocalTime minHour = LocalTime.of(23, 59);
+        LocalTime maxHour = LocalTime.of(0, 0);
+        for(Location location : graphRepository.getGraph(bigGraph).vertices()){
+            LocalTime startHour = location.getStartHour();
+            LocalTime endHour = location.getEndHour();
+            if(startHour != null && endHour != null){
+                if(startHour.isBefore(minHour)){
+                    minHour = startHour;
+                }
+                if(endHour.isAfter(maxHour)){
+                    maxHour = endHour;
+                }
+            }
+        }
+        if(time.isAfter(minHour) && time.isBefore(maxHour)){
+            return false;
+        }
+        System.out.println("O serviço ainda não começou! Insira uma hora entre " + minHour + " e " + maxHour + "");
+        return true;
     }
 }

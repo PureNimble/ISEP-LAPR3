@@ -258,22 +258,32 @@ public class Algorithms {
         afterChargeTimes.clear();
         descargaTimes.clear();
         for (V v : g.vertices()) {
-            dists.add(dist[g.key(v)]);
             LinkedList<V> shortPath = new LinkedList<>();
             getPath(g, vOrig, v, pathKeys, shortPath);
-            paths.add(shortPath);
+            if (!shortPath.isEmpty()) {
+                dists.add(dist[g.key(v)]);
+                paths.add(shortPath);
+            }
             LinkedList<LocalTime> arriveTimePath = new LinkedList<>();
             getTimes(g, vOrig, v, pathKeys, arriveTimePath, arriveTime);
-            arriveTimes.add(arriveTimePath);
+            if (!arriveTimePath.isEmpty()) {
+                arriveTimes.add(arriveTimePath);
+            }
             LinkedList<LocalTime> departTimePath = new LinkedList<>();
             getTimes(g, vOrig, v, pathKeys, departTimePath, departTime);
-            departTimes.add(departTimePath);
+            if (!departTimePath.isEmpty()) {
+                departTimes.add(departTimePath);
+            }
             LinkedList<LocalTime> afterChargeTimePath = new LinkedList<>();
             getTimes(g, vOrig, v, pathKeys, afterChargeTimePath, afterChargeTime);
-            afterChargeTimes.add(afterChargeTimePath);
+            if (!afterChargeTimePath.isEmpty()) {
+                afterChargeTimes.add(afterChargeTimePath);
+            }
             LinkedList<LocalTime> descargaTimePath = new LinkedList<>();
             getTimes(g, vOrig, v, pathKeys, descargaTimePath, descargaTime);
-            descargaTimes.add(descargaTimePath);
+            if (!descargaTimePath.isEmpty()) {
+                descargaTimes.add(descargaTimePath);
+            }
         }
 
         return true;
@@ -292,50 +302,54 @@ public class Algorithms {
             visited[i] = false;
         }
         dist[g.key(vOrig)] = zero;
+        arriveTimes[g.key(vOrig)] = time;
+        departTimes[g.key(vOrig)] = time;
+        descargaTimes[g.key(vOrig)] = null;
 
         while (vOrig != null) {
             visited[g.key(vOrig)] = true;
-            arriveTimes[g.key(vOrig)] = time;
-            departTimes[g.key(vOrig)] = time;
             
             for (V vAdj : g.adjVertices(vOrig)) {
+                if (vAdj.equals(vOrig)) {
+                    continue;
+                }
                 LocalTime currentTime = time;
                 LocalTime pathTime = LocalTime.of(0, 0);
                 LocalTime pathTimeMax = LocalTime.of(20, 0);
-                boolean didCharge = false;
                 E edgeWeight = g.edge(vOrig, vAdj).getWeight();
-                if (ce.compare(edgeWeight, autonomy) > 0 || vAdj.equals(vOrig)) {
+                if (ce.compare(edgeWeight, autonomy) > 0) {
                     continue;
                 }
+                E resetAutonomy = duringAutonomy;
                 if (ce.compare(edgeWeight, duringAutonomy) > 0) {
                     time = time.plus(Duration.ofMinutes((long) (Math.round((float) ((Integer) subtract.apply(autonomy, duringAutonomy)).intValue()) / gainedAutonomyPerMinute)));
                     pathTime = pathTime.plus(Duration.ofMinutes((long) (Math.round((float) ((Integer) subtract.apply(autonomy, duringAutonomy)).intValue()) / gainedAutonomyPerMinute)));
                     duringAutonomy = autonomy;
-                    didCharge = true;         
                 }
-                LocalTime timeBeforeTravel = time;
+                LocalTime timeAfterCharge = time;
                 time = time.plus(Duration.ofMinutes((long) (60 * ((double) ((Integer) edgeWeight).intValue() / 1000 / velocity))));
                 pathTime = pathTime.plus(Duration.ofMinutes((long) (60 * ((double) ((Integer) edgeWeight).intValue() / 1000 / velocity))));            
                 LocalTime endHour = ((Location) vAdj).getEndHour();
                 if ((endHour != null && time.isAfter(endHour)) || time.isAfter(maxHour) || pathTime.isAfter(pathTimeMax)) {
+                    duringAutonomy = resetAutonomy;
                     time = currentTime;
                     continue;
                 }
-                if (didCharge) {
-                    afterChargeTimes[g.key(vAdj)] = timeBeforeTravel;
-                }
-                arriveTimes[g.key(vAdj)] = time;
+                LocalTime arrivedTime = time;
                 if (((Location) vAdj).isHub()) {
                     time = time.plus(Duration.ofMinutes(new Random().nextInt(10) + 1));
                     pathTime = pathTime.plus(Duration.ofMinutes(new Random().nextInt(10) + 1));
                 }
-                descargaTimes[g.key(vAdj)] = time;
+                LocalTime descargasTime = time;
                 E oldDist = dist[g.key(vAdj)];
                 E newDist = sum.apply(dist[g.key(vOrig)], edgeWeight);
 
                 if (oldDist == null || ce.compare(newDist, oldDist) < 0) {
                     dist[g.key(vAdj)] = newDist;
                     pathKeys[g.key(vAdj)] = vOrig;
+                    arriveTimes[g.key(vAdj)] = arrivedTime;
+                    afterChargeTimes[g.key(vAdj)] = timeAfterCharge;
+                    descargaTimes[g.key(vAdj)] = descargasTime;
                     departTimes[g.key(vAdj)] = time;
 
                     duringAutonomy = subtract.apply(duringAutonomy, edgeWeight);
@@ -343,11 +357,11 @@ public class Algorithms {
             }
 
             vOrig = null;
-            E minDist = null;
+            LocalTime minArriveTime = null;
             for (V v : g.vertices()) {
-                if (visited[g.key(v)] == false && dist[g.key(v)] != null) {
-                    if (vOrig == null || ce.compare(dist[g.key(v)], minDist) < 0) {
-                        minDist = dist[g.key(v)];
+                if (visited[g.key(v)] == false && arriveTimes[g.key(v)] != null) {
+                    if (vOrig == null || arriveTimes[g.key(v)].isBefore(minArriveTime)) {
+                        minArriveTime = arriveTimes[g.key(v)];
                         vOrig = v;
                     }
                 }
@@ -378,28 +392,29 @@ public class Algorithms {
         }
     }
 
+
     private static <V, E> void getTimes(Graph<V, E> g, V vOrig, V vDest,
                 V[] pathKeys, LinkedList<LocalTime> arriveTimes, LocalTime[] times) {
 
-            if (!vOrig.equals(vDest) && pathKeys[g.key(vDest)] == null) {
+        if (!vOrig.equals(vDest) && pathKeys[g.key(vDest)] == null) {
+            return;
+        }
+
+        arriveTimes.push(times[g.key(vDest)]);
+        V vControl = pathKeys[g.key(vDest)];
+
+        while (vControl != null) {
+            arriveTimes.push(times[g.key(vControl)]);
+            int key = g.key(vControl);
+
+            if (key < 0) {
+                arriveTimes.removeFirst();
                 return;
             }
 
-            arriveTimes.push(times[g.key(vDest)]);
-            V vControl = pathKeys[g.key(vDest)];
-
-            while (vControl != null) {
-                arriveTimes.push(times[g.key(vControl)]);
-                int key = g.key(vControl);
-
-                if (key < 0) {
-                    arriveTimes.removeFirst();
-                    return;
-                }
-
-                vControl = pathKeys[g.key(vControl)];
-            }
+            vControl = pathKeys[g.key(vControl)];
         }
+    }
 
     @SuppressWarnings("unchecked")
     public static <V, E> MatrixGraph<V, E> minDistGraph(Graph<V, E> g, Comparator<E> ce, BinaryOperator<E> sum) {

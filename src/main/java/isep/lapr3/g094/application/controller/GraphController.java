@@ -96,8 +96,8 @@ public class GraphController {
         return service.getLatestFileFromDirectory(string);
     }
 
-    public void maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph) {
-        service.maximizedPath(idOrigem, time, autonomy, velocity, bigGraph);
+    public int maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph, LinkedList<Location> topPath, LinkedList<LocalTime> topArriveTimes, LinkedList<LocalTime> topDepartTimes, LinkedList<LocalTime> topAfterChargeTimes, LinkedList<LocalTime> topDescargaTimes) {
+        return service.maximizedPath(idOrigem, time, autonomy, velocity, bigGraph, topPath, topArriveTimes, topDepartTimes, topAfterChargeTimes, topDescargaTimes);
     }
 
     public boolean idExists(String idOrigem, Boolean bigGraph) {
@@ -113,4 +113,8 @@ public class GraphController {
     }
 
     public Map<Location, LinkedList<Location>> getClusters(boolean bigGraph, int numClusters, Set<Location> hubList){ return service.getClusters(bigGraph,numClusters, hubList); }
+
+    public boolean checkHours(LocalTime time, boolean bigGraph) {
+        return service.checkHours(time, bigGraph);
+    }
 }
