@@ -107,7 +107,7 @@ void getParameters(char *value_path, char *config_path, char *saida_path, int *n
 
 	if (isFileValid == -1)
 		reWriteSetup();
-	FILE *fp = fopen(CONFIG_PATH, "r");
+	FILE *fp = fopen(CONFIG_PATH, "r+");
 	if (fp == NULL)
 	{
 		printf("Erro ao abrir o ficheiro de configuração\n");

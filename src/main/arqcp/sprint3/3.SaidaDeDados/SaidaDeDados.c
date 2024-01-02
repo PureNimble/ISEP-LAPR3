@@ -26,37 +26,34 @@
 #include <sys/stat.h>
 #include <pthread.h>
 
-
 // malloc
 #include <stdlib.h>
 // time
 #include <time.h>
-
-pid_t fatherPid_saida;
-time_t latest_creation_time = 0;
-char latest_file_name[256];
-void saidaDeDados(char *directoryPath, char *outputPath, long frequency, pid_t pid)
+int numberOfLine = 0;
+void saidaDeDados(char *directoryPath, char *outputPath, long frequency)
 {
-
-    fatherPid_saida = pid;
-    directoryPath = insert_at_start_saida(directoryPath, "../");
-
-    outputPath = insert_at_start_saida(outputPath, "../");
-
-    Sensors *ptrSensores = (Sensors *)malloc(1 * sizeof(Sensors));
-
+    FinalSensor *ptrSensores = (FinalSensor *)malloc(1 * sizeof(FinalSensor));
+    directoryPath = insert_at_start(directoryPath, "../");
     if (ptrSensores == NULL)
     {
         printf("Erro ao criar a array dinâmico de estruturas\n");
         exit(0);
     }
+    int lastFile = 0;
 
+    while (1)
+    {
+        findFile(directoryPath, &lastFile, ptrSensores);
+        // createOutputFile(outputPath, ptrSensores);
+        usleep(frequency * 1000);
+    }
 
     doOutput(ptrSensores, directoryPath, outputPath, frequency);
-
 }
 
-int compare(const void *a, const void *b) {
+int compare(const void *a, const void *b)
+{
     return strcmp(*(const char **)a, *(const char **)b);
 }
 
@@ -79,17 +76,20 @@ char *insert_at_end(char *original, char *to_insert)
     return new_string;
 }
 
-
-void* doOutput(Sensors *ptrSensores, char *directoryPath, char *outputPath, long frequency) {
-    while (1) {
+void *doOutput(Sensors *ptrSensores, char *directoryPath, char *outputPath, long frequency)
+{
+    while (1)
+    {
         DIR *dir;
         struct dirent *entry;
         struct stat file_stat;
         dir = opendir(directoryPath);
         char **files = NULL;
         int num_files = 0;
-        while ((entry = readdir(dir)) != NULL) {
-            if (entry->d_type == DT_REG) {
+        while ((entry = readdir(dir)) != NULL)
+        {
+            if (entry->d_type == DT_REG)
+            {
                 // Regular file
                 num_files++;
                 files = (char **)realloc(files, num_files * sizeof(char *));
@@ -100,21 +100,19 @@ void* doOutput(Sensors *ptrSensores, char *directoryPath, char *outputPath, long
 
         qsort(files, num_files, sizeof(char *), compare);
 
-                directoryPath = insert_at_end(directoryPath, latest_file_name);
-                directoryPath = insert_at_end(directoryPath, ".txt");
-                int const NUM_SENSORS = numberOfLines_saida(directoryPath);
-                createSensor(ptrSensores, directoryPath);
+        directoryPath = insert_at_end(directoryPath, latest_file_name);
+        directoryPath = insert_at_end(directoryPath, ".txt");
+        int const NUM_SENSORS = numberOfLines_saida(directoryPath);
+        createSensor(ptrSensores, directoryPath);
 
-                serializeAllSensors(ptrSensores, outputPath, NUM_SENSORS);
+        serializeAllSensors(ptrSensores, outputPath, NUM_SENSORS);
 
-                freeSensor(ptrSensores, NUM_SENSORS);
-
+        freeSensor(ptrSensores, NUM_SENSORS);
 
         usleep(frequency / 1000);
     }
     return NULL;
 }
-
 
 char *insert_at_start_saida(char *original, char *to_insert)
 {
@@ -135,182 +133,93 @@ char *insert_at_start_saida(char *original, char *to_insert)
     return new_string;
 }
 
-
-int numberOfLines_saida(char *path)
+void createFinalSensor(FinalSensor *ptrSensores, char *fileName, char *directoryPath)
 {
-    FILE *file = fopen(path, "r");
-    if (file == NULL)
+    fileName = insert_at_start(fileName, "/");
+    char *path = (char *)malloc(100 * sizeof(char));
+    strcpy(path, directoryPath);
+    strcat(path, fileName);
+    printf("%s\n", path);
+    if (numberOfLine == 0)
     {
-        perror("Erro ao abrir o ficheiro");
-        return 0;
-    }
-    int lines = 1;
-    char c;
-    while ((c = fgetc(file)) != EOF)
-    {
-        if (c == '\n')
+        numberOfLine = numberOfLines(path);
+        FinalSensor *temp = (FinalSensor *)realloc(ptrSensores, numberOfLine * sizeof(FinalSensor));
+        if (temp == NULL)
         {
-            lines++;
+            printf("Erro ao criar a array dinâmico de estruturas\n");
+            free(ptrSensores);
+            exit(0);
         }
+        ptrSensores = temp;
     }
-    fclose(file);
-    return lines;
-}
-
-void createSensor(Sensors *ptr, char *path)
-{
-    findFile(path);
     FILE *fp = fopen(path, "r");
     if (fp == NULL)
     {
         printf("Erro ao abrir o ficheiro\n");
         exit(0);
     }
-    char line[100];
-    int i = 0;
-    unsigned short id;
+    unsigned int id;
+    unsigned int write_counter;
     char type[30];
     char unit[20];
-    unsigned int mediana;
-    unsigned short write_counter;
-    Sensors s;
+    float median;
+    FinalSensor s;
+    while (fscanf(fp, "%d,%d,%[^,],%[^,],%e#\n", &id, &write_counter, type, unit, &median) == 5)
+    {
+        s.sensor_type = (char *)calloc(strlen(type) + 1, sizeof(char));
+        s.unit = malloc(strlen(unit) + 1);
+        s.id = id;
+        s.write_counter = write_counter;
+        s.median = median;
+        strcpy(s.sensor_type, type);
+        strcpy(s.unit, unit);
 
-    while (fscanf(fp, "%hd,%hd,%[^#],%[^#],%d\n", &id, &write_counter, type, unit, &mediana) == 5)
-        {
-            s.sensor_type = (char *)calloc(strlen(type) + 1, sizeof(char));
-            s.unit = malloc(strlen(unit) + 1);
-            s.id = id;
-            strcpy(s.sensor_type, type);
-            strcpy(s.unit, unit);
-            s.write_counter = write_counter;
-            s.median = mediana;
-
-            *ptr = s;
-            ptr++;
-        }
+        *ptrSensores = s;
+        ptrSensores++;
+    }
     fclose(fp);
-}
-
-void serializeAllSensors(Sensors *ptrSensores, char *path, int NUM_SENSORS){
-    findFile(path);
-
-    char *output[NUM_SENSORS];
-     for (int i = 0; i < NUM_SENSORS; i++)
-     {
-            serializeSaida(&ptrSensores[i], path, &output[i]);
-     }
-     createSaidaFile(path, output, NUM_SENSORS);
-}
-
-void createSaidaFile(char *directoryPath, char **output, int numberOfSensors)
-{
-    time_t now;
-    struct tm *local;
-    char buffer[80];
-    time(&now);
-    local = localtime(&now);
-    strftime(buffer, 100, "/%Y%m%d%H%M%S_output.txt", local);
-    int i;
-
-    char *path = (char *)calloc(strlen(directoryPath) + 25, sizeof(char));
-    if (path == NULL)
-    {
-        printf("Erro ao alocar memória\n");
-        killProcess_saida(fatherPid_saida, SIGUSR1);
-    }
-    if (!doesDirectoryExist_saida(directoryPath))
-        mkdir(directoryPath, 0777);
-    strcpy(path, directoryPath);
-    strcat(path, buffer);
-    FILE *file = fopen(path, "a+");
-    if (file == NULL)
-    {
-        printf("Caminho invalido: %s\n", path);
-        killProcess_saida(fatherPid_saida, SIGUSR1);
-    }
-    for (i = 0; i < numberOfSensors; i++)
-    {
-        if (i == numberOfSensors - 1)
-        {
-            char *lastChar = strrchr(*output, '\n');
-            if (lastChar != NULL)
-                *lastChar = '\0';
-        }
-
-        fprintf(file, *output);
-        **output++;
-    }
-    fclose(file);
     free(path);
+    printf("Ficheiro lido com sucesso\n");
 }
 
-void serializeSaida(Sensors *sensor, char *directoryPath, char **output)
-{
-    char str[100];
-    int mediana = sensor->median;
-
-    char med[37];
-    sprintf(str, "%d", mediana);
-
-    int position = strlen(med) - 1;
-    memmove(str + position + 1, str + position, strlen(str) - position);
-    str[position] = '.';
-
-    sprintf(str, "ID: %d, Write Counter: %d, Sensor type: %s, Sensor Unit:%s, Mediana: %s#\n", sensor->id, sensor->write_counter, sensor->sensor_type, sensor->unit, med);
-
-    *output = (char *)calloc(strlen(str), sizeof(char));
-    if (*output == NULL)
-    {
-        printf("Erro ao alocar memória\n");
-        killProcess_saida(fatherPid_saida, SIGUSR1);
-    }
-    strcpy(*output, str);
-}
-
-
-void findFile(char *path)
+void findFile(char *path, int *lastFile, FinalSensor *ptrSensores)
 {
     DIR *d;
     struct dirent *dir;
     d = opendir(path);
+    char *file;
+    int temp, lastFileNumber = *lastFile;
+    char number[15];
     if (d)
     {
         while ((dir = readdir(d)) != NULL)
         {
-            char *file = dir->d_name;
-            if (file[0] != '.')
+            file = dir->d_name;
+            if (file[14] == '_')
+            {
                 printf("%s\n", file);
+                if (lastFileNumber == 0)
+                    createFinalSensor(ptrSensores, file, path);
+                else
+                {
+                    strncpy(number, file, 14);
+                    number[14] = '\0';
+                    int temp = atoi(number);
+                    if (temp > lastFileNumber)
+                    {
+                        lastFileNumber = temp;
+                        createFinalSensor(ptrSensores, file, path);
+                    }
+                }
+            }
         }
+        if (lastFileNumber == 0)
+            *lastFile = temp;
         closedir(d);
     }
-}
-
-int doesDirectoryExist_saida(const char *path)
-{
-    struct stat statbuf;
-    if (stat(path, &statbuf) != -1)
+    else
     {
-        if (S_ISDIR(statbuf.st_mode))
-        {
-            return 1;
-        }
+        printf("Cannot open directory %s\n", path);
+        killProcess();
     }
-    return 0;
-}
-
-void freeSensor(Sensors *sensors, int count)
-{
-    for (int i = 0; i < count; i++)
-    {
-        free(sensors[i].sensor_type);
-        free(sensors[i].unit);
-    }
-    free(sensors);
-}
-
-void killProcess_saida()
-{
-    kill(fatherPid_saida, SIGUSR1);
-
-    exit(0);
 }
