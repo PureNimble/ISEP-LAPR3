@@ -108,7 +108,7 @@ public class GraphController {
         return service.filterGraph(originalGraph);
     }
 
-    public Pair<Integer, List<Location>> maximumCapacity(MapGraph<Location, Integer> graph, Location origin, Location destination) {
+    public Pair<Integer, MapGraph<Location, Integer>> maximumCapacity(MapGraph<Location, Integer> graph, Location origin, Location destination) {
         return service.maximumCapacity(graph, origin, destination);
     }
 

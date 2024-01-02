@@ -579,23 +579,20 @@ public class BasketDistributionUI implements Runnable {
             idDestino = Utils.readLineFromConsole("Escreva o ID do HUB de destino: (CT**)").toUpperCase();
         } while ((!idDestino.contains("CT")) || (!hubGraph.validVertex(new Location(idDestino))));
 
-        Pair<Integer, List<Location>> result = graphController.maximumCapacity(hubGraph, new Location(idOrigem), new Location(idDestino));
-        if (result == null) {
-            System.out.println("--------------------------");
-            System.out.println("| Não existem caminhos ! |");
-            System.out.println("--------------------------");
-            return;
-        }
+        Pair<Integer, MapGraph<Location, Integer>> result = graphController.maximumCapacity(hubGraph, new Location(idOrigem), new Location(idDestino));
         System.out.println("Hub de Origem: " + idOrigem);
         System.out.println("Hub de Destino: " + idDestino);
+        if (result == null || result.getFirst() == 0) {
+            System.out.println("----------------------");
+            System.out.println("| Não existe fluxo ! |");
+            System.out.println("----------------------");
+            return;
+        }
         System.out.println("Capacidade Máxima: " + result.getFirst());
-        System.out.println("Caminho: ");
-
-        for (int i = 0; i < result.getSecond().size(); i++) {
-            System.out.print(result.getSecond().get(i).getId());
-            if (i < result.getSecond().size() - 1) {
-                System.out.print(" -> ");
-            }
+        if (Utils.confirm("Deseja ver o grafo?:")) {
+            graphController.generateDataCSV(result.getSecond());
+            String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
+            openGraphViewer(filePath);
         }
     }
 }

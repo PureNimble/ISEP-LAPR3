@@ -762,16 +762,20 @@ public class Algorithms {
         }
     }
 
-    public static <V, E> Pair<Integer, List<V>> fordFulkerson(Graph<V, E> g, V source, V sink) {
+    public static <V, E> Pair<Integer, Map<V, Map<V, Integer>>> fordFulkerson(Graph<V, E> g, V source, V sink) {
         int maxFlow = 0;
-        List<V> maxFlowPath = new ArrayList<>();
 
         Map<V, Map<V, Integer>> residualGraph = new HashMap<>();
         for (V vertex : g.vertices()) {
             residualGraph.put(vertex, new HashMap<>());
             for (V adjVertex : g.adjVertices(vertex)) {
                 Edge<V, E> edge = g.edge(vertex, adjVertex);
-                residualGraph.get(vertex).put(adjVertex, (Integer) edge.getWeight());
+                int weight = (Integer) edge.getWeight();
+                residualGraph.get(vertex).put(adjVertex, weight);
+                if (!residualGraph.containsKey(adjVertex)) {
+                    residualGraph.put(adjVertex, new HashMap<>());
+                }
+                residualGraph.get(adjVertex).put(vertex, weight);
             }
         }
 
@@ -789,23 +793,26 @@ public class Algorithms {
 
             for (V v = sink; v != source; v = parent.get(v)) {
                 V u = parent.get(v);
-                residualGraph.get(u).put(v, residualGraph.get(u).get(v) - pathFlow);
-                residualGraph.get(v).put(u, residualGraph.get(v).getOrDefault(u, 0) + pathFlow);
+                int residualCapacity = residualGraph.get(u).get(v);
+                int reverseCapacity = residualGraph.get(v).get(u);
+                if (pathFlow <= residualCapacity) {
+                    residualGraph.get(u).put(v, residualCapacity - pathFlow);
+                    residualGraph.get(v).put(u, reverseCapacity + pathFlow);
+                }
             }
 
             maxFlow += pathFlow;
-            maxFlowPath = path;
         }
 
-        return new Pair<>(maxFlow, maxFlowPath);
+        return new Pair<>(maxFlow, residualGraph);
     }
-    
+
     private static <V> boolean bfs(Map<V, Map<V, Integer>> residualGraph, V source, V sink, Map<V, V> parent) {
         Set<V> visited = new HashSet<>();
         Queue<V> queue = new LinkedList<>();
         queue.add(source);
         visited.add(source);
-    
+
         while (!queue.isEmpty()) {
             V vertex = queue.poll();
             for (Map.Entry<V, Integer> entry : residualGraph.get(vertex).entrySet()) {
@@ -821,7 +828,7 @@ public class Algorithms {
                 }
             }
         }
-    
+
         return false;
     }
 }
