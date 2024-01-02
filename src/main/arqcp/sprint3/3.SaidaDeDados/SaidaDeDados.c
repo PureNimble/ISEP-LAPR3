@@ -24,6 +24,8 @@
 #include <termios.h> // Contains POSIX terminal control definitions
 #include <unistd.h>  // write(), read(), close()
 #include <sys/stat.h>
+#include <pthread.h>
+
 
 // malloc
 #include <stdlib.h>
@@ -33,6 +35,8 @@ void saidaDeDados(char *directoryPath, char *outputPath, long frequency)
 {
     directoryPath = insert_at_start(directoryPath, "../");
 
+    outputPath = insert_at_start(outputPath, "../");
+
     Sensors *ptrSensores = (Sensors *)malloc(1 * sizeof(Sensors));
 
     if (ptrSensores == NULL)
@@ -40,11 +44,68 @@ void saidaDeDados(char *directoryPath, char *outputPath, long frequency)
         printf("Erro ao criar a array dinâmico de estruturas\n");
         exit(0);
     }
-    createSensor(ptrSensores, directoryPath);
 
-    // printAllSensors(ptrSensores, NUM_SENSORS);
 
-    // freeSensors(ptrSensores, NUM_SENSORS);
+    doOutput(ptrSensores, directoryPath, outputPath, frequency);
+
+}
+
+char *insert_at_end(char *original, char *to_insert)
+{
+    // Allocate memory for the new string
+    char *new_string = malloc(strlen(original) + strlen(to_insert) + 1);
+    if (new_string == NULL)
+    {
+        fprintf(stderr, "Failed to allocate memory\n");
+        killProcess(fatherPid, SIGUSR1);
+
+        exit(1);
+    }
+
+    // Copy the strings into the new string
+    strcpy(new_string, original);
+    strcat(new_string, to_insert);
+
+    return new_string;
+}
+
+void* doOutput(Sensors *ptrSensores, char *directoryPath, char *outputPath, long frequency) {
+    while (1) {
+        time_t latest_creation_time = 0;
+        char latest_file_name[256];
+
+        if (ftw(directoryPath, process_file, 10) == -1) {
+                perror("ftw");
+                exit(EXIT_FAILURE);
+            }
+
+            if (latest_creation_time == 0) {
+                printf("No files found in the directory.\n");
+            } else {
+
+                directoryPath = insert_at_end(directoryPath, latest_file_name);
+                directoryPath = insert_at_end(directoryPath, ".txt");
+                createSensor(ptrSensores, directoryPath);
+
+                serializeAllSensors(ptrSensores, NUM_SENSORS);
+
+                freeSensors(ptrSensores, NUM_SENSORS);
+
+            }
+        usleep(frequency / 1000);
+    }
+    return NULL;
+}
+
+int process_file(const char *file_path, const struct stat *info, const int typeflag, struct FTW *pathinfo) {
+    if (typeflag == FTW_F) {  // Only process regular files
+        if (info->st_ctime > latest_creation_time) {
+            latest_creation_time = info->st_ctime;
+            strncpy(latest_file_name, file_path, sizeof(latest_file_name) - 1);
+            latest_file_name[sizeof(latest_file_name) - 1] = '\0';
+        }
+    }
+    return 0;
 }
 
 char *insert_at_start(char *original, char *to_insert)
@@ -88,10 +149,10 @@ int numberOfLines(char *path)
     return lines;
 }
 
-void createSensor(Sensors *ptrSensores, char *path)
+void createSensor(Sensors *ptr, char *path)
 {
     findFile(path);
-    /* FILE *fp = fopen(directoryPath, "r");
+    FILE *fp = fopen(directoryPath, "r");
     if (fp == NULL)
     {
         printf("Erro ao abrir o ficheiro\n");
@@ -99,33 +160,30 @@ void createSensor(Sensors *ptrSensores, char *path)
     }
     char line[100];
     int i = 0;
-    while (fgets(line, sizeof(line), fp))
-    {
-        char *token = strtok(line, ",");
-        ptrSensores[i].id = atoi(token);
-        token = strtok(NULL, ",");
-        ptrSensores[i].sensor_type = token;
-        token = strtok(NULL, ",");
-        ptrSensores[i].unit = token;
-        token = strtok(NULL, ",");
-        ptrSensores[i].timeout = atoi(token);
-        token = strtok(NULL, ",");
-        ptrSensores[i].window_len = atoi(token);
-        token = strtok(NULL, ",");
-        ptrSensores[i].buffer_size = atoi(token);
-        ptrSensores[i].buffer_circular = (int *)malloc(ptrSensores[i].buffer_size * sizeof(int));
-        ptrSensores[i].median_array = (int *)malloc(ptrSensores[i].window_len * sizeof(int));
-        ptrSensores[i].buffer_read = 0;
-        ptrSensores[i].buffer_write = 0;
-        ptrSensores[i].write_counter = 0;
-        ptrSensores[i].medianIndex = 0;
-        ptrSensores[i].isError = false;
-        i++;
-    }
-    fclose(fp); */
+    unsigned short id;
+    char type[30];
+    char unit[20];
+    unsigned int mediana;
+    unsigned short write_counter;
+    Sensors s;
+
+    while (fscanf(fp, "%hd,%hd,%[^#],%[^#],%d\n", &id, &write_counter, type, unit, &mediana) == 5)
+        {
+            s.sensor_type = (char *)calloc(strlen(type) + 1, sizeof(char));
+            s.unit = malloc(strlen(unit) + 1);
+            s.id = id;
+            strcpy(s.sensor_type, type);
+            strcpy(s.unit, unit);
+            s.write_counter = write_counter;
+            s.median = mediana;
+
+            *ptr = s;
+            ptr++;
+        }
+    fclose(fp);
 }
 
-void printAllSensors(Sensors *ptrSensores, char *path, int NUM_SENSORS){
+void serializeAllSensors(Sensors *ptrSensores, char *path, int NUM_SENSORS){
     findFile(path);
 
     char *output[NUM_SENSORS];
@@ -178,27 +236,20 @@ void createSaidaFile(char *directoryPath, char **output, int numberOfSensors)
     free(path);
 }
 
-void serializeSaida(Sensor *sensor, char *directoryPath, char **output)
+void serializeSaida(Sensors *sensor, char *directoryPath, char **output)
 {
     char string[100];
-    if (sensor->isError)
-        sprintf(string, "ID: %d, Write Counter: %d, Sensor type: %s, Sensor Unit:%s, %s\n", sensor->id, sensor->write_counter, sensor->sensor_type, sensor->unit, "error#");
-    else
-    {
-        int mediana = 0, i;
+    int mediana = sensor->median;
 
-        for (i = 0; i < sensor->medianIndex; i++)
-            mediana += sensor->median_array[i];
+    char med[100];
+    sprintf(str, "%d", mediana);
 
-        char med[100];
-        sprintf(str, "%d", mediana);
+    int position = strlen(med) - 1;
+    memmove(str + position + 1, str + position, strlen(str) - position);
+    str[position] = '.';
 
-        int position = strlen(med) - 1;
-        memmove(str + position + 1, str + position, strlen(str) - position);
-        str[position] = '.';
+    sprintf(string, "ID: %d, Write Counter: %d, Sensor type: %s, Sensor Unit:%s, Mediana: %s#\n", sensor->id, sensor->write_counter, sensor->sensor_type, sensor->unit, med);
 
-        sprintf(string, "ID: %d, Write Counter: %d, Sensor type: %s, Sensor Unit:%s, Mediana: %s#\n", sensor->id, sensor->write_counter, sensor->sensor_type, sensor->unit, med);
-    }
     *output = (char *)calloc(strlen(string), sizeof(char));
     if (*output == NULL)
     {
@@ -206,7 +257,6 @@ void serializeSaida(Sensor *sensor, char *directoryPath, char **output)
         killProcess(fatherPid, SIGUSR1);
     }
     strcpy(*output, string);
-    sensor->isError = false;
 }
 
 
