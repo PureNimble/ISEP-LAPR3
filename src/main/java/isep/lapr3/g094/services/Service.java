@@ -507,10 +507,7 @@ public class Service {
                     topDepartTimes.add(departTimes.get(i).get(j));
                     topAfterChargeTimes.add(afterChargeTimes.get(i).get(j));
                     topDescargaTimes.add(descargaTimes.get(i).get(j));
-                    Integer distance = locationDistance.get(j);
-                    if (distance != null) {
-                        topDistance += distance;
-                    }
+                    topDistance = locationDistance.get(i);
                 }
             }
         }

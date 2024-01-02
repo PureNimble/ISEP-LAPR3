@@ -249,7 +249,8 @@ public class Algorithms {
         LocalTime[] departTime = new LocalTime[vertices];
         LocalTime[] afterChargeTime = new LocalTime[vertices];
         LocalTime[] descargaTime = new LocalTime[vertices];
-        shortestPathDijkstraConstrained(g, vOrig, ce, sum, subtract, zero, visited, pathKeys, arriveTime, departTime, afterChargeTime, descargaTime, dist, autonomy, time, velocity, maxHour);
+        E[] autonomies = (E[]) new Object[g.numVertices()];
+        shortestPathDijkstraConstrained(g, vOrig, ce, sum, subtract, zero, visited, pathKeys, arriveTime, departTime, afterChargeTime, descargaTime, dist, autonomy, time, velocity, maxHour, autonomies);
 
         dists.clear();
         paths.clear();
@@ -291,7 +292,7 @@ public class Algorithms {
 
     private static <V, E> void shortestPathDijkstraConstrained(Graph<V, E> g, V vOrig,
             Comparator<E> ce, BinaryOperator<E> sum, BinaryOperator<E> subtract, E zero,
-            boolean[] visited, V[] pathKeys, LocalTime[] arriveTimes, LocalTime[] departTimes, LocalTime[] afterChargeTimes, LocalTime[] descargaTimes, E[] dist, E autonomy, LocalTime time, double velocity, LocalTime maxHour) {
+            boolean[] visited, V[] pathKeys, LocalTime[] arriveTimes, LocalTime[] departTimes, LocalTime[] afterChargeTimes, LocalTime[] descargaTimes, E[] dist, E autonomy, LocalTime time, double velocity, LocalTime maxHour, E[] autonomies) {
         
         E duringAutonomy = autonomy;
         double gainedAutonomyPerMinute = 1016.6666666667;
@@ -308,14 +309,16 @@ public class Algorithms {
 
         while (vOrig != null) {
             visited[g.key(vOrig)] = true;
+            LocalTime currentTime = departTimes[g.key(vOrig)];
             
             for (V vAdj : g.adjVertices(vOrig)) {
                 if (vAdj.equals(vOrig)) {
                     continue;
                 }
-                LocalTime currentTime = time;
+                time = currentTime;                
                 LocalTime pathTime = LocalTime.of(0, 0);
                 LocalTime pathTimeMax = LocalTime.of(20, 0);
+                Boolean charged = false;
                 E edgeWeight = g.edge(vOrig, vAdj).getWeight();
                 if (ce.compare(edgeWeight, autonomy) > 0) {
                     continue;
@@ -325,6 +328,7 @@ public class Algorithms {
                     time = time.plus(Duration.ofMinutes((long) (Math.round((float) ((Integer) subtract.apply(autonomy, duringAutonomy)).intValue()) / gainedAutonomyPerMinute)));
                     pathTime = pathTime.plus(Duration.ofMinutes((long) (Math.round((float) ((Integer) subtract.apply(autonomy, duringAutonomy)).intValue()) / gainedAutonomyPerMinute)));
                     duringAutonomy = autonomy;
+                    charged = true;
                 }
                 LocalTime timeAfterCharge = time;
                 time = time.plus(Duration.ofMinutes((long) (60 * ((double) ((Integer) edgeWeight).intValue() / 1000 / velocity))));
@@ -336,7 +340,7 @@ public class Algorithms {
                     continue;
                 }
                 LocalTime arrivedTime = time;
-                if (((Location) vAdj).isHub()) {
+                if (((Location) vAdj).isHub() && ((Location) vAdj).getEndHour().isAfter(time)) {
                     time = time.plus(Duration.ofMinutes(new Random().nextInt(10) + 1));
                     pathTime = pathTime.plus(Duration.ofMinutes(new Random().nextInt(10) + 1));
                 }
@@ -353,18 +357,28 @@ public class Algorithms {
                     departTimes[g.key(vAdj)] = time;
 
                     duringAutonomy = subtract.apply(duringAutonomy, edgeWeight);
+                    autonomies[g.key(vAdj)] = duringAutonomy;
                 }
             }
 
             vOrig = null;
             LocalTime minArriveTime = null;
+            LocalTime prevOrigArriveTime = null;
+
             for (V v : g.vertices()) {
                 if (visited[g.key(v)] == false && arriveTimes[g.key(v)] != null) {
-                    if (vOrig == null || arriveTimes[g.key(v)].isBefore(minArriveTime)) {
+                    if ((vOrig == null || arriveTimes[g.key(v)].isBefore(minArriveTime)) && 
+                        (prevOrigArriveTime == null || !arriveTimes[g.key(v)].isBefore(prevOrigArriveTime))) {
                         minArriveTime = arriveTimes[g.key(v)];
                         vOrig = v;
                     }
                 }
+            }
+
+            prevOrigArriveTime = minArriveTime;
+            if (vOrig != null) {
+                duringAutonomy = autonomies[g.key(vOrig)];
+                time = departTimes[g.key(vOrig)];
             }
         }
     }
