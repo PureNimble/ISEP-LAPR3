@@ -514,6 +514,42 @@ public class MainTest {
         assertNull(newList);
     }
 
+    @Test
+    void testDeliveryCircuitPathHubsNotNegative(){
+        System.out.println("Testing DeliveryCircuitPathHubsNotNegative...");
+        int nHubs = -1;
+        List<Location> path = new ArrayList<>();
+        path=service.deliveryCircuitPath("CT1", nHubs, true);
+        assertNull(path);
+    }
+
+    @Test
+    void testDeliveryCircuitPathIdDoesNotExist(){
+        System.out.println("Testing DeliveryCircuitPathIdDoesNotExist...");
+        int nHubs = 6;
+        List<Location> path = new ArrayList<>();
+        path=service.deliveryCircuitPath("NaoExiste", nHubs, true);
+        assertNull(path);
+    }
+
+    @Test
+    void testDeliveryCircuitPathHubsCanNotBeGreaterThan7(){
+        System.out.println("Testing DeliveryCircuitPathHubsCanNotBeGreaterThan7...");
+        int nHubs = 8;
+        List<Location> path = new ArrayList<>();
+        path=service.deliveryCircuitPath("CT1", nHubs, true);
+        assertNull(path);
+    }
+
+    @Test
+    void testDeliveryCircuitPathHubsCanNotBeLessThan5(){
+        System.out.println("Testing DeliveryCircuitPathHubsCanNotBeLessThan5...");
+        int nHubs = 4;
+        List<Location> path = new ArrayList<>();
+        path=service.deliveryCircuitPath("CT1", nHubs, true);
+        assertNull(path);
+    }
+
     /*
      * @Test
      * void testGetSC() {
