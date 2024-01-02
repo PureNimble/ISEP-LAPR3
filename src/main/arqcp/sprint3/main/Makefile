@@ -20,7 +20,7 @@ all: $(EXE)
 
 # Rule to link object files to create executable
 $(EXE): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 # Rules for generating object files from source files
 %.o: %.c

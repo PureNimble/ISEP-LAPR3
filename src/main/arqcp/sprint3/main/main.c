@@ -14,6 +14,17 @@
 #include <sys/stat.h>
 #include <ctype.h>
 #include <string.h>
+#include <signal.h>
+#include <string.h>
+#include <stdlib.h>
+
+pid_t pids[2];
+void handleSignal(int signo, siginfo_t *sinfo, void *context)
+{
+	kill(pids[1], SIGKILL);
+
+	exit(0);
+}
 
 int main()
 {
@@ -46,7 +57,7 @@ int main()
 	switch (output)
 	{
 	case 1:
-		pid_t pids[2];
+		pid_t fatherPid = getpid();
 		for (int i = 0; i < 2; i++)
 		{
 			pids[i] = fork();
@@ -60,7 +71,7 @@ int main()
 				switch (i)
 				{
 				case 0:
-					processadorDeDados(value_path, config_path, saida_path, number_of_readings);
+					processadorDeDados(value_path, config_path, saida_path, number_of_readings, fatherPid);
 					break;
 				case 1:
 					saidaDeDados(saida_path, farm_coordinator, frequency);
@@ -70,7 +81,15 @@ int main()
 				}
 			}
 		}
+
+		struct sigaction act;
+		memset(&act, 0, sizeof(struct sigaction));
+		sigemptyset(&act.sa_mask);
+		act.sa_sigaction = handleSignal;
+		sigaction(SIGUSR1, &act, NULL);
+
 		scanf("%i", &output);
+
 		kill(pids[0], SIGKILL);
 		kill(pids[1], SIGKILL);
 

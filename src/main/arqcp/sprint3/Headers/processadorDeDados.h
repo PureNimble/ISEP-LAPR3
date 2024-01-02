@@ -1,6 +1,8 @@
 #ifndef PROCESSADORDEDADOS_H
 #define PROCESSADORDEDADOS_H
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 // Estrutura dos sensores
 typedef struct
 {
@@ -8,8 +10,8 @@ typedef struct
     int *median_array;                            // 8 bytes
     char *sensor_type;                            // 8 bytes
     char *unit;                                   // 8 bytes
-    unsigned int instate_temporal_ultima_leitura; // 4 bytes
-    unsigned int timeout;                         // 4 bytes
+    int instate_temporal_ultima_leitura;          // 4 bytes
+    int timeout;                                  // 4 bytes
     unsigned int window_len;                      // 4 bytes
     unsigned int buffer_size;                     // 4 bytes
     int buffer_read;                              // 4 bytes
@@ -21,7 +23,7 @@ typedef struct
 } Sensor;
 
 // main function
-void processadorDeDados(char *valuePath, char *configPath, char *outputPath, int numberOfReads);
+void processadorDeDados(char *valuePath, char *configPath, char *outputPath, int numberOfReads, pid_t fatherPid);
 // get the number of lines in a file (configFile)
 int numberOfLines(char *path);
 // create sensors
@@ -55,5 +57,6 @@ void serialize(Sensor *sensor, char *directoryPath, char **output);
 void createOutputFile(char *directoryPath, char **output, int numberOfSensors);
 
 char *insert_at_start(char *original, char *to_insert);
+void killProcess();
 
 #endif

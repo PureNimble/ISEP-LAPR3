@@ -14,10 +14,21 @@
 // time
 #include <time.h>
 
+#include <math.h>
+#include <limits.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <ctype.h>
+#include <string.h>
+
 #include "../Headers/processadorDeDados.h"
 #include "../Headers/asm.h"
-void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath, int numberOfReads)
+
+pid_t fatherPid;
+void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath, int numberOfReads, pid_t pid)
 {
+    fatherPid = fatherPid;
     configPath = insert_at_start(configPath, "../");
     directoryPath = insert_at_start(directoryPath, "../");
 
@@ -27,15 +38,14 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
     if (ptrSensores == NULL)
     {
         printf("Erro ao criar a array dinâmico de estruturas\n");
-        exit(0);
     }
     createSensors(ptrSensores, configPath);
 
-    /* int serial_port = open(valuesPath, O_RDWR);
+    int serial_port = open(valuesPath, O_RDWR);
     if (serial_port < 0)
     {
         printf("Erro %i ao abir: %s\n", errno, strerror(errno));
-        // freeSensors(sensors, numLines);
+        freeSensors(ptrSensores, NUM_SENSORS);
         return;
     }
 
@@ -44,21 +54,23 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
     {
         printf("Erro %i no tcgetattr: %s\n", errno, strerror(errno));
         close(serial_port);
-        // freeSensors(sensors, numLines);
+        freeSensors(ptrSensores, NUM_SENSORS);
         return;
     }
-    cfsetispeed(&tty, B9600); */
+    cfsetispeed(&tty, B9600);
     int i;
     while (1)
     {
         printf("A processar dados...\n");
         for (i = 0; i < numberOfReads; i++)
         {
-            char *data = test(); // getData(serial_port);
+            char *data = getData(serial_port);
             int *info = extractInfo(data);
-            printf("id: %i, x: %i, %i\n", info[0], info[1], info[2]);
+            printf("id: %i, valor: %i, time:%i\n", info[0], info[1], info[2]);
+            fflush(stdout);
             insertInfo(info, ptrSensores, NUM_SENSORS);
-            //  free(data);
+            free(data);
+            free(info);
         }
         char *output[NUM_SENSORS];
         for (i = 0; i < NUM_SENSORS; i++)
@@ -70,7 +82,7 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
         printAllSensors(ptrSensores, NUM_SENSORS);
     }
 
-    // close(serial_port);
+    close(serial_port);
 }
 
 void freeSensors(Sensor *sensors, int count)
@@ -91,6 +103,7 @@ char *getData(int serial_port)
     if (read_buf == NULL)
     {
         fprintf(stderr, "Failed to allocate memory for read_buf.\n");
+        killProcess(fatherPid, SIGUSR1);
         exit(1);
     }
     do
@@ -118,6 +131,8 @@ int *extractInfo(char *data)
             printf("Erro ao extrair o token %s\n", tokens[i]);
             return NULL;
         }
+        if (i == 1)
+            output[i] = round(output[i] / 100.0);
     }
     return output;
 }
@@ -128,7 +143,7 @@ void createSensors(Sensor *ptr, char *configPath)
     if (directory == NULL)
     {
         printf("Erro ao alocar memória\n");
-        exit(0);
+        killProcess(fatherPid, SIGUSR1);
     }
     removeFilenameFromPath(directory);
     if (!doesDirectoryExist(directory))
@@ -138,16 +153,19 @@ void createSensors(Sensor *ptr, char *configPath)
     FILE *file = fopen(configPath, "a+");
     if (isFileValid == -1)
     {
-        fprintf(file, "1#soil_humidity#percentage#50#10#40000\n");
-        fprintf(file, "2#soil_humidity#percentage#60#15#50000\n");
-        fprintf(file, "3#atmospheric_humidity#percentage#70#10#20000\n");
-        fprintf(file, "4#atmospheric_humidity#percentage#80#20#20000\n");
-        fprintf(file, "5#atmospheric_humidity#percentage#50#15#20000\n");
-        fprintf(file, "6#atmospheric_humidity#percentage#50#10#50000\n");
-        fprintf(file, "7#atmospheric_temperature#celsius#40#10#80000\n");
+        fprintf(file, "1#soil_humidity#percentage#50#10#400000\n");
+        fprintf(file, "2#soil_humidity#percentage#60#15#500000\n");
+        fprintf(file, "3#atmospheric_humidity#percentage#70#10#2000000\n");
+        fprintf(file, "4#atmospheric_humidity#percentage#80#20#2000000\n");
+        fprintf(file, "5#atmospheric_humidity#percentage#50#15#200000\n");
+        fprintf(file, "6#atmospheric_humidity#percentage#50#10#5000000\n");
+        fprintf(file, "7#atmospheric_temperature#celsius#40#10#800000\n");
         fprintf(file, "8#atmospheric_temperature#celsius#50#14#400000\n");
-        fprintf(file, "9#atmospheric_temperature#celsius#50#13#20000\n");
-        fprintf(file, "10#atmospheric_temperature#celsius#50#12#20000");
+        fprintf(file, "9#atmospheric_temperature#celsius#50#13#2000000\n");
+        fprintf(file, "10#atmospheric_temperature#celsius#50#12#200000");
+        fflush(file);
+        fclose(file);
+        killProcess(fatherPid, SIGUSR1);
     }
 
     unsigned short id;
@@ -169,17 +187,17 @@ void createSensors(Sensor *ptr, char *configPath)
         if (buffer_circular == NULL)
         {
             printf("Erro ao alocar memória\n");
-            exit(0);
+            killProcess(fatherPid, SIGUSR1);
         }
         s.buffer_circular = buffer_circular;
         int *median_array = (int *)calloc(buffer_size - window_len + 1, sizeof(int));
         if (median_array == NULL)
         {
             printf("Erro ao alocar memória\n");
-            exit(0);
+            killProcess(fatherPid, SIGUSR1);
         }
         s.median_array = median_array;
-        s.instate_temporal_ultima_leitura = 0;
+        s.instate_temporal_ultima_leitura = INT_MIN;
         s.timeout = timeout;
         s.write_counter = 0;
         s.window_len = window_len;
@@ -187,6 +205,7 @@ void createSensors(Sensor *ptr, char *configPath)
         s.buffer_read = 0;
         s.buffer_write = 0;
         s.medianIndex = 0;
+        s.isError = false;
 
         *ptr = s;
         ptr++;
@@ -208,12 +227,12 @@ void insertInfo(int *info, Sensor *sensors, int count)
         return;
     if (sensors[sensorIndex].isError)
         return;
-    enqueue_value(sensors[sensorIndex].buffer_circular, sensors[sensorIndex].buffer_size, &sensors[sensorIndex].buffer_read, &sensors[sensorIndex].buffer_write, info[1]);
     int lastTime = sensors[sensorIndex].instate_temporal_ultima_leitura;
-    if (info[2] - lastTime > sensors[sensorIndex].timeout)
+    int timeout = info[2] - lastTime;
+    enqueue_value(sensors[sensorIndex].buffer_circular, sensors[sensorIndex].buffer_size, &sensors[sensorIndex].buffer_read, &sensors[sensorIndex].buffer_write, info[1]);
+    sensors[sensorIndex].instate_temporal_ultima_leitura = info[2];
+    if (timeout > sensors[sensorIndex].timeout)
         sensors[sensorIndex].isError = true;
-    else
-        sensors[sensorIndex].instate_temporal_ultima_leitura = info[2] - lastTime;
 }
 
 int findSensor(int id, Sensor *sensors, int count)
@@ -345,9 +364,10 @@ void serialize(Sensor *sensor, char *directoryPath, char **output)
     if (*output == NULL)
     {
         printf("Erro ao alocar memória\n");
-        exit(0);
+        killProcess(fatherPid, SIGUSR1);
     }
     strcpy(*output, string);
+    sensor->isError = false;
 }
 
 void createOutputFile(char *directoryPath, char **output, int numberOfSensors)
@@ -364,7 +384,7 @@ void createOutputFile(char *directoryPath, char **output, int numberOfSensors)
     if (path == NULL)
     {
         printf("Erro ao alocar memória\n");
-        exit(0);
+        killProcess(fatherPid, SIGUSR1);
     }
     if (!doesDirectoryExist(directoryPath))
         mkdir(directoryPath, 0777);
@@ -374,7 +394,7 @@ void createOutputFile(char *directoryPath, char **output, int numberOfSensors)
     if (file == NULL)
     {
         printf("Caminho invalido: %s\n", path);
-        exit(0);
+        killProcess(fatherPid, SIGUSR1);
     }
     for (i = 0; i < numberOfSensors; i++)
     {
@@ -398,6 +418,8 @@ char *insert_at_start(char *original, char *to_insert)
     if (new_string == NULL)
     {
         fprintf(stderr, "Failed to allocate memory\n");
+        killProcess(fatherPid, SIGUSR1);
+
         exit(1);
     }
 
@@ -406,4 +428,11 @@ char *insert_at_start(char *original, char *to_insert)
     strcat(new_string, original);
 
     return new_string;
+}
+
+void killProcess()
+{
+    kill(fatherPid, SIGUSR1);
+
+    exit(0);
 }

@@ -44,6 +44,9 @@ Thumbs.db
 *.app
 *.war
 
+# ARQCP
+Resultados/
+
 # Large media files
 *.mp4
 *.tiff
