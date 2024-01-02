@@ -421,17 +421,17 @@ public class BasketDistributionUI implements Runnable {
         Duration chargeDuration = Duration.ZERO;
         Duration travDuration = Duration.ZERO;
         for (int i = 1; i < topAfterChargeTimes.size(); i++) {
-            if (!topAfterChargeTimes.get(i).equals(topDepartTimes.get(i-1))) {
-                numCharges++;
-                Duration duration = Duration.between(topDepartTimes.get(i-1), topAfterChargeTimes.get(i));
-                chargeDuration = chargeDuration.plus(duration);
+                if (!topAfterChargeTimes.get(i).equals(topDepartTimes.get(i-1))) {
+                    numCharges++;
+                    Duration duration = Duration.between(topDepartTimes.get(i-1), topAfterChargeTimes.get(i)).abs();                    
+                    chargeDuration = chargeDuration.plus(duration);
+                }
             }
-        }
-        
-        System.out.println("\nNúmero de Carregamentos: " + numCharges);
-        System.out.println("\nDistância Total: " + topDistance + "m");
-        System.out.println("Tempo de carregamento: " + formatDuration(chargeDuration) + "\n");
-        for (int i = 1; i < topDescargaTimes.size(); i++) {
+            
+            System.out.println("\nNúmero de Carregamentos: " + numCharges);
+            System.out.println("\nDistância Total: " + topDistance + "m");
+            System.out.println("Tempo de carregamento: " + formatDuration(chargeDuration) + "\n");
+            for (int i = 1; i < topDescargaTimes.size(); i++) {
             if (!topDescargaTimes.get(i).equals(topArriveTimes.get(i))) {
                 Duration duration = Duration.between(topArriveTimes.get(i), topDescargaTimes.get(i));
                 System.out.println("Tempo de descarga dos cestos no hub " + topPath.get(i).getId() + ": " + formatDuration(duration));
