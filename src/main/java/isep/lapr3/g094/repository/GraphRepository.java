@@ -64,6 +64,7 @@ public class GraphRepository {
         return distance != null ? distance.getWeight() : null;
     }
 
+
     public int getNumLocations(boolean bigGraph) {
         return bigGraph ? this.basketDistribution.numVertices() : this.smallGraph.numVertices();
     }
