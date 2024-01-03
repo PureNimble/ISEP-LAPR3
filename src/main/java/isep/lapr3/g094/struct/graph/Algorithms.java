@@ -837,32 +837,43 @@ public class Algorithms {
                 hubs.add(v);
             }
         }
+
         depthFirstSearchWithHubs(g, vOrig, vDest, n, hubs, new ArrayList<>(Collections.singletonList(vOrig)), paths,
                 new HashSet<>());
         return paths;
     }
 
+    //make the search where the vInitial needs to be also the vDest and i dont want to repeat the hubs and in the nHubs necessary
     public static <V, E> void depthFirstSearchWithHubs(Graph<V, E> g, V v, V vDest, int n, List<V> hubs,
             List<V> path, List<List<V>> paths, Set<V> visited) {
-        visited.add(v); // Mark vertex as visited
-
+        try{
         for (V vAdj : g.adjVertices(v)) {
+
             if (!visited.contains(vAdj)) { // Skip if vertex has been visited
+                n--; // Decrement n
+                visited.add(vAdj);
                 path.add(vAdj);
-                if (hubs.contains(vAdj) && !vAdj.equals(vDest)) {
+                if (hubs.contains(vAdj) && !vAdj.equals(vDest) && n > 0) {
                     n--;
                 }
-                if (n >= 0 && !vAdj.equals(vDest) || vAdj.equals(vDest) && n == 0) {
-                    if (vAdj.equals(vDest) && n == 0) {
+                if (n >= 0 && !vAdj.equals(vDest) || vAdj.equals(vDest)) {
+                    if (vAdj.equals(vDest)) {
                         paths.add(new ArrayList<>(path)); // Add a copy of the current path to paths
                     }
-                    depthFirstSearchWithHubs(g, vAdj, vDest, n, hubs, path, paths, new HashSet<>(visited)); // Pass a copy of visited set
-                }
-                path.remove(path.size() - 1);
-                if (hubs.contains(vAdj) && !vAdj.equals(vDest)) {
-                    n++;
+
+                    //caso n seja 0 e o vAdj nao seja o vDest, entao remove o ultimo elemento do path
+                    if (n == 0 && !vAdj.equals(vDest)) {
+                        path.remove(path.size() - 1);
+                    }
+
+                    depthFirstSearchWithHubs(g, vAdj, vDest, n, hubs, path, paths, visited); // Pass the same visited set
                 }
             }
         }
+        }catch(Exception e){
+            System.out.println(e);
+        }
     }
+
+
 }

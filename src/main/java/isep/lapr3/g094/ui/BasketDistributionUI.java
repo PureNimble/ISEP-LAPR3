@@ -493,10 +493,10 @@ public class BasketDistributionUI implements Runnable {
             nHubs = Utils.readIntegerFromConsole("Escreva o número de hubs (5, 6 e 7): ");
         } while (nHubs < 5 || nHubs > 7);
         List<Location> bestPath = graphController.deliveryCircuitPath(idOrigem, nHubs, bigGraph);
-        if(bestPath.size() < nHubs - 1){
+        /*if(bestPath.size() < nHubs - 1){
             System.out.println("Não foi possível encontrar um caminho!");
             return;
-        }
+        }*/
         System.out.println("Localização de Origem: " + idOrigem);
         System.out.println("Número de Hubs: " + nHubs);
         int totalDistance = 0;
