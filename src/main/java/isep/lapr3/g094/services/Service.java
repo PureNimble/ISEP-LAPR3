@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.BinaryOperator;
@@ -684,5 +685,44 @@ public class Service {
 
     public int getDistance(Location location, Location location1, Boolean bigGraph) {
         return graphRepository.distanceLocations(location, location1, bigGraph);
+    }
+
+    public Pair<Duration, Integer> getChargeDuration(List<Location> bestPath, Boolean bigGraph, int autonomy) {
+        int duringAutonomy = autonomy;
+        Duration chargeDuration = Duration.ofMinutes(0);
+        int numCharges = 0;
+        for(int i = 0; i < bestPath.size() - 1; i++){
+            Location location1 = bestPath.get(i);
+            Location location2 = bestPath.get(i + 1);
+            int distance = graphRepository.distanceLocations(location1, location2, bigGraph);
+            if (distance > duringAutonomy) {
+                chargeDuration = chargeDuration.plus(chargingTime(autonomy, duringAutonomy));
+                duringAutonomy = autonomy;
+                numCharges++;
+            }
+            duringAutonomy -= distance;
+        }
+        return new Pair<>(chargeDuration, numCharges);
+    }
+
+    public Duration getTravDuration(List<Location> bestPath, Boolean bigGraph, int velocity) {
+        Duration travelDuration = Duration.ofMinutes(0);
+        int distance = 0;
+        for(int i = 0; i < bestPath.size() - 1; i++){
+            Location location1 = bestPath.get(i);
+            Location location2 = bestPath.get(i + 1);
+            distance = graphRepository.distanceLocations(location1, location2, bigGraph);
+            travelDuration = travelDuration.plus(travelTime(distance/1000, velocity));
+        }
+        return travelDuration;
+    }
+
+    private Duration chargingTime(int autonomy, int leftAutonomy) {
+        double gainedAutonomyPerMinute = 1016.6666666667;
+        return Duration.ofMinutes(Math.round((autonomy - leftAutonomy) / gainedAutonomyPerMinute));
+    }
+
+    private Duration travelTime(int distance, int velocity) {
+        return Duration.ofMinutes((long) (60 * ((double) distance / velocity)));
     }
 }

@@ -492,6 +492,9 @@ public class BasketDistributionUI implements Runnable {
         do {
             nHubs = Utils.readIntegerFromConsole("Escreva o número de hubs (5, 6 e 7): ");
         } while (nHubs < 5 || nHubs > 7);
+        int autonomy = Utils.readIntegerFromConsole("Qual a autonomia do veículo?(km)");
+        int velocity = Utils.readIntegerFromConsole("Qual a velocidade média do veículo?(km/h)");
+        int numCharges = 0;
         List<Location> bestPath = graphController.deliveryCircuitPath(idOrigem, nHubs, bigGraph);
         System.out.println("Localização de Origem: " + idOrigem);
         System.out.println("Número de Hubs: " + nHubs);
@@ -506,6 +509,7 @@ public class BasketDistributionUI implements Runnable {
                         bigGraph) + " m |");
                 Integer distance = graphController.getDistance(bestPath.get(i), bestPath.get(i+1), bigGraph);
                 if (distance == null) {
+                    System.out.println("Não existe caminho entre " + bestPath.get(i).getId() + " e " + bestPath.get(i+1).getId());
                     return;
                 }
                 totalDistance += distance;
@@ -517,9 +521,17 @@ public class BasketDistributionUI implements Runnable {
                 System.out.println("  v");
             }
         }
+        Pair<Duration, Integer> charge = graphController.getChargeDuration(bestPath, bigGraph, autonomy * 1000);
+        Duration chargeDuration = charge.getFirst();
+        numCharges = charge.getSecond();
+        Duration travDuration = graphController.getTravDuration(bestPath, bigGraph, velocity);
+        Duration fullDuration = chargeDuration.plus(travDuration);
         System.out.println("\nNúmero de Colaboradores: " + numCollaborations);
         System.out.println("\nDistância Total: " + totalDistance + "m");
-        //dar print do tempo de carregamento, tempo de viagem e tempo total
+        System.out.println("Número de Carregamentos: " + numCharges);
+        System.out.println("Tempo Total: " + formatDuration(fullDuration) + "\n");
+        System.out.println("Tempo de Carregamento: " + formatDuration(chargeDuration) + "\n");
+
     }
 
     private String formatDuration(Duration duration) {
