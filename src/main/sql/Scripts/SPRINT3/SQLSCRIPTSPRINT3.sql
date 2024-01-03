@@ -8,8 +8,6 @@ DROP TRIGGER PreventLogChanges;
 DROP TRIGGER CheckUniqueOperacaoIDSetor;
 DROP TRIGGER CheckUniqueOperacaoIDParcela;
 DROP TRIGGER ChechUniqueOperacaoIDPlantacao;
-DROP TRIGGER CheckUniqueOperacaoIDOperacaoFator;
-DROP TRIGGER CheckUniqueOperacaoIDOperacaoReceita;
 DROP TRIGGER OperacaoID;
 DROP TRIGGER InsertLogOperacao;
 DROP TRIGGER PreventDeleteOperacao;
@@ -42,8 +40,8 @@ DROP TABLE Operacao CASCADE CONSTRAINTS;
 DROP TABLE OperacaoFator CASCADE CONSTRAINTS;
 DROP TABLE OperacaoParcela CASCADE CONSTRAINTS;
 DROP TABLE OperacaoPlantacao CASCADE CONSTRAINTS;
-DROP TABLE OperacaoReceita CASCADE CONSTRAINTS;
 DROP TABLE OperacaoSetor CASCADE CONSTRAINTS;
+DROP TABLE OperacaoTipoOperacao CASCADE CONSTRAINTS;
 DROP TABLE Parcela CASCADE CONSTRAINTS;
 DROP TABLE PlanoPlantacao CASCADE CONSTRAINTS;
 DROP TABLE PlanoSetor CASCADE CONSTRAINTS;
@@ -177,10 +175,10 @@ CREATE TABLE GARAGEM (
 
 CREATE TABLE LOGOPERACAO (
     ID NUMBER(10) NOT NULL,
+    OPERACAOID NUMBER(10) NOT NULL,
     DATAOPERACAO DATE NOT NULL,
     QUANTIDADE DOUBLE PRECISION NOT NULL,
     UNIDADE VARCHAR2(255) NOT NULL,
-    TIPOOPERACAO VARCHAR2(255) NOT NULL,
     ESTADO VARCHAR2(255) NOT NULL,
     REGISTO TIMESTAMP(0) NOT NULL,
     TIPOREGISTO VARCHAR2(255) NOT NULL,
@@ -212,7 +210,6 @@ CREATE TABLE OPERACAO (
     QUANTIDADE DOUBLE PRECISION NOT NULL CHECK(QUANTIDADE > 0),
     UNIDADE VARCHAR2(255) NOT NULL,
     REGISTO TIMESTAMP(0) DEFAULT SYSTIMESTAMP NOT NULL,
-    TIPOOPERACAOID NUMBER(10) NOT NULL,
     CADERNOCAMPOID NUMBER(10) NOT NULL,
     ESTADOID NUMBER(10) NOT NULL,
     PRIMARY KEY (ID)
@@ -221,7 +218,9 @@ CREATE TABLE OPERACAO (
 CREATE TABLE OPERACAOFATOR (
     OPERACAOID NUMBER(10) NOT NULL,
     FATORPRODUCAOID NUMBER(10) NOT NULL,
-    PRIMARY KEY (OPERACAOID)
+    QUANTIDADE DOUBLE PRECISION NOT NULL,
+    UNIDADE VARCHAR2(255) NOT NULL,
+    PRIMARY KEY (OPERACAOID, FATORPRODUCAOID)
 );
 
 CREATE TABLE OPERACAOPARCELA (
@@ -236,17 +235,17 @@ CREATE TABLE OPERACAOPLANTACAO (
     PRIMARY KEY (OPERACAOID)
 );
 
-CREATE TABLE OPERACAORECEITA (
-    OPERACAOID NUMBER(10) NOT NULL,
-    RECEITAID NUMBER(10) NOT NULL,
-    PRIMARY KEY (OPERACAOID)
-);
-
 CREATE TABLE OPERACAOSETOR (
     OPERACAOID NUMBER(10) NOT NULL,
     HORAINICIAL TIMESTAMP(0) NOT NULL,
     SETORID NUMBER(10) NOT NULL,
     PRIMARY KEY (OPERACAOID)
+);
+
+CREATE TABLE OPERACAOTIPOOPERACAO (
+    OPERACAOID NUMBER(10) NOT NULL,
+    TIPOOPERACAOID NUMBER(10) NOT NULL,
+    PRIMARY KEY (OPERACAOID, TIPOOPERACAOID)
 );
 
 CREATE TABLE PARCELA (
@@ -429,7 +428,6 @@ ALTER TABLE SensorEstacao ADD CONSTRAINT FKSensorEsta509551 FOREIGN KEY (Estacao
 ALTER TABLE SensorEstacao ADD CONSTRAINT FKSensorEsta239503 FOREIGN KEY (SensorID) REFERENCES Sensor (ID);
 ALTER TABLE Fertilizacao ADD CONSTRAINT FKFertilizac483896 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
 ALTER TABLE Fertilizacao ADD CONSTRAINT FKFertilizac729538 FOREIGN KEY (ModoFertilizacaoID) REFERENCES ModoFertilizacao (ID);
-ALTER TABLE Operacao ADD CONSTRAINT FKOperacao623592 FOREIGN KEY (TipoOperacaoID) REFERENCES TipoOperacao (ID);
 ALTER TABLE OperacaoFator ADD CONSTRAINT FKOperacaoFa121712 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
 ALTER TABLE OperacaoFator ADD CONSTRAINT FKOperacaoFa436815 FOREIGN KEY (FatorProducaoID) REFERENCES FatorProducao (ID);
 ALTER TABLE ProdutoArmazem ADD CONSTRAINT FKProdutoArm466455 FOREIGN KEY (ProdutoCulturaID) REFERENCES Produto (CulturaID);
@@ -450,9 +448,9 @@ ALTER TABLE PlanoSetor ADD CONSTRAINT FKPlanoSetor502685 FOREIGN KEY (SistemaReg
 ALTER TABLE Operacao ADD CONSTRAINT FKOperacao534717 FOREIGN KEY (EstadoID) REFERENCES Estado (ID);
 ALTER TABLE ReceitaFator ADD CONSTRAINT FKReceitaFat104034 FOREIGN KEY (ReceitaID) REFERENCES Receita (ID);
 ALTER TABLE ReceitaFator ADD CONSTRAINT FKReceitaFat725349 FOREIGN KEY (FatorProducaoID) REFERENCES FatorProducao (ID);
-ALTER TABLE OperacaoReceita ADD CONSTRAINT FKOperacaoRe280761 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
-ALTER TABLE OperacaoReceita ADD CONSTRAINT FKOperacaoRe864440 FOREIGN KEY (ReceitaID) REFERENCES Receita (ID);
 ALTER TABLE PlantacaoPermanente ADD CONSTRAINT FKPlantacaoP192597 FOREIGN KEY (PlantacaoID) REFERENCES Plantacao (ID);
+ALTER TABLE OperacaoTipoOperacao ADD CONSTRAINT FKOperacaoTi419278 FOREIGN KEY (OperacaoID) REFERENCES Operacao (ID);
+ALTER TABLE OperacaoTipoOperacao ADD CONSTRAINT FKOperacaoTi64864 FOREIGN KEY (TipoOperacaoID) REFERENCES TipoOperacao (ID);
 
 CREATE OR REPLACE TRIGGER CapacidadeTrigger
 BEFORE INSERT OR UPDATE ON ProdutoArmazem
@@ -727,40 +725,6 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE TRIGGER CheckUniqueOperacaoIDOperacaoFator
-BEFORE INSERT OR UPDATE ON OperacaoFator
-FOR EACH ROW
-DECLARE
-    existsCheck NUMBER;
-BEGIN
-    SELECT COUNT(*)
-    INTO existsCheck
-    FROM OperacaoReceita OPR
-    WHERE OPR.OperacaoID = :NEW.OperacaoID;
-
-    IF existsCheck > 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Esta operação já contém uma receita associada');
-    END IF;
-END;
-/
-
-CREATE OR REPLACE TRIGGER CheckUniqueOperacaoIDOperacaoReceita
-BEFORE INSERT OR UPDATE ON OperacaoReceita
-FOR EACH ROW
-DECLARE
-    existsCheck NUMBER;
-BEGIN
-    SELECT COUNT(*)
-    INTO existsCheck
-    FROM OperacaoFator OPF
-    WHERE OPF.OperacaoID = :NEW.OperacaoID;
-
-    IF existsCheck > 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Esta operação já contém um fator de produção associado');
-    END IF;
-END;
-/
-
 CREATE OR REPLACE TRIGGER OperacaoID
 BEFORE INSERT ON Operacao
 FOR EACH ROW
@@ -776,15 +740,12 @@ AFTER INSERT OR UPDATE ON Operacao
 FOR EACH ROW
 DECLARE
      logOperacaoID NUMBER;
-     tipoOperacaoDes VARCHAR2(100);
      estadoDes VARCHAR2(100);
      registoDes VARCHAR2(100);
 BEGIN
     SELECT LogOperacaoNextID.NEXTVAL
     INTO logOperacaoID
     FROM dual;
-
-    SELECT Designacao INTO tipoOperacaoDes FROM TipoOperacao WHERE ID = :NEW.TipoOperacaoID;
 
     SELECT Designacao INTO estadoDes FROM Estado WHERE ID = :NEW.EstadoID;
 
@@ -794,8 +755,8 @@ BEGIN
         registoDes := 'Alteração da Operação';
     END IF;
 
-    INSERT INTO LogOperacao (ID, DataOperacao, Quantidade, Unidade, TipoOperacao, Estado, Registo, TipoRegisto)
-    VALUES (logOperacaoID, :NEW.dataOperacao, :NEW.quantidade, :NEW.Unidade, tipoOperacaoDes, estadoDes, SYSTIMESTAMP, registoDes);
+    INSERT INTO LogOperacao (ID, OperacaoID, DataOperacao, Quantidade, Unidade, Estado, Registo, TipoRegisto)
+    VALUES (logOperacaoID, :NEW.id, :NEW.dataOperacao, :NEW.quantidade, :NEW.Unidade, estadoDes, SYSTIMESTAMP, registoDes);
 END;
 /
 
@@ -1087,8 +1048,9 @@ CREATE OR REPLACE PROCEDURE registerRega(quantidade NUMBER, setorID NUMBER, data
 BEGIN
     verifySetorInfo(setorID);
 
-    insertOperacao(dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO, estado, idOperacao);
+    insertOperacao(dataOperacao, quantidade, UNIDADE, CADERNO_DE_CAMPO, estado, idOperacao);
     INSERT INTO OperacaoSetor(OperacaoID, HoraInicial, SetorID) VALUES (idOperacao, hora, setorID);
+    INSERT INTO OperacaoTipoOperacao(OperacaoID, TipoOperacaoID) VALUES (idOperacao, TIPO_OPERACAO);
     COMMIT;
 EXCEPTION
     WHEN OTHERS THEN
@@ -1099,22 +1061,62 @@ END;
 
 CREATE OR REPLACE PROCEDURE registerFertirrega(quantidade NUMBER,setorID NUMBER,dataOperacao DATE,hora TIMESTAMP, receita NUMBER, estado NUMBER) IS
 
-    TIPO_OPERACAO CONSTANT NUMBER := 11;
+    TIPO_OPERACAO_REGA CONSTANT NUMBER := 2;
+    TIPO_OPERACAO_FATOR CONSTANT NUMBER := 11;
     CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
     UNIDADE CONSTANT VARCHAR2(10) := 'min';
     idOperacao NUMBER;
+    result_cursor SYS_REFCURSOR;
+    FATORPRODUCAO NUMBER;
+    QUANTIDADE_CURSOR NUMBER;
+    UNIDADE_CURSOR VARCHAR2(10);
 
 BEGIN
     verifySetorInfo(setorID);
     
-    insertOperacao(dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO, estado, idOperacao);
-    INSERT INTO OperacaoReceita(OperacaoID, ReceitaID) VALUES (idOperacao, receita);
+    insertOperacao(dataOperacao, quantidade, UNIDADE, CADERNO_DE_CAMPO, estado, idOperacao);
     INSERT INTO OperacaoSetor(OperacaoID, HoraInicial, SetorID) VALUES (idOperacao, hora, setorID);
+    INSERT INTO OperacaoTipoOperacao(OperacaoID, TipoOperacaoID) VALUES (idOperacao, TIPO_OPERACAO_REGA);
+    INSERT INTO OperacaoTipoOperacao(OperacaoID, TipoOperacaoID) VALUES (idOperacao, TIPO_OPERACAO_FATOR);
+
+    result_cursor := getFatorReceita(receita);
+    LOOP
+        FETCH result_cursor INTO FATORPRODUCAO, QUANTIDADE_CURSOR, UNIDADE_CURSOR;
+        EXIT WHEN result_cursor%NOTFOUND;
+        INSERT INTO OperacaoFator(OperacaoID, FatorProducaoID, Quantidade, Unidade)
+        VALUES (idOperacao, FATORPRODUCAO, QUANTIDADE_CURSOR, UNIDADE_CURSOR);
+    END LOOP;
+    CLOSE result_cursor;
     COMMIT;
 EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
         RAISE;
+END;
+/
+
+CREATE OR REPLACE FUNCTION getFatorReceita(Receita NUMBER) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+    row_count NUMBER;
+    no_data_found EXCEPTION;
+BEGIN
+    SELECT COUNT(*)
+    INTO row_count
+    FROM RECEITAFATOR
+    WHERE RECEITAID = Receita;
+
+    IF row_count = 0 THEN
+        RAISE no_data_found;
+    END IF;
+
+    OPEN result_cursor FOR
+        SELECT FATORPRODUCAOID as fatorproducaoID, QUANTIDADE as quantidade, UNIDADE as unidade
+        FROM RECEITAFATOR
+        WHERE RECEITAID = Receita;
+    RETURN result_cursor;
+EXCEPTION
+    WHEN no_data_found THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Essa receita não existe ou não tem fatores de produção associados.');
 END;
 /
 
@@ -1131,13 +1133,10 @@ BEGIN
     verifyPlantacaoInfo(plantacaoID, parcelaID,dataOperacao);
     verifyQuantityInfo(plantacaoID, parcelaID, quantidade, UNIDADE);
     verifyDateInfo(dataOperacao, ESTADO);
-    --Obter o ID da operação
-    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
 
-    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
-    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
-
+    insertOperacao(dataOperacao, quantidade, UNIDADE, CADERNO_DE_CAMPO, estado, idOperacao);
     INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
+    INSERT INTO OperacaoTipoOperacao(OperacaoID, TipoOperacaoID) VALUES (idOperacao, TIPO_OPERACAO);
     
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('Operação registada com sucesso!');
@@ -1165,16 +1164,16 @@ BEGIN
     verifyAvailableAreaInfo(parcelaID, quantidade);
     
     --Obter o ID da operação
-    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
     SELECT NVL(MAX(ID),0) + 1 INTO idPlantacao FROM Plantacao;
 
-    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
-    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+    insertOperacao(dataOperacao, quantidade, UNIDADE, CADERNO_DE_CAMPO, estado, idOperacao);
     INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) 
     VALUES (idOperacao, parcelaID);
     INSERT INTO Plantacao(ID, DataInicial, DataFinal, Quantidade, Unidade, EstadoFenologico, CulturaID, ParcelaEspacoID) 
     VALUES (idPlantacao, dataOperacao, NULL, area, UNIDADE2, NULL, culturaID, parcelaID);
-    
+    INSERT INTO OperacaoTipoOperacao(OperacaoID, TipoOperacaoID) 
+    VALUES (idOperacao, TIPO_OPERACAO);
+
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('Operação registada com sucesso!');
 EXCEPTION
@@ -1198,11 +1197,10 @@ BEGIN
     verifyPlantacaoInfo(plantacaoID,parcelaID,dataOperacao);
     verifyQuantityInfo(plantacaoID,parcelaID,quantidade, UNIDADE);
     --Obter o ID da operação
-    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
 
-    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
-    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
-
+    insertOperacao(dataOperacao, quantidade, UNIDADE, CADERNO_DE_CAMPO, estado, idOperacao);
+    INSERT INTO OperacaoTipoOperacao(OperacaoID, TipoOperacaoID) 
+    VALUES (idOperacao, TIPO_OPERACAO);
     IF plantacaoID IS NULL THEN 
         INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) VALUES (idOperacao, parcelaID);
     ELSE
@@ -1233,9 +1231,8 @@ BEGIN
     --Obter o ID da operação
     SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
 
-    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID)
-    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE, TIPO_OPERACAO, CADERNO_DE_CAMPO);
-
+    insertOperacao(dataOperacao, quantidade, UNIDADE, CADERNO_DE_CAMPO, estado, idOperacao);
+    INSERT INTO OperacaoTipoOperacao(OperacaoID, TipoOperacaoID) VALUES (idOperacao, TIPO_OPERACAO);
     INSERT INTO OperacaoPlantacao(OperacaoID, PlantacaoID) VALUES (idOperacao, plantacaoID);
     
     COMMIT;
@@ -1249,7 +1246,7 @@ END;
 
 CREATE OR REPLACE PROCEDURE registerFatorDeProducao(quantidade NUMBER,parcelaID NUMBER,dataOperacao DATE, area NUMBER, fatorProducaoID NUMBER, modoFertilizacaoID NUMBER) IS
 
-    TIPO_OPERACAO CONSTANT NUMBER := 4;
+    TIPO_OPERACAO CONSTANT NUMBER := 11;
     CADERNO_DE_CAMPO CONSTANT NUMBER := 1;
     UNIDADE1 CONSTANT VARCHAR2(10) := 'ha';
     UNIDADE2 CONSTANT VARCHAR2(10) := 'kg';
@@ -1262,11 +1259,9 @@ BEGIN
     verifyFatorDeProducaoInfo(fatorProducaoID);
     verifyModoFertilizacaoInfo(modoFertilizacaoID);
     verifyQuantityInfo(NULL,parcelaID,area,UNIDADE1);
-    --Obter o ID da operação
-    SELECT NVL(MAX(ID),0) + 1 INTO idOperacao FROM Operacao;
 
-    INSERT INTO Operacao(ID, DataOperacao, Quantidade, Unidade, TipoOperacaoID, CadernoCampoID) 
-    VALUES (idOperacao, dataOperacao, quantidade, UNIDADE2, TIPO_OPERACAO, CADERNO_DE_CAMPO);
+    insertOperacao(dataOperacao, quantidade, UNIDADE2, CADERNO_DE_CAMPO, estado, idOperacao);
+    INSERT INTO OperacaoTipoOperacao(OperacaoID, TipoOperacaoID) VALUES (idOperacao, TIPO_OPERACAO);
     INSERT INTO OperacaoFator(OperacaoID, FatorProducaoID) VALUES(idOperacao, fatorProducaoID);
     INSERT INTO Fertilizacao(OperacaoID, ModoFertilizacaoID) VALUES(idOperacao, modoFertilizacaoID);
     INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) VALUES (idOperacao, parcelaID);
@@ -1287,13 +1282,14 @@ BEGIN
         SELECT PARCELA, ESPECIE, PRODUTO, DATA
         FROM(
         SELECT ES.DESIGNACAO AS PARCELA, NE.ESPECIE AS ESPECIE, NP.DESIGNACAO || ' ' || C.VARIEDADE AS PRODUTO, O.DATAOPERACAO as data
-            FROM ESPACO ES, NOMEESPECIE NE, NOMEPRODUTO NP, CULTURA C, TIPOOPERACAO TP, OPERACAO O, PLANTACAO P, OPERACAOPLANTACAO OP, PRODUTO PR
+            FROM ESPACO ES, NOMEESPECIE NE, NOMEPRODUTO NP, CULTURA C, TIPOOPERACAO TP, OPERACAO O, PLANTACAO P, OPERACAOPLANTACAO OP, PRODUTO PR, OPERACAOTIPOOPERACAO OT
             WHERE ES.ID = parcelaID
             AND P.PARCELAESPACOID = ES.ID
             AND OP.PLANTACAOID = P.ID
             AND O.ID = OP.OPERACAOID
             AND TP.ID = 7
-            AND TP.ID = O.TIPOOPERACAOID
+            AND TP.ID = OT.TIPOOPERACAOID
+            AND OT.OPERACAOID = O.ID
             AND P.CULTURAID = PR.CULTURAID
             AND C.ID = PR.CULTURAID
             AND C.NOMEESPECIEID = NE.ID
@@ -1377,9 +1373,10 @@ BEGIN
         SELECT PARCELA, EXTRACT(YEAR FROM DATA) AS YEAR, EXTRACT(MONTH FROM DATA) AS MONTH, SUM(DURACAO) AS DURACAO
         FROM(
             SELECT ES.DESIGNACAO AS PARCELA, OP.DataOperacao AS DATA, MAX(OP.QUANTIDADE) AS DURACAO
-            FROM TIPOOPERACAO TP, OPERACAO OP, PARCELA PAR, OPERACAOSETOR OS, SETOR S, PLANTACAOSETOR PS, PLANTACAO P, ESPACO ES
+            FROM TIPOOPERACAO TP, OPERACAO OP, PARCELA PAR, OPERACAOSETOR OS, SETOR S, PLANTACAOSETOR PS, PLANTACAO P, ESPACO ES, OPERACAOTIPOOPERACAO OT
             WHERE TP.ID = 2
-            AND OP.TIPOOPERACAOID = TP.ID
+            AND OT.TIPOOPERACAOID = TP.ID
+            AND OT.OPERACAOID = OP.ID
             AND OS.OPERACAOID = OP.ID
             AND S.ID = OS.SETORID
             AND PS.SETORID = S.ID
@@ -1402,31 +1399,34 @@ OPEN result_cursor FOR
 SELECT OperacaoID, TipoDeOperacao, data, Cultura
 FROM(
     SELECT OP.OperacaoID AS OperacaoID, TOP.Designacao AS TipoDeOperacao, O.DataOperacao as data, 'Sem cultura' as Cultura
-    FROM OperacaoParcela OP, TipoOperacao TOP, Operacao O
+    FROM OperacaoParcela OP, TipoOperacao TOP, Operacao O, OPERACAOTIPOOPERACAO OT
     WHERE OP.OperacaoID = O.ID
-      AND O.TIPOOPERACAOID = TOP.ID
-      AND OP.ParcelaEspacoID = parcelaID
+        AND OT.TIPOOPERACAOID = TOP.ID
+        AND OT.OPERACAOID = O.ID
+        AND OP.ParcelaEspacoID = parcelaID
     UNION
     SELECT OP.OperacaoID AS OperacaoID, TOP.Designacao AS TipoDeOperacao, O.DataOperacao as data, NP.Designacao  ||' '|| CU.Variedade AS Cultura
-    FROM OperacaoPlantacao OP, TipoOperacao TOP, Operacao O, Plantacao P, Cultura CU, Produto Po, NomeProduto NP
+    FROM OperacaoPlantacao OP, TipoOperacao TOP, Operacao O, Plantacao P, Cultura CU, Produto Po, NomeProduto NP, OPERACAOTIPOOPERACAO OT
     WHERE OP.OperacaoID = O.ID
-      AND O.TIPOOPERACAOID = TOP.ID
-      AND OP.PlantacaoID = P.ID
-      AND P.ParcelaEspacoID = parcelaID
-      AND P.CulturaID = CU.ID
-      AND P.CulturaID = PO.CulturaID
-      AND PO.NomeProdutoID = NP.ID
+        AND OT.TIPOOPERACAOID = TOP.ID
+        AND OT.OPERACAOID = O.ID
+        AND OP.PlantacaoID = P.ID
+        AND P.ParcelaEspacoID = parcelaID
+        AND P.CulturaID = CU.ID
+        AND P.CulturaID = PO.CulturaID
+        AND PO.NomeProdutoID = NP.ID
     UNION
     SELECT OS.OperacaoID AS OperacaoID, TOP.Designacao AS TipoDeOperacao, O.DataOperacao as data, NE.NomeComum  ||' '|| CU.Variedade AS Cultura
-    FROM OperacaoSetor OS, TipoOperacao TOP, Operacao O, Plantacao P, PlantacaoSetor PS, Setor S, Cultura CU, NomeEspecie NE
+    FROM OperacaoSetor OS, TipoOperacao TOP, Operacao O, Plantacao P, PlantacaoSetor PS, Setor S, Cultura CU, NomeEspecie NE, OPERACAOTIPOOPERACAO OT
     WHERE OS.OperacaoID = O.ID
-      AND O.TIPOOPERACAOID = TOP.ID
-      AND OS.SetorID = S.ID
-      AND P.PARCELAESPACOID = parcelaID
-      AND P.ID = PS.PlantacaoID
-      AND PS.SetorID = S.ID
-      AND P.CulturaID = Cu.ID
-      AND CU.NomeEspecieID = NE.ID
+        AND OT.TIPOOPERACAOID = TOP.ID
+        AND OT.OPERACAOID = O.ID
+        AND OS.SetorID = S.ID
+        AND P.PARCELAESPACOID = parcelaID
+        AND P.ID = PS.PlantacaoID
+        AND PS.SetorID = S.ID
+        AND P.CulturaID = Cu.ID
+        AND CU.NomeEspecieID = NE.ID
     )
 WHERE data BETWEEN DATAINICIAL AND DATAFINAL
 ORDER BY TipoDeOperacao, data;
@@ -1434,12 +1434,12 @@ RETURN result_cursor;
 END;
 /
 
-CREATE OR REPLACE PROCEDURE insertOperacao(dataoperacao DATE, quantidade NUMBER, unidade VARCHAR2, tipooperacaoid NUMBER, cadernocampoid NUMBER, estadoid NUMBER, id OUT NUMBER) AS
+CREATE OR REPLACE PROCEDURE insertOperacao(dataoperacao DATE, quantidade NUMBER, unidade VARCHAR2, cadernocampoid NUMBER, estadoid NUMBER, id OUT NUMBER) AS
 BEGIN
     verifyDateInfo(dataOperacao, estadoid);
 
-    INSERT INTO Operacao(DATAOPERACAO, QUANTIDADE, UNIDADE, TIPOOPERACAOID, CADERNOCAMPOID, ESTADOID)
-    VALUES (dataoperacao, quantidade, unidade, tipooperacaoid, cadernocampoid, estadoid)
+    INSERT INTO Operacao(DATAOPERACAO, QUANTIDADE, UNIDADE, CADERNOCAMPOID, ESTADOID)
+    VALUES (dataoperacao, quantidade, unidade, cadernocampoid, estadoid)
     RETURNING id INTO id;
 EXCEPTION
     WHEN OTHERS THEN
@@ -1454,9 +1454,16 @@ BEGIN
         SELECT CULTURA, SUM(Minutos) AS CONSUMO_MINUTOS
         FROM(
             SELECT NE.NOMECOMUM || ' ' || CU.VARIEDADE AS CULTURA, O.QUANTIDADE AS Minutos, O.UNIDADE AS UNIDADE
-            FROM OPERACAOSETOR OS, PLANTACAOSETOR PS, PLANTACAO P, CULTURA CU, NOMEESPECIE NE, OPERACAO O
-            WHERE OS.SETORID = PS.SETORID AND PS.PLANTACAOID = P.ID AND P.CULTURAID = CU.ID AND CU.NOMEESPECIEID = NE.ID AND OS.OPERACAOID = O.ID
-            AND EXTRACT(YEAR FROM OS.HORAINICIAL) = year
+            FROM OPERACAOSETOR OS, PLANTACAOSETOR PS, PLANTACAO P, CULTURA CU, NOMEESPECIE NE, OPERACAO O, OPERACAOTIPOOPERACAO OT, TIPOOPERACAO TOO
+            WHERE OS.SETORID = PS.SETORID 
+            AND PS.PLANTACAOID = P.ID
+            AND P.CULTURAID = CU.ID
+            AND CU.NOMEESPECIEID = NE.ID
+            AND OS.OPERACAOID = O.ID
+            AND O.ID = OT.OPERACAOID
+            AND OT.TIPOOPERACAOID = TOO.ID
+            AND TOO.ID = 2
+            AND EXTRACT(YEAR FROM O.DATAOPERACAO) = year
         )
         GROUP BY CULTURA, UNIDADE
         ORDER BY CONSUMO_MINUTOS DESC;

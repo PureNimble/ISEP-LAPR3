@@ -456,6 +456,11 @@ public class Service {
     }
 
     public String getLatestFileFromDirectory(String dir) {
+        try {
+            Thread.sleep(4000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         URL url = getClass().getClassLoader().getResource(dir);
         if (url == null) {
             System.out.println("Directory not found: " + dir);

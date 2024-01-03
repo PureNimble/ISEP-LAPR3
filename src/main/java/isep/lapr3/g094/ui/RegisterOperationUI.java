@@ -309,8 +309,10 @@ public class RegisterOperationUI implements Runnable {
             }
 
             String option = (String) Utils.showAndSelectOne(setorList, "\nLista de Setores:");
-            if (option != null)
-                setorID = setores.get(option);
+            if (option != null){
+                String[] split = option.split(" - ");
+                setorID = Integer.parseInt(split[0]);
+            }
         } catch (SQLException e) {
             System.out.println("\nErro ao obter lista de setores");
             System.out.println("Motivo: " + e.getMessage());

@@ -194,11 +194,6 @@ public class BasketDistributionUI implements Runnable {
         Utils.confirm("Deseja ver o grafo?:");
         if (true) {
             graphController.generateDataCSV(graph);
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
             openGraphViewer(filePath);
         }
