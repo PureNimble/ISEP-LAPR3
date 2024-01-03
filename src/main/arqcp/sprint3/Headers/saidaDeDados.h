@@ -19,10 +19,10 @@ typedef struct
 
 void saidaDeDados(char *directoryPath, char *outputPath, long frequency);
 void createFinalSensor(FinalSensor *ptrSensores, char *fileName, char *directoryPath);
-void findFile(char *path, bool *isFirstFile, int *lastFileId, FinalSensor *ptrSensores);
-void createStruct(FinalSensor *ptrSensores, char *fileName, char *directoryPath);
-int findSensors(int id, FinalSensor *sensors, int count);
-
-
+FinalSensor *createStruct(FinalSensor *ptrSensores, char *fileName, char *directoryPath);
+int findSensors(int id, FinalSensor *sensors);
+FinalSensor *findFile(char *path, bool *isFirstFile, int *lastFileId, FinalSensor *ptrSensores);
+void saidaDeDadosOutput(FinalSensor *ptr, char *outputPath);
+float media(int *vec, int size);
 
 #endif

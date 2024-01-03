@@ -42,7 +42,7 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
     }
     createSensors(ptrSensores, configPath);
 
-    /* int serial_port = open(valuesPath, O_RDWR);
+    int serial_port = open(valuesPath, O_RDWR);
     if (serial_port < 0)
     {
         printf("Erro %i ao abir: %s\n", errno, strerror(errno));
@@ -58,20 +58,20 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
         freeSensors(ptrSensores, NUM_SENSORS);
         return;
     }
-    cfsetispeed(&tty, B9600); */
+    cfsetispeed(&tty, B9600);
+
     int i;
     while (1)
     {
         printf("A processar dados...\n");
         for (i = 0; i < numberOfReads; i++)
         {
-            // char *data = getData(serial_port);
-            char *data = "sensor_id:1#value:1000#time:10"; // getData(serial_port);
+            char *data = getData(serial_port);
             int *info = extractInfo(data);
             printf("id: %i, valor: %i, time:%i\n", info[0], info[1], info[2]);
             fflush(stdout);
             insertInfo(info, ptrSensores, NUM_SENSORS);
-            // free(data);
+            free(data);
             free(info);
         }
         char *output[NUM_SENSORS];
@@ -85,7 +85,7 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
     }
     freeSensors(ptrSensores, NUM_SENSORS);
 
-    // close(serial_port);
+    close(serial_port);
 }
 
 void freeSensors(Sensor *sensors, int count)
