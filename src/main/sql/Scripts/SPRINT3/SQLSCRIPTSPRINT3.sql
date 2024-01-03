@@ -1262,7 +1262,7 @@ BEGIN
 
     insertOperacao(dataOperacao, quantidade, UNIDADE2, CADERNO_DE_CAMPO, estado, idOperacao);
     INSERT INTO OperacaoTipoOperacao(OperacaoID, TipoOperacaoID) VALUES (idOperacao, TIPO_OPERACAO);
-    INSERT INTO OperacaoFator(OperacaoID, FatorProducaoID) VALUES(idOperacao, fatorProducaoID);
+    INSERT INTO OperacaoFator(OperacaoID, FatorProducaoID, Quantidade, Unidade) VALUES(idOperacao, fatorProducaoID, quantidade, Unidade2);
     INSERT INTO Fertilizacao(OperacaoID, ModoFertilizacaoID) VALUES(idOperacao, modoFertilizacaoID);
     INSERT INTO OperacaoParcela(OperacaoID, ParcelaEspacoID) VALUES (idOperacao, parcelaID);
 
