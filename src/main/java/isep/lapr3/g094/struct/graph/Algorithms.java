@@ -3,13 +3,11 @@ package isep.lapr3.g094.struct.graph;
 import isep.lapr3.g094.domain.type.Location;
 import isep.lapr3.g094.domain.Pair;
 import isep.lapr3.g094.struct.graph.matrix.MatrixGraph;
-import oracle.security.o3logon.a;
 
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.BinaryOperator;
-import java.util.stream.Collectors;
 
 public class Algorithms {
 

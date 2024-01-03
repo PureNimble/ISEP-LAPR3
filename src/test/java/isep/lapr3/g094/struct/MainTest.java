@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalTime;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import isep.lapr3.g094.application.controller.GraphController;
@@ -18,7 +19,6 @@ import isep.lapr3.g094.repository.Repositories;
 import isep.lapr3.g094.services.Service;
 import isep.lapr3.g094.services.Services;
 import isep.lapr3.g094.struct.graph.Algorithms;
-import isep.lapr3.g094.struct.graph.Edge;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.domain.Pair;
 
@@ -26,8 +26,10 @@ public class MainTest {
 
     private GraphController graphController;
     private GraphRepository graphRepository;
+    private ImportController importController;
     private Service service;
     private MapGraph<Location, Integer> BASKET_DISTRIBUTION = new MapGraph<>(false);
+    private MapGraph<Location, Integer> SMALL_BASKET_DISTRIBUTION = new MapGraph<>(false);
 
     @BeforeEach
     void setUp() {
@@ -35,11 +37,12 @@ public class MainTest {
         Services services = Services.getInstance();
         graphRepository = repositories.getGraphRepository();
         service = services.getService();
-        ImportController importController = new ImportController();
+        importController = new ImportController();
         importController.importToGraph(true);
         importController.importToGraph(false);
         graphController = new GraphController();
         BASKET_DISTRIBUTION = graphRepository.getGraph(true);
+        SMALL_BASKET_DISTRIBUTION = graphRepository.getGraph(false);
     }
 
     @Test
@@ -766,21 +769,19 @@ public class MainTest {
 
         Location idOrigem = new Location("CT56");
         Location idDestino = new Location("CT234");
-        Location ct56 = new Location("CT56");
         Location ct13 = new Location("CT13");
         Location ct245 = new Location("CT245");
         Location ct94 = new Location("CT94");
 
         service.getVerticesIdeais(1, 250, true);
-        MapGraph<Location, Integer> graph = service.getGraph(true);
-        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(BASKET_DISTRIBUTION);
         Pair<Integer, MapGraph<Location, Integer>> testPair = graphController.maximumCapacity(hubGraph, idOrigem,
                 idDestino);
 
-        assertEquals(Integer.valueOf(2), testPair.getSecond().edge(ct56, ct13).getWeight());
+        assertEquals(Integer.valueOf(2), testPair.getSecond().edge(idOrigem, ct13).getWeight());
         assertEquals(Integer.valueOf(2), testPair.getSecond().edge(ct13, ct245).getWeight());
         assertEquals(Integer.valueOf(2), testPair.getSecond().edge(ct245, ct94).getWeight());
-        assertEquals(Integer.valueOf(2), testPair.getSecond().edge(ct56, ct94).getWeight());
+        assertEquals(Integer.valueOf(2), testPair.getSecond().edge(idOrigem, ct94).getWeight());
     }
 
     @Test
@@ -791,8 +792,7 @@ public class MainTest {
         Location idDestino = new Location("CT47");
         Location idCT296 = new Location("CT296");
         service.getVerticesIdeais(1, 250, true);
-        MapGraph<Location, Integer> graph = service.getGraph(true);
-        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(BASKET_DISTRIBUTION);
         Pair<Integer, MapGraph<Location, Integer>> testPair = graphController.maximumCapacity(hubGraph, idOrigem,
                 idDestino);
         int outFlow = testPair.getSecond().vertices().stream()
@@ -836,8 +836,7 @@ public class MainTest {
         Location idOrigem = new Location("CT56");
         Location idDestino = new Location("CT234");
         service.getVerticesIdeais(1, 250, true);
-        MapGraph<Location, Integer> graph = service.getGraph(true);
-        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(BASKET_DISTRIBUTION);
         Pair<Integer, MapGraph<Location, Integer>> testPair = graphController.maximumCapacity(hubGraph, idOrigem,
                 idDestino);
 
@@ -851,8 +850,7 @@ public class MainTest {
         Location idOrigem = new Location("CT196");
         Location idDestino = new Location("CT300");
         service.getVerticesIdeais(1, 250, true);
-        MapGraph<Location, Integer> graph = service.getGraph(true);
-        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(BASKET_DISTRIBUTION);
         Pair<Integer, MapGraph<Location, Integer>> testPair = graphController.maximumCapacity(hubGraph, idOrigem,
                 idDestino);
 
@@ -871,8 +869,7 @@ public class MainTest {
         Location ct14 = new Location("CT14");
 
         service.getVerticesIdeais(1, 8, false);
-        MapGraph<Location, Integer> graph = service.getGraph(false);
-        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(SMALL_BASKET_DISTRIBUTION);
         Pair<Integer, MapGraph<Location, Integer>> testPair = graphController.maximumCapacity(hubGraph, idOrigem,
                 idDestino);
 
@@ -890,8 +887,7 @@ public class MainTest {
         Location idOrigem = new Location("CT2");
         Location idDestino = new Location("CT8");
         service.getVerticesIdeais(1, 8, false);
-        MapGraph<Location, Integer> graph = service.getGraph(false);
-        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(SMALL_BASKET_DISTRIBUTION);
         Pair<Integer, MapGraph<Location, Integer>> testPair = graphController.maximumCapacity(hubGraph, idOrigem,
                 idDestino);
 
@@ -906,8 +902,7 @@ public class MainTest {
         Location idDestino = new Location("CT8");
         Location idCT14 = new Location("CT14");
         service.getVerticesIdeais(1, 250, false);
-        MapGraph<Location, Integer> graph = service.getGraph(false);
-        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(SMALL_BASKET_DISTRIBUTION);
         Pair<Integer, MapGraph<Location, Integer>> testPair = graphController.maximumCapacity(hubGraph, idOrigem,
                 idDestino);
         int outFlow = testPair.getSecond().vertices().stream()
@@ -951,8 +946,7 @@ public class MainTest {
         Location idOrigem = new Location("CT3");
         Location idDestino = new Location("CT7");
         service.getVerticesIdeais(1, 8, false);
-        MapGraph<Location, Integer> graph = service.getGraph(false);
-        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(SMALL_BASKET_DISTRIBUTION);
         Pair<Integer, MapGraph<Location, Integer>> testPair = graphController.maximumCapacity(hubGraph, idOrigem,
                 idDestino);
 
@@ -965,13 +959,14 @@ public class MainTest {
     void testMaximumCapacityNoHubs() {
         System.out.println("Testing MaximumCapacityNoHubs...");
 
-        MapGraph<Location, Integer> graph = service.getGraph(true);
-        MapGraph<Location, Integer> hubGraph = graphController.filterGraph(graph);
+        service.resetHubs(true);
+        service.resetHubs(false);
+        MapGraph<Location, Integer> bigHubGraph = graphController.filterGraph(BASKET_DISTRIBUTION);
+        MapGraph<Location, Integer> smallHubGraph = graphController.filterGraph(SMALL_BASKET_DISTRIBUTION);
 
-        assertTrue(hubGraph.vertices().isEmpty());
+        assertTrue(bigHubGraph.vertices().isEmpty());
+        assertTrue(smallHubGraph.vertices().isEmpty());
     }
-
-
 
     @Test
     void testDivideGraphNWith3Clusters() {
@@ -998,5 +993,54 @@ public class MainTest {
         }
     }
 
+    @Test
+    void testMaximizedPath(){
+        System.out.println("Testing MaximizedPath...");
 
+        int autonomy = 150000;
+        int velocity = 50;
+        String idOrigem = "ct3".toUpperCase();
+        LocalTime time = LocalTime.of(10, 0);
+        LinkedList<Location> topPath = new LinkedList<>();
+        LinkedList<LocalTime> topArriveTimes = new LinkedList<>();
+        LinkedList<LocalTime> topDepartTimes = new LinkedList<>();
+        LinkedList<LocalTime> topAfterChargeTimes = new LinkedList<>();
+        LinkedList<LocalTime> topDescargaTimes = new LinkedList<>();
+        graphController.getVerticesIdeais(0, 10, false);
+        importController.importOpeningHours("esinf/schedules/horarioFuncionamento.csv", false);
+        int topDistance = graphController.maximizedPath(idOrigem, time, autonomy, velocity, false, topPath, topArriveTimes, topDepartTimes, topAfterChargeTimes, topDescargaTimes);
+        assertEquals(3, topPath.size());
+        assertEquals(3, topArriveTimes.size());
+        assertEquals(3, topDepartTimes.size());
+        assertEquals(3, topAfterChargeTimes.size());
+        assertEquals(3, topDescargaTimes.size());
+        assertEquals(3, topPath.size());
+        assertEquals(113344, topDistance);
+
+        List<String> expectedPath = Arrays.asList("CT3", "CT12", "CT1");
+        for (Location location : topPath) {
+            assertTrue(expectedPath.contains(location.getId()));
+        }
+
+        List<LocalTime> expectedArriveTimes = Arrays.asList(LocalTime.of(10, 0), LocalTime.of(11, 0));
+        for (int i = 0; i < 2 && i < topArriveTimes.size(); i++) {
+            assertTrue(expectedArriveTimes.contains(topArriveTimes.get(i)));
+        }
+
+        List<LocalTime> expectedDepartTimes = Arrays.asList(LocalTime.of(10, 0));
+        for (int i = 0; i < 1 && i < topDepartTimes.size(); i++) {
+            assertTrue(expectedDepartTimes.contains(topDepartTimes.get(i)));
+        }
+
+        List<LocalTime> expectedAfterChargeTimes = Arrays.asList(null, LocalTime.of(10, 0));
+        for (int i = 0; i < 2 && i < topAfterChargeTimes.size(); i++) {
+            assertTrue(expectedAfterChargeTimes.contains(topAfterChargeTimes.get(i)));
+        }
+
+        if (!topDescargaTimes.isEmpty()) {
+            assertNull(topDescargaTimes.get(0));
+        }
+
+        assertEquals(topDepartTimes.getLast(), topDescargaTimes.getLast());
+    }
 }

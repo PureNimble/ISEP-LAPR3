@@ -10,7 +10,6 @@ import isep.lapr3.g094.struct.graph.Graph;
 import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
-import oracle.net.aso.b;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -96,6 +95,9 @@ public class BasketDistributionUI implements Runnable {
         orders.add("Influência e proximidade");
         orders.add("Centralidade");
         int order = Utils.showAndSelectIndex(orders, "\n=========Escolha do critério=========");
+        if (order == -1) {
+            return;
+        }
         int numberOfHubs = Utils.readIntegerFromConsole("Qual o número de hubs?");
         Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(order, numberOfHubs, bigGraph);
         int maxIdLength = Math.max(idealVertices.keySet().stream()
@@ -386,6 +388,21 @@ public class BasketDistributionUI implements Runnable {
         if (bigGraph == null) {
             return;
         }
+
+        MapGraph<Location, Integer> graph = graphController.getGraph(bigGraph);
+        boolean check = false;
+        for (Location location : graph.vertices()) {
+            if (location.isHub()) {
+                check = true;
+                break;
+            }
+        }
+
+        if (!check) {
+            System.out.println("Não existem Hubs neste grafo! Por favor execute a USEI02 primeiro!");
+            return;
+        }
+
         String idOrigem;
         LocalTime time;
         do {

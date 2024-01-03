@@ -62,7 +62,6 @@ public class Service {
                 allAdded = false;
         }
         return allAdded;
-
     }
 
     public boolean createOpeningHours(List<String> horarios, boolean bigGraph) throws Exception {
@@ -118,11 +117,12 @@ public class Service {
         Map<Location, Criteria> map = new HashMap<>();
         int numberMinimumPaths = 0;
         int i;
-        for (Location location : getGraph(bigGraph).vertices()) {
-            int degree = getGraph(bigGraph).inDegree(location);
+        MapGraph<Location, Integer> graph = getGraph(bigGraph);
+        for (Location location : graph.vertices()) {
+            int degree = graph.inDegree(location);
             ArrayList<LinkedList<Location>> locationPaths = new ArrayList<>();
             ArrayList<Integer> locationDistance = new ArrayList<>();
-            Algorithms.shortestPaths(getGraph(bigGraph), location, Integer::compare, Integer::sum,
+            Algorithms.shortestPaths(graph, location, Integer::compare, Integer::sum,
                     0, locationPaths, locationDistance);
 
             int totalDistance = locationDistance.stream().mapToInt(Integer::intValue).sum();
@@ -154,9 +154,15 @@ public class Service {
             entry.getValue().setNumberMinimumPaths(numberMinimumPaths);
         }
         map = sortByValue(order, map);
-        int numberHubs = numberOfHubs;
-        setHubs(0, numberHubs, map);
+        resetHubs(bigGraph);
+        setHubs(0, numberOfHubs, map);
         return map;
+    }
+
+    public void resetHubs(boolean bigGraph) {
+        for (Location location : getGraph(bigGraph).getVertices()) {
+            location.setHub(false);
+        }
     }
 
     private void setHubs(int i, int numberHubs, Map<Location, Criteria> map) {
@@ -318,7 +324,7 @@ public class Service {
     }
 
     public Map<Location, LinkedList<Location>> getClusters(boolean bigGraph, int numClusters, Set<Location> hubList){
-        MapGraph<Location, Integer> graph = getGraph(bigGraph);
+        MapGraph<Location, Integer> graph = getGraph(bigGraph).clone();
         if(hubList.size() < numClusters){
             System.out.println("O número de clusters não pode ser maior que o número de hubs do grafo!");
             return null;
