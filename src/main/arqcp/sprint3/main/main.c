@@ -21,6 +21,7 @@
 pid_t pids[2];
 void handleSignal(int signo, siginfo_t *sinfo, void *context)
 {
+	kill(pids[0], SIGKILL);
 	kill(pids[1], SIGKILL);
 
 	exit(0);
@@ -66,15 +67,18 @@ int main()
 				printf("Erro ao criar o processo\n");
 				exit(0);
 			}
+
 			if (pids[i] == 0)
 			{
 				switch (i)
 				{
 				case 0:
 					processadorDeDados(value_path, config_path, saida_path, number_of_readings, fatherPid);
+					exit(0);
 					break;
 				case 1:
-					saidaDeDados(saida_path, farm_coordinator, frequency, fatherPid);
+					saidaDeDados(saida_path, farm_coordinator, frequency);
+					exit(0);
 					break;
 				default:
 					break;
