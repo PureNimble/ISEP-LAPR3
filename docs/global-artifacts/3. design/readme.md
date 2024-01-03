@@ -2,4 +2,4 @@
 
 ## Class Diagram
 
-![Class Diagram Repository](./png/sprint2.png)
+![Class Diagram Repository](./png/sprint3.png)

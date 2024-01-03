@@ -1,0 +1,416 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class Algorithms {
+  + Algorithms(): 
+  - shortestPathDijkstraConstrained(Graph<V, E>, V, Comparator<E>, BinaryOperator<E>, BinaryOperator<E>, E, boolean[], V[], LocalTime[], LocalTime[], LocalTime[], LocalTime[], E[], E, LocalTime, double, LocalTime, E[]): void
+  + minDistGraph(Graph<V, E>, Comparator<E>, BinaryOperator<E>): MatrixGraph<V, E>
+  - getDistanceTwoVsMST(Graph<V, E>, V, V, Comparator<E>, BinaryOperator<E>, E, LinkedList<V>): int
+  - getPath(Graph<V, E>, V, V, V[], LinkedList<V>): void
+  + minSpanningTree(Graph<V, E>): Graph<V, E>
+  + depthFirstSearchWithHubs(Graph<V, E>, V, V, int, List<V>, List<V>, List<List<V>>, Set<V>): void
+  + allPathsWithLimit(Graph<V, E>, V, V, E, Comparator<E>, BinaryOperator<E>, E): List<List<V>>
+  - allPaths(Graph<V, E>, V, V, boolean[], LinkedList<V>, ArrayList<LinkedList<V>>): void
+  - countCommonNeighbors(V, Graph<V, E>, Graph<V, E>): int
+  - fillEdges(List<Graph<V, E>>, Graph<V, E>): void
+  + divideGraph(Graph<V, E>, Set<V>, Comparator<E>, BinaryOperator<E>, E, LinkedList<V>): List<Graph<V, E>>
+  + depthFirstSearchWithDistanceLimit(Graph<V, E>, V, V, E, Comparator<E>, BinaryOperator<E>, E, List<V>, E, List<List<V>>, Set<V>): void
+  - DepthFirstSearch(Graph<V, E>, V, LinkedList<V>): void
+  - calculateSillouette(float, float): float
+  - getTimes(Graph<V, E>, V, V, V[], LinkedList<LocalTime>, LocalTime[]): void
+  + allPaths(Graph<V, E>, V, V): ArrayList<LinkedList<V>>
+  + allPathsN(Graph<V, E>, V, V, int): List<List<V>>
+  - shortestPathDijkstra(Graph<V, E>, V, Comparator<E>, BinaryOperator<E>, E, boolean[], V[], E[]): void
+  + fordFulkerson(Graph<V, E>, V, V): Pair<Integer, Map<V, Map<V, Integer>>>
+  - numShortPaths(Graph<V, E>, LinkedList<V>, Map<Edge<V, E>, Integer>): void
+  - bfs(Map<V, Map<V, Integer>>, V, V, Map<V, V>): boolean
+  + shortestPaths(Graph<V, E>, V, Comparator<E>, BinaryOperator<E>, E, ArrayList<LinkedList<V>>, ArrayList<E>): boolean
+  + BreadthFirstSearch(Graph<V, E>, V): LinkedList<V>?
+  + divideGraphN(Graph<V, E>, Set<V>, Comparator<E>, BinaryOperator<E>, E, int): Map<V, LinkedList<V>>
+  + DepthFirstSearch(Graph<V, E>, V): LinkedList<V>?
+  + shortestPathsConstrained(Graph<V, E>, V, Comparator<E>, BinaryOperator<E>, BinaryOperator<E>, E, ArrayList<LinkedList<V>>, ArrayList<E>, ArrayList<LinkedList<LocalTime>>, ArrayList<LinkedList<LocalTime>>, ArrayList<LinkedList<LocalTime>>, ArrayList<LinkedList<LocalTime>>, E, LocalTime, double, LocalTime): boolean
+  - createClusterLists(Graph<V, E>, Set<V>): Map<V, LinkedList<V>>
+  + getSC(List<Graph<V, E>>, Comparator<E>, BinaryOperator<E>, E, LinkedList<V>, Graph<V, E>): float
+  - DepthFirstSearch(Graph<V, E>, V, boolean[], LinkedList<V>): void
+  + shortestPath(Graph<V, E>, V, V, Comparator<E>, BinaryOperator<E>, E, LinkedList<V>): E?
+  - sortMap(Graph<V, E>, Comparator<E>, BinaryOperator<E>, E): List<Entry<Edge<V, E>, Integer>>
+}
+class BasketDistributionUI {
+  + BasketDistributionUI(): 
+  - idExists(String, Boolean): boolean
+  - printCluster(Location, LinkedList<Location>): void
+  - formatDuration(Duration): String
+  - selectCluster(Map<Location, LinkedList<Location>>): void
+  - getMinimal(): void
+  - getIdealVertices(): void
+  + run(): void
+  - printClusters(Boolean, List<String>): void
+  - maximizedPath(): void
+  - getMinimalPaths(): void
+  - checkHours(LocalTime, Boolean): boolean
+  - getClusters(): void
+  - deliveryCircuitPath(): void
+  - addSchedule(): void
+  - divideDistribution(): void
+  - printBasketDistribution(): void
+  - buildBasketDistribution(): void
+  - printPaths(int, int): void
+  - openGraphViewer(String): void
+  - graphOption(): Boolean?
+  - getAllPathsWithAutonomy(): void
+  - maximumCapacity(): void
+}
+class CommonGraph<V, E> {
+  + CommonGraph(boolean): 
+  # isDirected: boolean
+  + vertices(): ArrayList<V>
+  + numEdges(): int
+  + equals(Object): boolean
+  + vertex(int): V
+  + hashCode(): int
+  + key(V): int
+  # copy(Graph<V, E>, Graph<V, E>): void
+  + numVertices(): int
+  + clone(): Graph<V, E>
+  + validVertex(V): boolean
+  + vertex(Predicate<V>): V
+   isDirected: boolean
+}
+class Criteria {
+  + Criteria(int, ArrayList<LinkedList<Location>>, int, int): 
+  - numberMinimumPaths: int
+  - distances: int
+  - paths: ArrayList<LinkedList<Location>>
+  - degree: int
+   degree: int
+   distances: int
+   paths: ArrayList<LinkedList<Location>>
+   numberMinimumPaths: int
+}
+class Edge<V, E> {
+  + Edge(V, V, E): 
+  - weight: E
+  + equals(Object): boolean
+  + hashCode(): int
+  + toString(): String
+   VDest: V
+   VOrig: V
+   weight: E
+}
+class FurthestPoints {
+  + FurthestPoints(Pair<Location, Location>, List<Location>, List<Integer>): 
+  - locations: List<Location>
+  - pair: Pair<Location, Location>
+  - distances: List<Integer>
+  + hashCode(): int
+  + toString(): String
+  + equals(Object): boolean
+   pair: Pair<Location, Location>
+   distances: List<Integer>
+   locations: List<Location>
+}
+interface Graph<V, E> << interface >> {
+  + adjVertices(V): Collection<V>
+  + removeVertex(V): boolean
+  + addVertex(V): boolean
+  + inDegree(V): int
+  + addEdge(V, V, E): boolean
+  + validVertex(V): boolean
+  + edges(): Collection<Edge<V, E>>
+  + clone(): Graph<V, E>
+  + vertex(Predicate<V>): V
+  + vertex(int): V
+  + edge(V, V): Edge<V, E>
+  + numVertices(): int
+  + vertices(): ArrayList<V>
+  + incomingEdges(V): Collection<Edge<V, E>>
+  + key(V): int
+  + edge(int, int): Edge<V, E>
+  + outgoingEdges(V): Collection<Edge<V, E>>
+  + removeEdge(V, V): boolean
+  + numEdges(): int
+  + outDegree(V): int
+   directed: boolean
+}
+class GraphController {
+  + GraphController(): 
+  - service: Service
+  + getDistance(Location, Location, Boolean): int
+  + maximizedPath(String, LocalTime, int, int, Boolean, LinkedList<Location>, LinkedList<LocalTime>, LinkedList<LocalTime>, LinkedList<LocalTime>, LinkedList<LocalTime>): int
+  + generateDataCSV(MapGraph<Location, Integer>): boolean
+  + getNumLocations(boolean): int
+  + allPathsWithLimit(String, String, int, int, boolean): Map<List<Pair<Location, Integer>>, Integer>
+  + getLatestFileFromDirectory(String): String
+  + maximumCapacity(MapGraph<Location, Integer>, Location, Location): Pair<Integer, MapGraph<Location, Integer>>
+  + divideIntoClusters(List<String>, boolean): List<Graph<Location, Integer>>
+  + getCoefSil(List<Graph<Location, Integer>>, boolean): float
+  + getClusters(boolean, int, Set<Location>): Map<Location, LinkedList<Location>>
+  + deliveryCircuitPath(String, int, Boolean): List<Location>
+  + getVerticesIdeais(int, int, boolean): Map<Location, Criteria>
+  + getMinimal(int, boolean): Pair<FurthestPoints, Pair<List<Location>, Integer>>
+  + filterGraph(MapGraph<Location, Integer>): MapGraph<Location, Integer>
+  + distanceLocations(String, String, boolean): Integer
+  + generateInitialDataCSV(boolean): boolean
+  + checkHours(LocalTime, boolean): boolean
+  + getMinimalPaths(boolean): Map<Location, Map<Location, Integer>>
+  + idExists(String, Boolean): boolean
+  + getNumDistances(boolean): int
+  + locationById(String, boolean): Location
+  + convertMapToMapGraph(Map<Location, Map<Location, Integer>>, MapGraph<Location, Integer>): boolean
+  + getGraph(boolean): MapGraph<Location, Integer>
+   service: Service
+}
+class GraphRepository {
+  + GraphRepository(): 
+  + distanceLocations(Location, Location, boolean): Integer
+  + getGraph(boolean): MapGraph<Location, Integer>
+  + getNumLocations(boolean): int
+  + getNumDistances(boolean): int
+  + locationById(String, boolean): Location
+  + keyLocation(Location, boolean): int
+  + addLocation(Location, boolean): boolean
+  + addDistance(Location, Location, Integer, boolean): boolean
+  + locationByKey(int, boolean): Location
+}
+class Import {
+  + Import(): 
+  + importXlsxFile(String): List<LinkedHashSet<List<String>>>
+  - importSheet(XSSFSheet): LinkedHashSet<List<String>>
+  - processCell(XSSFCell, String): String?
+  + importTxtFile(String, boolean): List<String>
+  + importFilesNames(String): List<String>
+}
+class ImportController {
+  + ImportController(): 
+  - irrigationHourRepository: IrrigationHourRepository
+  - service: Service
+  - irrigationSectorRepository: IrrigationSectorRepository
+  + importIrrigationPlan(): boolean
+  + importBddadNewData(): List<String>
+  + importToGraph(boolean): boolean
+  + importXlsx(): List<LinkedHashSet<List<String>>>
+  + importOpeningHours(String, boolean): boolean
+  + getFilesFromDirectory(String): List<String>
+   irrigationHourRepository: IrrigationHourRepository
+   service: Service
+   irrigationSectorRepository: IrrigationSectorRepository
+}
+class Location {
+  + Location(String, double, double, int, LocalTime, LocalTime): 
+  + Location(String): 
+  - startHour: LocalTime
+  - longitude: double
+  - latitude: double
+  - numEmployees: int
+  - endHour: LocalTime
+  - id: String
+  - isHub: boolean
+  + hashCode(): int
+  + equals(Object): boolean
+  + toString(): String
+   starHour: LocalTime
+   startHour: LocalTime
+   endHour: LocalTime
+   latitude: double
+   isHub: boolean
+   longitude: double
+   numEmployees: int
+   id: String
+}
+class MainTest {
+  + MainTest(): 
+  ~ testBasketDistributionDepthFirstSearch(): void
+  ~ testMaximumCapacityNetworkSmallGraph(): void
+  ~ allPathsWithLimitSmallGraph(): void
+  ~ testDeliveryCircuitPathIdDoesNotExist(): void
+  ~ testMaximumCapacityNetworkBigGraph(): void
+  ~ testMaximumCapacityBigGraph(): void
+  ~ testBasketDistributionNullLocation(): void
+  ~ testMaximumCapacitySmallGraphNoFlow(): void
+  ~ testBasketDistributionLocationByID(): void
+  ~ setUp(): void
+  ~ testGetMinimalPathsDistanceBetweenLocalizationsNotNegative(): void
+  ~ testMaximumCapacityNetworkPrincipleSmallGraph(): void
+  ~ testLocationDegree(): void
+  ~ testMinimalOptimalCase(): void
+  ~ testDeliveryCircuitPathHubsNotNegative(): void
+  ~ testGetMinimalPathsDistanceBetweenLocalizations(): void
+  ~ testDeliveryCircuitPathHubsCanNotBeLessThan5(): void
+  ~ allPathsWithLimitBigGraph(): void
+  ~ testMaximumCapacityNetworkPrincipleBigGraph(): void
+  ~ testDivideGraphNWith3Clusters(): void
+  ~ testMaximumCapacityBigGraphNoFlow(): void
+  ~ testBasketDistributionKeyLocation(): void
+  ~ allPathsWithLimitInvalidLocation(): void
+  ~ testBasketDistributionBreadthFirstSearch(): void
+  ~ testShortestPaths(): void
+  ~ testDeliveryCircuitPathHubsCanNotBeGreaterThan7(): void
+  ~ testBasketDistributionDistancesNum(): void
+  ~ testGetClustersWith0Hubs(): void
+  ~ testMinimalNoFuel(): void
+  ~ testBasketDistributionLocationsNum(): void
+  ~ testVerticesIdeais(): void
+  ~ testMaximumCapacitySmallGraph(): void
+  ~ testMaximizedPath(): void
+  ~ testBasketDistributionLocationById(): void
+  ~ testGetClustersWith2Hubs(): void
+  ~ testShortestPath(): void
+  ~ testBasketDistributionLocationByKey(): void
+  ~ testGetMinimalPathsMinimalDistanceBetweenLocalizations(): void
+  ~ testGetMinimalPathsPrint(): void
+  ~ allPathsWithLimitNoPath(): void
+  ~ testBasketDistributionAllPaths(): void
+  ~ testGetMinimalPathsPathExistsBetweenLocalizations(): void
+  ~ testMaximumCapacityNoHubs(): void
+}
+class MapGraph<V, E> {
+  + MapGraph(boolean): 
+  + MapGraph(Graph<V, E>): 
+  + inDegree(V): int
+  + clone(): MapGraph<V, E>
+  + outDegree(V): int
+  + addEdge(V, V, E): boolean
+  + edge(V, V): Edge<V, E>
+  + adjVertices(V): Collection<V>
+  + outgoingEdges(V): Collection<Edge<V, E>>
+  + toString(): String
+  + validVertex(V): boolean
+  + edges(): Collection<Edge<V, E>>
+  + removeVertex(V): boolean
+  + incomingEdges(V): Collection<Edge<V, E>>
+  + edge(int, int): Edge<V, E>
+  + removeEdge(V, V): boolean
+  + addVertex(V): boolean
+   vertices: Set<V>
+}
+class MapVertex<V, E> {
+  + MapVertex(V): 
+  - element: V
+  + remAdjVert(V): void
+  + numAdjVerts(): int
+  + toString(): String
+  + getEdge(V): Edge<V, E>
+  + addAdjVert(V, Edge<V, E>): void
+   allAdjVerts: Collection<V>
+   allOutEdges: Collection<Edge<V, E>>
+   element: V
+}
+class MatrixGraph<V, E> {
+  + MatrixGraph(boolean): 
+  + MatrixGraph(boolean, int): 
+  + MatrixGraph(Graph<V, E>): 
+  + MatrixGraph(boolean, ArrayList<V>, E[][]): 
+  + addEdge(V, V, E): boolean
+  + removeVertex(V): boolean
+  + edge(int, int): Edge<V, E>
+  + outgoingEdges(V): Collection<Edge<V, E>>
+  + adjVertices(V): Collection<V>
+  + edges(): Collection<Edge<V, E>>
+  + inDegree(V): int
+  + outDegree(V): int
+  + toString(): String
+  - removeEdge(int, int): void
+  + clone(): MatrixGraph<V, E>
+  + removeEdge(V, V): boolean
+  - resizeMatrix(): void
+  + edge(V, V): Edge<V, E>
+  + incomingEdges(V): Collection<Edge<V, E>>
+  + addVertex(V): boolean
+}
+class Pair<T, U> {
+  + Pair(T, U): 
+  - first: T
+  - second: U
+  + equals(Object): boolean
+  + hashCode(): int
+  + toString(): String
+   second: U
+   first: T
+}
+class Service {
+  + Service(): 
+  - graphRepository: GraphRepository
+  + generateDataCSV(MapGraph<Location, Integer>): boolean
+  + createOpeningHours(List<String>, boolean): boolean
+  + getMinimalPaths(boolean): Map<Location, Map<Location, Integer>>
+  + keyLocation(Location, boolean): int
+  + getVerticesIdeais(int, int, boolean): Map<Location, Criteria>
+  - transformData(MapGraph<Location, Integer>): List<String>
+  + locationById(String, boolean): Location
+  + resetHubs(boolean): void
+  + convertMapToMapGraph(Map<Location, Map<Location, Integer>>, MapGraph<Location, Integer>): boolean
+  + checkHours(LocalTime, boolean): boolean
+  + distanceLocations(String, String, boolean): Integer
+  + getClusters(boolean, int, Set<Location>): Map<Location, LinkedList<Location>>
+  + maximizedPath(String, LocalTime, int, int, Boolean, LinkedList<Location>, LinkedList<LocalTime>, LinkedList<LocalTime>, LinkedList<LocalTime>, LinkedList<LocalTime>): int
+  + idExists(String, Boolean): boolean
+  + maximumCapacity(MapGraph<Location, Integer>, Location, Location): Pair<Integer, MapGraph<Location, Integer>>
+  + addDistance(List<String>, boolean): boolean
+  + getNumLocations(boolean): int
+  + filterGraph(MapGraph<Location, Integer>): MapGraph<Location, Integer>
+  + transformToDirectedOneWay(MapGraph<Location, Integer>): MapGraph<Location, Integer>
+  + deliveryCircuitPath(String, int, Boolean): List<Location>
+  - getMaxHourToSearch(Boolean): LocalTime
+  + locationByKey(int, boolean): Location
+  - sortByValue(int, Map<Location, Criteria>): Map<Location, Criteria>
+  + getNumDistances(boolean): int
+  + createLocation(List<String>, boolean): boolean
+  + getDistance(Location, Location, Boolean): int
+  + getMinimal(int, boolean): Pair<FurthestPoints, Pair<List<Location>, Integer>>
+  + generateInitialDataCSV(boolean): boolean
+  - furthestPoints(Graph<Location, Integer>): Pair<Integer, LinkedList<Location>>
+  + getLatestFileFromDirectory(String): String
+  + getCoefSil(List<Graph<Location, Integer>>, boolean): float
+  + allPathsWithLimit(String, String, int, int, boolean): Map<List<Pair<Location, Integer>>, Integer>
+  - makeCsvFile(String, List<String>): boolean
+  - setHubs(int, int, Map<Location, Criteria>): void
+  + getGraph(boolean): MapGraph<Location, Integer>
+  + divideIntoClusters(List<String>, boolean): List<Graph<Location, Integer>>
+   graphRepository: GraphRepository
+}
+
+Algorithms            -[#595959,dashed]->  MatrixGraph          : "«create»"
+Algorithms            -[#595959,dashed]->  Pair                 : "«create»"
+BasketDistributionUI "1" *-[#595959,plain]-> "graphController\n1" GraphController      
+BasketDistributionUI  -[#595959,dashed]->  GraphController      : "«create»"
+BasketDistributionUI  -[#595959,dashed]->  ImportController     : "«create»"
+BasketDistributionUI "1" *-[#595959,plain]-> "importController\n1" ImportController     
+BasketDistributionUI  -[#595959,dashed]->  Location             : "«create»"
+BasketDistributionUI  -[#595959,dashed]->  MapGraph             : "«create»"
+CommonGraph           -[#008200,dashed]-^  Graph                
+FurthestPoints       "1" *-[#595959,plain]-> "locations\n*" Location             
+FurthestPoints       "1" *-[#595959,plain]-> "pair\n1" Pair                 
+GraphController      "1" *-[#595959,plain]-> "service\n1" Service              
+GraphRepository       -[#595959,dashed]->  MapGraph             : "«create»"
+GraphRepository      "1" *-[#595959,plain]-> "basketDistribution\n1" MapGraph             
+ImportController      -[#595959,dashed]->  Import               : "«create»"
+ImportController     "1" *-[#595959,plain]-> "importClass\n1" Import               
+ImportController     "1" *-[#595959,plain]-> "service\n1" Service              
+MainTest              -[#595959,dashed]->  GraphController      : "«create»"
+MainTest             "1" *-[#595959,plain]-> "graphController\n1" GraphController      
+MainTest             "1" *-[#595959,plain]-> "graphRepository\n1" GraphRepository      
+MainTest             "1" *-[#595959,plain]-> "importController\n1" ImportController     
+MainTest              -[#595959,dashed]->  ImportController     : "«create»"
+MainTest              -[#595959,dashed]->  Location             : "«create»"
+MainTest              -[#595959,dashed]->  MapGraph             : "«create»"
+MainTest             "1" *-[#595959,plain]-> "BASKET_DISTRIBUTION\n1" MapGraph             
+MainTest              -[#595959,dashed]->  Pair                 : "«create»"
+MainTest             "1" *-[#595959,plain]-> "service\n1" Service              
+MapGraph              -[#000082,plain]-^  CommonGraph          
+MapGraph              -[#595959,dashed]->  Edge                 : "«create»"
+MapGraph              -[#595959,dashed]->  MapVertex            : "«create»"
+MapGraph             "1" *-[#595959,plain]-> "mapVertices\n*" MapVertex            
+MapVertex            "1" *-[#595959,plain]-> "outVerts\n*" Edge                 
+MatrixGraph           -[#000082,plain]-^  CommonGraph          
+MatrixGraph          "1" *-[#595959,plain]-> "edgeMatrix\n*" Edge                 
+MatrixGraph           -[#595959,dashed]->  Edge                 : "«create»"
+Service               -[#595959,dashed]->  Criteria             : "«create»"
+Service               -[#595959,dashed]->  FurthestPoints       : "«create»"
+Service              "1" *-[#595959,plain]-> "graphRepository\n1" GraphRepository      
+Service               -[#595959,dashed]->  Location             : "«create»"
+Service               -[#595959,dashed]->  MapGraph             : "«create»"
+Service               -[#595959,dashed]->  Pair                 : "«create»"
+@enduml

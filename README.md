@@ -33,9 +33,9 @@ mvn clean verify
 
 ## Lista de conteúdos 
 
-* [Artefatos globais](./docs/global-artifacts/readme.md)
+* [Artefactos globais](./docs/global-artifacts/readme.md)
 * [Diagramas BDDAD](./docs/bddad/models/Diagrams.md)
-* [Estrura do Armazém (fsiap)](docs/fsiap/readme.md)
+* [Estrutura do Armazém (fsiap)](docs/fsiap/readme.md)
 
 ## Burndown Chart
 
