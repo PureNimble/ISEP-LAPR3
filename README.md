@@ -30,6 +30,10 @@ mvn exec:java
 ```
 mvn clean verify
 ```
+### Executar o programa final
+```
+java -jar sem3pi2023_24_g094.jar
+```
 
 ## Lista de conteúdos 
 

@@ -16,9 +16,6 @@ dist/
 # Log files
 *.log
 
-# Package files
-*.jar
-
 # compiled files
 output
 *.o

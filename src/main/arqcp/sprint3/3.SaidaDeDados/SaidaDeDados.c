@@ -62,6 +62,11 @@ void createFinalSensor(FinalSensor *ptrSensores, char *fileName, char *directory
 {
     fileName = insert_at_start(fileName, "/");
     char *path = (char *)malloc(100 * sizeof(char));
+    if (path == NULL)
+    {
+        printf("Erro ao alocar memória\n");
+        killProcess();
+    }
     strcpy(path, directoryPath);
     strcat(path, fileName);
     FILE *fp = fopen(path, "r");
@@ -70,14 +75,13 @@ void createFinalSensor(FinalSensor *ptrSensores, char *fileName, char *directory
         printf("Erro ao abrir o ficheiro\n");
         exit(0);
     }
-    FinalSensor *ptr = ptrSensores;
-    unsigned int id;
-    unsigned int write_counter;
+    unsigned short id;
+    unsigned short write_counter;
     char type[30];
     char unit[20];
     char median[20];
     int median_value;
-    while (fscanf(fp, "%d,%d,%[^,],%[^,],%s#\n", &id, &write_counter, type, unit, &median) == 5)
+    while (fscanf(fp, "%hd,%hd,%[^,],%[^,],%s#\n", &id, &write_counter, type, unit, median) == 5)
     {
         if (!strcmp(median, "error"))
             median_value = 0;
@@ -86,8 +90,8 @@ void createFinalSensor(FinalSensor *ptrSensores, char *fileName, char *directory
         int currentSensor = findSensors(id, ptrSensores);
         if (currentSensor == -1)
             continue;
-        if (median_value != 0)
-            enqueue_value(ptrSensores[currentSensor].array_median, ptrSensores[currentSensor].array_size, &ptrSensores[currentSensor].array_read, &ptrSensores[currentSensor].array_write, median);
+        ptrSensores[currentSensor].median = median_value;
+        ptrSensores[currentSensor].write_counter = write_counter;
     }
     fclose(fp);
     free(path);
@@ -135,6 +139,11 @@ FinalSensor *createStruct(FinalSensor *ptrSensores, char *fileName, char *direct
 {
     fileName = insert_at_start(fileName, "/");
     char *path = (char *)malloc(100 * sizeof(char));
+    if (path == NULL)
+    {
+        printf("Erro ao alocar memória\n");
+        killProcess();
+    }
     strcpy(path, directoryPath);
     strcat(path, fileName);
     FILE *fp = fopen(path, "r");
@@ -155,14 +164,14 @@ FinalSensor *createStruct(FinalSensor *ptrSensores, char *fileName, char *direct
     }
     ptrSensores = temp;
     FinalSensor *ptr = ptrSensores;
-    unsigned int id;
-    unsigned int write_counter;
+    unsigned short id;
+    unsigned short write_counter;
     char type[30];
     char unit[20];
     char median[20];
     int median_value;
     FinalSensor s;
-    while (fscanf(fp, "%d,%d,%[^,],%[^,],%s#\n", &id, &write_counter, type, unit, &median) == 5)
+    while (fscanf(fp, "%hd,%hd,%[^,],%[^,],%s#\n", &id, &write_counter, type, unit, median) == 5)
     {
         if (!strcmp(median, "error"))
             median_value = 0;
@@ -173,14 +182,9 @@ FinalSensor *createStruct(FinalSensor *ptrSensores, char *fileName, char *direct
         s.unit = malloc(strlen(unit) + 1);
         s.id = id;
         s.write_counter = write_counter;
-        s.array_median = (int *)calloc(10, sizeof(int));
-        s.array_read = 0;
-        s.array_write = 0;
-        s.array_size = 10;
+        s.median = median_value;
         strcpy(s.sensor_type, type);
         strcpy(s.unit, unit);
-        if (median_value != 0)
-            enqueue_value(s.array_median, s.array_size, &s.array_read, &s.array_write, median_value);
 
         *ptrSensores = s;
         ptrSensores++;
@@ -188,7 +192,7 @@ FinalSensor *createStruct(FinalSensor *ptrSensores, char *fileName, char *direct
 
     fclose(fp);
     free(path);
-    printf("Ficheiro criado com sucesso\n");
+    printf("Ficheiro importado com sucesso\n");
     return ptr;
 }
 
@@ -202,24 +206,6 @@ int findSensors(int id, FinalSensor *sensors)
     }
     printf("Não existe configuração para o sensor ID:%d\n", id);
     return -1;
-}
-
-void printSensor(FinalSensor *ptr)
-{
-    int i;
-    for (i = 0; i < numberOfL; i++)
-    {
-        printf("ID: %d\n", ptr->id);
-        printf("Write Counter: %d\n", ptr->write_counter);
-        printf("Sensor Type: %s\n", ptr->sensor_type);
-        printf("Unit: %s\n", ptr->unit);
-        printf("Median: %d\n", ptr->array_median[ptr->array_read]);
-        printf("Array Size: %d\n", ptr->array_size);
-        printf("Array Read: %d\n", ptr->array_read);
-        printf("Array Write: %d\n", ptr->array_write);
-        printf("\n");
-        ptr++;
-    }
 }
 
 void saidaDeDadosOutput(FinalSensor *ptr, char *outputPath)
@@ -252,29 +238,14 @@ void saidaDeDadosOutput(FinalSensor *ptr, char *outputPath)
     }
     for (i = 0; i < numberOfL; i++)
     {
-        int write = ptr->array_write;
-        int read = ptr->array_read;
-        int size = ptr->array_size;
-        int num_elements = (write - read + size) % size;
-        if (num_elements == 0)
+        float median = (float)ptr->median;
+        if (median == 0)
             fprintf(file, "%d,%d,%s,%s,%s\n", ptr->id, ptr->write_counter, ptr->sensor_type, ptr->unit, "no data");
         else
-        {
-            int vec[num_elements];
-            move_num_vec(ptr->array_median, size, &read, &write, num_elements, vec);
-            float med = media(vec, num_elements);
-            fprintf(file, "%d,%d,%s,%s,%.2f\n", ptr->id, ptr->write_counter, ptr->sensor_type, ptr->unit, med);
-        }
+            fprintf(file, "%d,%d,%s,%s,%.2f\n", ptr->id, ptr->write_counter, ptr->sensor_type, ptr->unit, median);
+
         ptr++;
     }
     fclose(file);
     free(path);
-}
-float media(int *vec, int size)
-{
-    int i;
-    float sum = 0;
-    for (i = 0; i < size; i++)
-        sum += vec[i];
-    return sum / size;
 }

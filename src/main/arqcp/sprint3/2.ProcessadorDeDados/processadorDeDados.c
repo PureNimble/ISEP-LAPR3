@@ -37,9 +37,8 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
     int const NUM_SENSORS = numberOfLines(configPath);
     Sensor *ptrSensores = (Sensor *)malloc(NUM_SENSORS * sizeof(Sensor));
     if (ptrSensores == NULL)
-    {
         printf("Erro ao criar a array dinâmico de estruturas\n");
-    }
+
     createSensors(ptrSensores, configPath);
 
     int serial_port = open(valuesPath, O_RDWR);
@@ -344,7 +343,7 @@ int doesDirectoryExist(const char *path)
 
 void serialize(Sensor *sensor, char *directoryPath, char **output)
 {
-    char string[100];
+    char *string = (char *)calloc(256, sizeof(char));
     if (sensor->isError)
         sprintf(string, "%d,%d,%s,%s,%s\n", sensor->id, sensor->write_counter, sensor->sensor_type, sensor->unit, "error#");
     else
@@ -355,13 +354,7 @@ void serialize(Sensor *sensor, char *directoryPath, char **output)
             mediana += sensor->median_array[i];
         sprintf(string, "%d,%d,%s,%s,%d#\n", sensor->id, sensor->write_counter, sensor->sensor_type, sensor->unit, mediana);
     }
-    *output = (char *)calloc(strlen(string), sizeof(char));
-    if (*output == NULL)
-    {
-        printf("Erro ao alocar memória\n");
-        killProcess(fatherPid, SIGUSR1);
-    }
-    strcpy(*output, string);
+    *output = string;
     sensor->isError = false;
 }
 
@@ -400,7 +393,7 @@ void createOutputFile(char *directoryPath, char **output, int numberOfSensors)
                 *lastChar = '\0';
         }
 
-        fprintf(file, *output);
+        fprintf(file, "%s", *output);
         **output++;
     }
     fclose(file);

@@ -8,10 +8,7 @@ typedef struct
 {
     char *sensor_type;              // 8 bytes
     char *unit;                     // 8 bytes
-    int* array_median;              // 4 bytes
-    int  array_read;                // 4 bytes
-    int  array_write;               // 4 bytes
-    int  array_size;                // 4 bytes
+    int median;                     // 4 bytes
     unsigned short id;              // 2 bytes
     unsigned short write_counter;   // 2 bytes
 
