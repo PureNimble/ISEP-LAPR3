@@ -59,4 +59,6 @@ void createOutputFile(char *directoryPath, char **output, int numberOfSensors);
 char *insert_at_start(char *original, char *to_insert);
 void killProcess();
 
+void createConfigFile(char *configPath);
+
 #endif

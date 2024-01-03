@@ -74,7 +74,7 @@ int main()
 					processadorDeDados(value_path, config_path, saida_path, number_of_readings, fatherPid);
 					break;
 				case 1:
-					saidaDeDados(saida_path, farm_coordinator, frequency);
+					saidaDeDados(saida_path, farm_coordinator, frequency, fatherPid);
 					break;
 				default:
 					break;
@@ -107,7 +107,7 @@ void getParameters(char *value_path, char *config_path, char *saida_path, int *n
 
 	if (isFileValid == -1)
 		reWriteSetup();
-	FILE *fp = fopen(CONFIG_PATH, "r");
+	FILE *fp = fopen(CONFIG_PATH, "r+");
 	if (fp == NULL)
 	{
 		printf("Erro ao abrir o ficheiro de configuração\n");

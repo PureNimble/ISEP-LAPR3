@@ -8,7 +8,9 @@
 #include <termios.h> // Contains POSIX terminal control definitions
 #include <unistd.h>  // write(), read(), close()
 #include <sys/stat.h>
-
+#include <sys/types.h>
+#include <signal.h>
+#include <unistd.h>
 // malloc
 #include <stdlib.h>
 // time
@@ -28,20 +30,19 @@
 pid_t fatherPid;
 void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath, int numberOfReads, pid_t pid)
 {
-    fatherPid = fatherPid;
+    fatherPid = pid;
     configPath = insert_at_start(configPath, "../");
     directoryPath = insert_at_start(directoryPath, "../");
 
     int const NUM_SENSORS = numberOfLines(configPath);
     Sensor *ptrSensores = (Sensor *)malloc(NUM_SENSORS * sizeof(Sensor));
-
     if (ptrSensores == NULL)
     {
         printf("Erro ao criar a array dinâmico de estruturas\n");
     }
     createSensors(ptrSensores, configPath);
 
-    int serial_port = open(valuesPath, O_RDWR);
+    /* int serial_port = open(valuesPath, O_RDWR);
     if (serial_port < 0)
     {
         printf("Erro %i ao abir: %s\n", errno, strerror(errno));
@@ -57,19 +58,20 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
         freeSensors(ptrSensores, NUM_SENSORS);
         return;
     }
-    cfsetispeed(&tty, B9600);
+    cfsetispeed(&tty, B9600); */
     int i;
     while (1)
     {
         printf("A processar dados...\n");
         for (i = 0; i < numberOfReads; i++)
         {
-            char *data = getData(serial_port);
+            // char *data = getData(serial_port);
+            char *data = "sensor_id:1#value:1000#time:10"; // getData(serial_port);
             int *info = extractInfo(data);
             printf("id: %i, valor: %i, time:%i\n", info[0], info[1], info[2]);
             fflush(stdout);
             insertInfo(info, ptrSensores, NUM_SENSORS);
-            free(data);
+            // free(data);
             free(info);
         }
         char *output[NUM_SENSORS];
@@ -81,8 +83,9 @@ void processadorDeDados(char *valuesPath, char *configPath, char *directoryPath,
         createOutputFile(directoryPath, output, NUM_SENSORS);
         printAllSensors(ptrSensores, NUM_SENSORS);
     }
+    freeSensors(ptrSensores, NUM_SENSORS);
 
-    close(serial_port);
+    // close(serial_port);
 }
 
 void freeSensors(Sensor *sensors, int count)
@@ -149,22 +152,14 @@ void createSensors(Sensor *ptr, char *configPath)
     if (!doesDirectoryExist(directory))
         mkdir(directory, 0777);
     free(directory);
-    int isFileValid = access(configPath, F_OK);
-    FILE *file = fopen(configPath, "a+");
-    if (isFileValid == -1)
+
+    if (access(configPath, F_OK) == -1)
+        createConfigFile(configPath);
+
+    FILE *file = fopen(configPath, "r");
+    if (file == NULL)
     {
-        fprintf(file, "1#soil_humidity#percentage#50#10#400000\n");
-        fprintf(file, "2#soil_humidity#percentage#60#15#500000\n");
-        fprintf(file, "3#atmospheric_humidity#percentage#70#10#2000000\n");
-        fprintf(file, "4#atmospheric_humidity#percentage#80#20#2000000\n");
-        fprintf(file, "5#atmospheric_humidity#percentage#50#15#200000\n");
-        fprintf(file, "6#atmospheric_humidity#percentage#50#10#5000000\n");
-        fprintf(file, "7#atmospheric_temperature#celsius#40#10#800000\n");
-        fprintf(file, "8#atmospheric_temperature#celsius#50#14#400000\n");
-        fprintf(file, "9#atmospheric_temperature#celsius#50#13#2000000\n");
-        fprintf(file, "10#atmospheric_temperature#celsius#50#12#200000");
-        fflush(file);
-        fclose(file);
+        printf("Erro ao abrir o ficheiro de configuração\n");
         killProcess(fatherPid, SIGUSR1);
     }
 
@@ -211,13 +206,6 @@ void createSensors(Sensor *ptr, char *configPath)
         ptr++;
     }
     fclose(file);
-}
-
-char *test()
-{
-    char *text[] = {"sensor_id:1#value:10#time:10", "sensor_id:2#value:20#time:20", "sensor_id:3#value:30#time:30", "sensor_id:4#value:40#time:40"};
-    // return a random string
-    return text[rand() % 4];
 }
 
 void insertInfo(int *info, Sensor *sensors, int count)
@@ -276,7 +264,14 @@ void printAllSensors(Sensor *sensors, int count)
         printf("type: %s; ", sensors[i].sensor_type);
         printf("unit: %s; ", sensors[i].unit);
         printf("write_counter: %i; ", sensors[i].write_counter);
-        printf("instate_temporal_ultima_leitura: %d; ", sensors[i].instate_temporal_ultima_leitura);
+        if (sensors[i].instate_temporal_ultima_leitura != INT_MIN)
+        {
+            printf("instate_temporal_ultima_leitura: %d; ", sensors[i].instate_temporal_ultima_leitura);
+        }
+        else
+        {
+            printf("instate_temporal_ultima_leitura: NULL; ");
+        }
         printf("timeout: %i; ", sensors[i].timeout);
         printf("buffer_read: %i; ", sensors[i].buffer_read);
         printf("buffer_write: %i; ", sensors[i].buffer_write);
@@ -426,6 +421,7 @@ char *insert_at_start(char *original, char *to_insert)
     // Copy the strings into the new string
     strcpy(new_string, to_insert);
     strcat(new_string, original);
+    // free(original);
 
     return new_string;
 }
@@ -433,6 +429,28 @@ char *insert_at_start(char *original, char *to_insert)
 void killProcess()
 {
     kill(fatherPid, SIGUSR1);
-
     exit(0);
+}
+
+void createConfigFile(char *configPath)
+{
+    FILE *file = fopen(configPath, "w");
+    if (file == NULL)
+    {
+        printf("Erro ao criar o ficheiro de configuração\n");
+        exit(0);
+    }
+    fprintf(file, "1#soil_humidity#percentage#50#10#40000\n");
+    fprintf(file, "2#soil_humidity#percentage#60#15#50000\n");
+    fprintf(file, "3#atmospheric_humidity#percentage#70#10#20000\n");
+    fprintf(file, "4#atmospheric_humidity#percentage#80#20#20000\n");
+    fprintf(file, "5#atmospheric_humidity#percentage#50#15#20000\n");
+    fprintf(file, "6#atmospheric_humidity#percentage#50#10#50000\n");
+    fprintf(file, "7#atmospheric_temperature#celsius#40#10#80000\n");
+    fprintf(file, "8#atmospheric_temperature#celsius#50#14#400000\n");
+    fprintf(file, "9#atmospheric_temperature#celsius#50#13#20000\n");
+    fprintf(file, "10#atmospheric_temperature#celsius#50#12#20000");
+    fflush(file);
+    fclose(file);
+    killProcess(fatherPid, SIGUSR1);
 }
