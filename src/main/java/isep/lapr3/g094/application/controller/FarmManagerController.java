@@ -71,8 +71,8 @@ public class FarmManagerController {
         return farmManagerRepository.getParcelas();
     }
 
-    public Map<String, Integer> getPlantacoes(int parcelaID) throws SQLException {
-        return farmManagerRepository.getPlantacoes(parcelaID);
+    public Map<String, Integer> getPlantacoes(int parcelaID, Date operacaoData) throws SQLException {
+        return farmManagerRepository.getPlantacoes(parcelaID, operacaoData);
     }
 
     public Map<String, Integer> getCulturas() throws SQLException {
@@ -137,7 +137,7 @@ public class FarmManagerController {
         farmManagerRepository.addFatorToReceita(receitaID, fatorProducaoID, quantidade, unidade);
     }
 
-    public List<String> getConsumoByCultura(int year) throws SQLException {
+    public Map<Integer, List<String>> getConsumoByCultura(int year) throws SQLException {
         return farmManagerRepository.getConsumoByCultura(year);
     }
 
@@ -145,11 +145,11 @@ public class FarmManagerController {
         return farmManagerRepository.getFatorProducaoYear(year);
     }
 
-    public void cancelOperation(int operacaoId) throws SQLException{
+    public void cancelOperation(int operacaoId) throws SQLException {
         farmManagerRepository.cancelOperation(operacaoId);
     }
 
-    public Map<String, Integer> getOperacoes() throws SQLException{
+    public Map<String, Integer> getOperacoes() throws SQLException {
         return farmManagerRepository.getOperacoes();
     }
 }

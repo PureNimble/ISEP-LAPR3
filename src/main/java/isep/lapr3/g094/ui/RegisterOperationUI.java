@@ -1,5 +1,6 @@
 package isep.lapr3.g094.ui;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.time.LocalTime;
@@ -123,13 +124,13 @@ public class RegisterOperationUI implements Runnable {
         }
     }
 
-    public void createReceita(){
+    public void createReceita() {
         String designacao = Utils.readLineFromConsole("Designação desejada para a receita: ");
         try {
             int receitaID = farmManagerController.createReceita(designacao);
             System.out.println("\nReceita inicializada com sucesso!");
             boolean cont;
-            do{
+            do {
                 Integer fatorProducaoID = selectFatorProducao();
                 Double quantidade = Utils.readDoubleFromConsole("Quantidade: ");
                 String unidade = Utils.readLineFromConsole("Unidade: ");
@@ -160,7 +161,7 @@ public class RegisterOperationUI implements Runnable {
             if (plantacaoID == null)
                 return;
         } else {
-            plantacaoID = selectPlantacao(parcelaID);
+            plantacaoID = selectPlantacao(parcelaID, dataOperacao);
             if (plantacaoID == null)
                 return;
         }
@@ -186,10 +187,10 @@ public class RegisterOperationUI implements Runnable {
 
     }
 
-    private Integer selectPlantacao(int parcelaID) {
+    private Integer selectPlantacao(int parcelaID, Date dataOperacao) {
         Integer plantacaoID = null;
         try {
-            Map<String, Integer> plantacoes = farmManagerController.getPlantacoes(parcelaID);
+            Map<String, Integer> plantacoes = farmManagerController.getPlantacoes(parcelaID, dataOperacao);
 
             List<String> plantacoesList = new ArrayList<String>(plantacoes.keySet());
             String plantacao = (String) Utils.showAndSelectOne(plantacoesList, "\nLista de plantações:");
@@ -309,7 +310,7 @@ public class RegisterOperationUI implements Runnable {
             }
 
             String option = (String) Utils.showAndSelectOne(setorList, "\nLista de Setores:");
-            if (option != null){
+            if (option != null) {
                 String[] split = option.split(" - ");
                 setorID = Integer.parseInt(split[0]);
             }

@@ -48,7 +48,7 @@ public class Utils {
 
                 return value;
             } catch (NumberFormatException ex) {
-                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("input inválido. Por favor escreva um valor válido.");
             }
         } while (true);
     }

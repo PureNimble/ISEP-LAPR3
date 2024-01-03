@@ -101,12 +101,17 @@ public class DisplayOperationUI implements Runnable {
         Integer year = Utils.readIntegerFromConsole("Ano civil: ");
 
         try {
-            List<String> list = farmManagerController.getConsumoByCultura(year);
-
+            Map<Integer, List<String>> list = farmManagerController.getConsumoByCultura(year);
             if (!list.isEmpty()) {
                 System.out.println("\nResultado:");
-                for (String s : list)
-                    System.out.println(s);
+                int i = 1;
+                for (Map.Entry<Integer, List<String>> entry : list.entrySet()) {
+                    System.out.println("Top " + i + "º de consumo: " + entry.getKey());
+                    for (String s : entry.getValue()) {
+                        System.out.println("\t -> " + s);
+                    }
+                    i++;
+                }
             } else
                 System.out.println("\nSem resultados");
         } catch (SQLException e) {

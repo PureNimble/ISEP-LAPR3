@@ -3,12 +3,15 @@ package isep.lapr3.g094.repository;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.List;
 import java.text.DateFormatSymbols;
 import java.util.Locale;
@@ -231,19 +234,18 @@ public class FarmManagerRepository {
 		return output;
 	}
 
-	public Map<String, Integer> getPlantacoes(int parcelaID) throws SQLException {
+	public Map<String, Integer> getPlantacoes(int parcelaID, Date operacaoData) throws SQLException {
 		CallableStatement callStmt = null;
-		Statement stmt = null;
+		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		Map<String, Integer> output = new HashMap<String, Integer>();
 		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
-			stmt = connection.createStatement();
-			rs = stmt.executeQuery(
-					"SELECT P.ID,NE.NOMECOMUM || ' ' || CU.VARIEDADE AS Cultura, P.DATAINICIAL FROM Plantacao P, CULTURA CU, NOMEESPECIE NE WHERE P.ParcelaEspacoID = "
-							+ parcelaID
-							+ " AND P.CULTURAID = CU.ID AND CU.NOMEESPECIEID = NE.ID AND (P.DATAFINAL IS NULL OR P.DATAFINAL > SYSDATE)");
-
+			String query = "SELECT P.ID,NE.NOMECOMUM || ' ' || CU.VARIEDADE AS Cultura, P.DATAINICIAL FROM Plantacao P, CULTURA CU, NOMEESPECIE NE WHERE P.ParcelaEspacoID = ? AND P.CULTURAID = CU.ID AND CU.NOMEESPECIEID = NE.ID AND (P.DATAFINAL IS NULL OR P.DATAFINAL >= ?)";
+			stmt = connection.prepareStatement(query);
+			stmt.setInt(1, parcelaID);
+			stmt.setDate(2, operacaoData);
+			rs = stmt.executeQuery();
 			while (rs.next()) {
 				output.put(rs.getString(2) + " | " + rs.getDate(3), rs.getInt(1));
 			}
@@ -259,7 +261,6 @@ public class FarmManagerRepository {
 			}
 		}
 		return output;
-
 	}
 
 	public Map<String, Integer> getCulturas() {
@@ -854,10 +855,10 @@ public class FarmManagerRepository {
 		return output;
 	}
 
-	public List<String> getConsumoByCultura(int year) throws SQLException {
+	public Map<Integer, List<String>> getConsumoByCultura(int year) throws SQLException {
 		CallableStatement callStmt = null;
 		ResultSet resultSet = null;
-		List<String> result = new ArrayList<>();
+		Map<Integer, List<String>> result = new TreeMap<>(Collections.reverseOrder());
 
 		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
@@ -865,10 +866,20 @@ public class FarmManagerRepository {
 			callStmt.registerOutParameter(1, OracleTypes.CURSOR);
 			callStmt.setInt(2, year);
 			callStmt.execute();
+
 			resultSet = (ResultSet) callStmt.getObject(1);
 			while (resultSet.next()) {
-				result.add("Cultura: " + resultSet.getString(1) + " - Consumo: " + resultSet.getString(2)
-						+ " minutos."); // replace 1 with the column index or column name
+				String cultura = resultSet.getString(1);
+				Integer consumo = resultSet.getInt(2);
+
+				if (result.containsKey(consumo))
+					result.get(consumo).add(cultura);
+				else {
+					List<String> culturas = new ArrayList<>();
+					culturas.add(cultura);
+					result.put(consumo, culturas);
+				}
+
 			}
 
 		} finally {
