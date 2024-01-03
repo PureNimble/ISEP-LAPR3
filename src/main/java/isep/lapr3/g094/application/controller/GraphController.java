@@ -1,5 +1,6 @@
 package isep.lapr3.g094.application.controller;
 
+import java.time.Duration;
 import java.time.LocalTime;
 
 import java.util.LinkedList;
@@ -124,5 +125,13 @@ public class GraphController {
 
     public int getDistance(Location location, Location location1, Boolean bigGraph) {
         return service.getDistance(location, location1, bigGraph);
+    }
+
+    public Pair<Duration, Integer> getChargeDuration(List<Location> bestPath, Boolean bigGraph, int autonomy) {
+        return service.getChargeDuration(bestPath, bigGraph, autonomy);
+    }
+
+    public Duration getTravDuration(List<Location> bestPath, Boolean bigGraph, int velocity) {
+        return service.getTravDuration(bestPath, bigGraph, velocity);
     }
 }
