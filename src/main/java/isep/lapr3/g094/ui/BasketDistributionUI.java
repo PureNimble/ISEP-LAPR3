@@ -493,24 +493,24 @@ public class BasketDistributionUI implements Runnable {
             nHubs = Utils.readIntegerFromConsole("Escreva o número de hubs (5, 6 e 7): ");
         } while (nHubs < 5 || nHubs > 7);
         List<Location> bestPath = graphController.deliveryCircuitPath(idOrigem, nHubs, bigGraph);
-        /*if(bestPath.size() < nHubs - 1){
-            System.out.println("Não foi possível encontrar um caminho!");
-            return;
-        }*/
         System.out.println("Localização de Origem: " + idOrigem);
         System.out.println("Número de Hubs: " + nHubs);
         int totalDistance = 0;
         int numCollaborations = 0;
         for (int i = 0; i < bestPath.size(); i++) {
-            System.out.println("+-----------------+");
-            System.out.println("| ID: " + bestPath.get(i).getId() + "          |");
-            System.out.println("| Colaboradores: " + bestPath.get(i).getNumEmployees() + " |");
+            System.out.println("+--------------------+");
+            System.out.println("| ID: " + bestPath.get(i).getId() + "            |");
+            System.out.println("| Colaboradores: " + bestPath.get(i).getNumEmployees() + "   |");
             if (i < bestPath.size() - 1) {
                 System.out.println("| Distância: " + graphController.getDistance(bestPath.get(i), bestPath.get(i+1),
                         bigGraph) + " m |");
-                totalDistance += graphController.getDistance(bestPath.get(i), bestPath.get(i+1), bigGraph);
+                Integer distance = graphController.getDistance(bestPath.get(i), bestPath.get(i+1), bigGraph);
+                if (distance == null) {
+                    return;
+                }
+                totalDistance += distance;
             }
-            System.out.println("+-----------------+");
+            System.out.println("+--------------------+");
             numCollaborations += bestPath.get(i).getNumEmployees();
             if (i < bestPath.size() - 1) {
                 System.out.println("  |");

@@ -553,6 +553,17 @@ public class MainTest {
         assertNull(path);
     }
 
+    //Verificar que o metodo deliveryCircuitPath retorna a informação correta
+    @Test
+    void testDeliveryCircuitPath(){
+        System.out.println("Testing DeliveryCircuitPath...");
+        int nHubs = 5;
+        graphController.getVerticesIdeais(1,17,false);
+        List<Location> path = new ArrayList<>();
+        path=service.deliveryCircuitPath("CT1", nHubs, false);
+        assertEquals(5, path.size());
+    }
+
     /*
      * @Test
      * void testGetSC() {
