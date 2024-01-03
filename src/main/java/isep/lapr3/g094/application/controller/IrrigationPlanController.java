@@ -179,6 +179,73 @@ public class IrrigationPlanController {
         return false;
     }
 
+    public boolean registerOperation(IrrigationSector sector, int dayNum, java.sql.Date operationDate,
+            Time operationTime) {
+        try {
+            if (sector.getRecorrencia() != dayNum) {
+                farmManagerRepository.registerRega(sector.getDuracao(), sector.getSector(),
+                        operationDate,
+                        operationTime, 2);
+                System.out
+                        .println("Rega registada com sucesso. \nDetalhes: Setor: " + sector.getSector()
+                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: "
+                                + sector.getDuracao() + "min\n");
+            } else {
+                farmManagerRepository.registerFertirrega(sector.getDuracao(), sector.getSector(),
+                        operationDate,
+                        operationTime, 2, sector.getMix());
+                System.out
+                        .println("Fertirrega registada com sucesso. \nDetalhes: Setor: "
+                                + sector.getSector()
+                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: "
+                                + sector.getDuracao() + "min, " + "Mix: " + sector.getMix() + "\n");
+            }
+        } catch (SQLException e) {
+            System.out.println(
+                    "Não foi possível registar a rega. \nDetalhes: Setor: " + sector.getSector()
+                            + " Data: " + operationDate + " Hora: " + operationTime + " Duração: "
+                            + sector.getDuracao() + "min\n");
+            System.out.println("Motivo: " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    public boolean executeDay(Date date, LocalTime time) {
+        List<IrrigationSector> sectors = irrigationSectorRepository.getIrrigationSectors();
+        sectors.sort(Comparator.comparingInt(IrrigationSector::getDuracao));
+        List<IrrigationDate> diasDeRega = irrigationDateRepository.getIrrigationDates();
+        List<IrrigationHour> irrigationHours = irrigationHourRepository.getIrrigationHours();
+        IrrigationDate startDay = diasDeRega.getFirst();
+        LocalDate startDate = startDay.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        boolean confirm = false;
+        if (!diasDeRega.contains(new IrrigationDate(date)))
+            return confirm;
+
+        for (int i = 0; i < irrigationHours.size(); i++) {
+            LocalTime irrigationHour = LocalTime.parse(irrigationHours.get(i).getHour());
+            Time operationTime = Time.valueOf(LocalTime.parse(irrigationHours.get(i).getHour()));
+            for (IrrigationSector sector : sectors) {
+                if ((irrigationHour.plusMinutes(sector.getDuracao())).isAfter(time)) {
+                    confirm = true;
+                    char periodicidade = sector.getPeriodicidade();
+                    boolean shouldRegister = (periodicidade == 'T') ||
+                            (periodicidade == 'P' && i % 2 == 0) ||
+                            (periodicidade == 'I' && i % 2 != 0) ||
+                            (periodicidade == '3' && i % 3 == 0);
+                    int dayNum = (int) ChronoUnit.DAYS.between(startDate,
+                            date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()) + 1;
+
+                    if (shouldRegister) {
+                        registerOperation(sector, dayNum, new java.sql.Date(date.getTime()), operationTime);
+                    }
+                }
+            }
+        }
+
+        return confirm;
+    }
+
     public boolean executeWatering() {
         List<IrrigationSector> sectors = irrigationSectorRepository.getIrrigationSectors();
         sectors.sort(Comparator.comparingInt(IrrigationSector::getDuracao));
@@ -203,33 +270,7 @@ public class IrrigationPlanController {
                     int dayNum = (int) ChronoUnit.DAYS.between(startDate, currentDate) + 1;
 
                     if (shouldRegister) {
-                        try {
-                            if (sector.getRecorrencia() != dayNum) {
-                                farmManagerRepository.registerRega(sector.getDuracao(), sector.getSector(),
-                                        operationDate,
-                                        operationTime, 2);
-                                System.out
-                                        .println("Rega registada com sucesso. \nDetalhes: Setor: " + sector.getSector()
-                                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: "
-                                                + sector.getDuracao() + "min\n");
-                            } else {
-                                farmManagerRepository.registerFertirrega(sector.getDuracao(), sector.getSector(),
-                                        operationDate,
-                                        operationTime, 2, sector.getMix());
-                                System.out
-                                        .println("Fertirrega registada com sucesso. \nDetalhes: Setor: "
-                                                + sector.getSector()
-                                                + " Data: " + operationDate + " Hora: " + operationTime + " Duração: "
-                                                + sector.getDuracao() + "min, " + "Mix: " + sector.getMix() + "\n");
-                            }
-                        } catch (SQLException e) {
-                            System.out.println(
-                                    "Não foi possível registar a rega. \nDetalhes: Setor: " + sector.getSector()
-                                            + " Data: " + operationDate + " Hora: " + operationTime + " Duração: "
-                                            + sector.getDuracao() + "min\n");
-                            System.out.println("Motivo: " + e.getMessage());
-                            return false;
-                        }
+                        registerOperation(sector, dayNum, operationDate, operationTime);
                     }
                 }
             }

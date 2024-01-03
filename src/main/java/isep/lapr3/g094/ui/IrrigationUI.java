@@ -1,11 +1,15 @@
 package isep.lapr3.g094.ui;
 
 import java.text.ParseException;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.time.DateUtils;
+
 import isep.lapr3.g094.application.controller.IrrigationPlanController;
 import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.domain.Pair;
@@ -14,6 +18,7 @@ import isep.lapr3.g094.domain.irrigation.IrrigationHour;
 import isep.lapr3.g094.domain.irrigation.IrrigationSector;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
+import net.bytebuddy.asm.Advice.Local;
 
 public class IrrigationUI implements Runnable {
 
@@ -96,11 +101,26 @@ public class IrrigationUI implements Runnable {
     }
 
     private void executeWatering() {
-        if (irrigationPlanController.executeWatering())
-            System.out.println("Regas registadas com sucesso");
-        else
-            System.out.println("Não foi possível registar todas as regas");
 
+        List<String> options = new ArrayList<>();
+        options.add("Executar plano de rega");
+        options.add("Executar dia");
+        Integer option = Utils.showAndSelectIndex(options, "\n=========Interface do Controlador de Rega=========");
+        boolean confirm = false;
+        if (option == -1)
+            return;
+        if (option == 0) {
+            confirm = irrigationPlanController.executeWatering();
+        } else {
+            Date date = Utils.readDateFromConsole("Indique o dia: (dd/mm/yyyy)");
+            LocalTime time = Utils.readTimeFromConsole("Indique a hora: (hh:mm)");
+            confirm = irrigationPlanController.executeDay(date, time);
+        }
+
+        if (confirm) {
+            System.out.println("Regas registadas com sucesso");
+        } else
+            System.out.println("Não foi possível registar todas as regas");
     }
 
     private void printPlan() {
