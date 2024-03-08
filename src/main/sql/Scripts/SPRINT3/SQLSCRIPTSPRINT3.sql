@@ -1488,20 +1488,6 @@ BEGIN
                 AND OFA2.OPERACAOID = O2.ID
                 AND EXTRACT(YEAR FROM O2.DATAOPERACAO) = year
             )
-            UNION 
-            SELECT FP.DESIGNACAO as Designacao, O.DATAOPERACAO as data
-            FROM fatorproducao FP, Operacao O, OperacaoReceita OPR, Receita RC, ReceitaFator RF
-            WHERE OPR.OPERACAOID = O.ID
-            AND OPR.RECEITAID = RC.ID
-            AND RC.ID = RF.RECEITAID
-            AND RF.FATORPRODUCAOID = FP.ID
-            AND FP.ID NOT IN (
-                SELECT FP2.ID
-                FROM fatorproducao FP2, OperacaoReceita OPR2, Operacao O2
-                WHERE OPR2.RECEITAID = FP2.ID
-                AND OPR2.OPERACAOID = O2.ID
-                AND EXTRACT(YEAR FROM O2.DATAOPERACAO) = year
-            )
         )
         WHERE year != EXTRACT(YEAR FROM data)
         GROUP BY fatorProducao, EXTRACT(YEAR FROM data)

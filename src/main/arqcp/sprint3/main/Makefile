@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -Wextra -fanalyzer
 
 # List of source files in c
 ASRC := $(wildcard ../*/*.c)

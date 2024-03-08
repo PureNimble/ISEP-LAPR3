@@ -935,14 +935,17 @@ public class FarmManagerRepository {
 	}
 
 	public void cancelOperation(int operacaoID) throws SQLException {
-		Statement stmt = null;
+		PreparedStatement pstmt = null;
 		try {
 			Connection connection = DatabaseConnection.getInstance().getConnection();
-			stmt = connection.createStatement();
-			stmt.executeUpdate("UPDATE OPERACAO SET ESTADOID = 3 WHERE ID = " + operacaoID);
+			String sql = "UPDATE OPERACAO SET ESTADOID = 3 WHERE ID = ?";
+			pstmt = connection.prepareStatement(sql);
+			pstmt.setInt(1, operacaoID);
+			pstmt.executeUpdate();
+			connection.commit();
 		} finally {
-			if (stmt != null) {
-				stmt.close();
+			if (pstmt != null) {
+				pstmt.close();
 			}
 		}
 	}

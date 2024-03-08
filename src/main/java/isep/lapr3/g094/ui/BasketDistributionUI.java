@@ -11,10 +11,13 @@ import isep.lapr3.g094.struct.graph.map.MapGraph;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
@@ -194,7 +197,7 @@ public class BasketDistributionUI implements Runnable {
         Utils.confirm("Deseja ver o grafo?:");
         if (true) {
             graphController.generateDataCSV(graph);
-            String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
+            String filePath = graphController.getLatestFileFromDirectory("./output/");
             openGraphViewer(filePath);
         }
     }
@@ -205,7 +208,7 @@ public class BasketDistributionUI implements Runnable {
             return;
         }
         int numberOfHubs = Utils.readIntegerFromConsole("Qual o número de hubs?");
-        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(1,numberOfHubs, bigGraph);
+        Map<Location, Criteria> idealVertices = graphController.getVerticesIdeais(1, numberOfHubs, bigGraph);
         // Calculate the maximum length of the IDs
         int maxIdLength = Math.max(idealVertices.keySet().stream()
                 .mapToInt(Location -> Location.getId().length())
@@ -247,7 +250,7 @@ public class BasketDistributionUI implements Runnable {
         if (bigGraph == null) {
             return;
         }
-        String filePath = bigGraph ? "distancias_big.csv" : "distancias_small.csv";
+        String filePath = bigGraph ? "BigGraph.csv" : "SmallGraph.csv";
         openGraphViewer(filePath);
     }
 
@@ -260,7 +263,7 @@ public class BasketDistributionUI implements Runnable {
         }
     }
 
-    private void getClusters(){
+    private void getClusters() {
         Boolean bigGraph = graphOption();
         if (bigGraph == null) {
             return;
@@ -270,14 +273,16 @@ public class BasketDistributionUI implements Runnable {
 
         Set<Location> listHubs = new LinkedHashSet<>();
         int i = 0;
-        for(Map.Entry<Location, Criteria> entry : idealVertices.entrySet()){
+        for (Map.Entry<Location, Criteria> entry : idealVertices.entrySet()) {
             listHubs.add(entry.getKey());
             i++;
-            if(i >= numberOfClusters) break;
+            if (i >= numberOfClusters)
+                break;
         }
 
-        Map<Location, LinkedList<Location>> clusters = graphController.getClusters(bigGraph, numberOfClusters, listHubs);
-        if (clusters != null){
+        Map<Location, LinkedList<Location>> clusters = graphController.getClusters(bigGraph, numberOfClusters,
+                listHubs);
+        if (clusters != null) {
             System.out.println("Clusters criados com sucesso");
             selectCluster(clusters);
         } else {
@@ -298,18 +303,18 @@ public class BasketDistributionUI implements Runnable {
             }
 
             option = Utils.readIntegerFromConsole("Selecione o cluster que quer ver (0 para sair do menu)");
-            if (option > 0 && option <= hubList.size()){
+            if (option > 0 && option <= hubList.size()) {
                 Location selectedHub = hubList.get(option - 1);
                 printCluster(selectedHub, clusters.get(selectedHub));
             }
         } while (option != 0);
     }
 
-    private void printCluster(Location hub, LinkedList<Location> locations){
+    private void printCluster(Location hub, LinkedList<Location> locations) {
         System.out.printf("Cluster do hub %s\n", hub.getId());
 
         System.out.println("Locations:");
-        for (Location location : locations){
+        for (Location location : locations) {
             System.out.println(location.getId());
         }
         System.out.println();
@@ -414,7 +419,8 @@ public class BasketDistributionUI implements Runnable {
         LinkedList<LocalTime> topDepartTimes = new LinkedList<>();
         LinkedList<LocalTime> topAfterChargeTimes = new LinkedList<>();
         LinkedList<LocalTime> topDescargaTimes = new LinkedList<>();
-        int topDistance = graphController.maximizedPath(idOrigem, time, autonomy * 1000, velocity, bigGraph, topPath, topArriveTimes,
+        int topDistance = graphController.maximizedPath(idOrigem, time, autonomy * 1000, velocity, bigGraph, topPath,
+                topArriveTimes,
                 topDepartTimes, topAfterChargeTimes, topDescargaTimes);
         System.out.println("Localização de Origem: " + idOrigem);
         System.out.println("Hora de Partida: " + time);
@@ -436,28 +442,30 @@ public class BasketDistributionUI implements Runnable {
         Duration chargeDuration = Duration.ZERO;
         Duration travDuration = Duration.ZERO;
         for (int i = 1; i < topAfterChargeTimes.size(); i++) {
-            if (!topAfterChargeTimes.get(i).equals(topDepartTimes.get(i-1)) && topDistance > autonomy * 1000) {
+            if (!topAfterChargeTimes.get(i).equals(topDepartTimes.get(i - 1)) && topDistance > autonomy * 1000) {
                 numCharges++;
-                Duration duration = Duration.between(topDepartTimes.get(i-1), topAfterChargeTimes.get(i));                    
+                Duration duration = Duration.between(topDepartTimes.get(i - 1), topAfterChargeTimes.get(i));
                 chargeDuration = chargeDuration.plus(duration);
             }
         }
-        
+
         System.out.println("\nNúmero de Carregamentos: " + numCharges);
         System.out.println("\nDistância Total: " + topDistance + "m");
         System.out.println("Tempo de carregamento: " + formatDuration(chargeDuration) + "\n");
         for (int i = 1; i < topDescargaTimes.size(); i++) {
-        if (!topDescargaTimes.get(i).equals(topArriveTimes.get(i))) {
-            Duration duration = Duration.between(topArriveTimes.get(i), topDescargaTimes.get(i));
-            System.out.println("Tempo de descarga dos cestos no hub " + topPath.get(i).getId() + ": " + formatDuration(duration));
-        }
+            if (!topDescargaTimes.get(i).equals(topArriveTimes.get(i))) {
+                Duration duration = Duration.between(topArriveTimes.get(i), topDescargaTimes.get(i));
+                System.out.println("Tempo de descarga dos cestos no hub " + topPath.get(i).getId() + ": "
+                        + formatDuration(duration));
+            }
         }
         for (int i = 1; i < topArriveTimes.size(); i++) {
             Duration duration = Duration.ZERO;
-            if (!topAfterChargeTimes.get(i).equals(topDepartTimes.get(i-1))) {
-                duration = Duration.between(topDepartTimes.get(i-1), topAfterChargeTimes.get(i));
+            if (!topAfterChargeTimes.get(i).equals(topDepartTimes.get(i - 1))) {
+                duration = Duration.between(topDepartTimes.get(i - 1), topAfterChargeTimes.get(i));
             }
-            travDuration = travDuration.plus(Duration.between(topDepartTimes.get(i-1), topArriveTimes.get(i)).minus(duration));
+            travDuration = travDuration
+                    .plus(Duration.between(topDepartTimes.get(i - 1), topArriveTimes.get(i)).minus(duration));
         }
         System.out.println("\nTempo de viagem: " + formatDuration(travDuration));
         System.out.println("Tempo Total: " + formatDuration(Duration.between(time, topArriveTimes.getLast())));
@@ -466,12 +474,12 @@ public class BasketDistributionUI implements Runnable {
     /**Encontrar para um produtor o circuito de entrega que parte de um local origem, passa por N hubs com maior número
     de colaboradores uma só vez e volta ao local origem minimizando a distância total percorrida. Considere como número
     de hubs: 5, 6 e 7.
-
+    
     Critério de Aceitação: Devolver o local de origem do circuito, os locais de passagem (sendo um hub, indicar o
     respetivo número de colaboradores), a distância entre todos os locais do percurso, a distância total, o número de
     carregamentos e o tempo total do circuito (discriminando o tempo afeto aos carregamentos do veículo,
     ao percurso e ao tempo de descarga dos cestos em cada hub).
-
+    
      Critérios principais: Passar por ponto de origem: ponto final --> ponto inicial sem repetir caminhos ✔️
                            Passar por N hubs uma unica vez ✔️
                            Maior numero de colaboradores ✔️
@@ -479,7 +487,7 @@ public class BasketDistributionUI implements Runnable {
      Critérios secundários: Tempo total do circuito
                             Número de carregamentos
     */
-    private void deliveryCircuitPath(){
+    private void deliveryCircuitPath() {
         Boolean bigGraph = graphOption();
         if (bigGraph == null) {
             return;
@@ -505,11 +513,12 @@ public class BasketDistributionUI implements Runnable {
             System.out.println("| ID: " + bestPath.get(i).getId() + "            |");
             System.out.println("| Colaboradores: " + bestPath.get(i).getNumEmployees() + "   |");
             if (i < bestPath.size() - 1) {
-                System.out.println("| Distância: " + graphController.getDistance(bestPath.get(i), bestPath.get(i+1),
+                System.out.println("| Distância: " + graphController.getDistance(bestPath.get(i), bestPath.get(i + 1),
                         bigGraph) + " m |");
-                Integer distance = graphController.getDistance(bestPath.get(i), bestPath.get(i+1), bigGraph);
+                Integer distance = graphController.getDistance(bestPath.get(i), bestPath.get(i + 1), bigGraph);
                 if (distance == null) {
-                    System.out.println("Não existe caminho entre " + bestPath.get(i).getId() + " e " + bestPath.get(i+1).getId());
+                    System.out.println("Não existe caminho entre " + bestPath.get(i).getId() + " e "
+                            + bestPath.get(i + 1).getId());
                     return;
                 }
                 totalDistance += distance;
@@ -582,9 +591,18 @@ public class BasketDistributionUI implements Runnable {
 
     private void openGraphViewer(String filePath) {
         try {
-            URL url = getClass().getClassLoader().getResource("chromedriver.exe");
-            if (url != null) {
-                String path = url.getPath();
+            InputStream in = getClass().getClassLoader().getResourceAsStream("chromedriver.exe");
+            if (in != null) {
+                File tempFile = File.createTempFile("chromedriver", ".exe");
+                tempFile.deleteOnExit();
+                try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, bytesRead);
+                    }
+                }
+                String path = tempFile.getAbsolutePath();
                 System.out.println("ChromeDriver path: " + path);
                 System.setProperty("webdriver.chrome.driver", path);
             } else {
@@ -611,7 +629,7 @@ public class BasketDistributionUI implements Runnable {
 
             // get a path of the file in resources folder
             if (!(filePath == null)) {
-                String path = getClass().getClassLoader().getResource("esinf/" + filePath).getPath();
+                String path = Paths.get("./output/", filePath).toAbsolutePath().toString();
                 try {
                     // Decode the path
                     path = URLDecoder.decode(path, "UTF-8");
@@ -630,6 +648,12 @@ public class BasketDistributionUI implements Runnable {
 
                 buttons.getLast().click();
             }
+            
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    if (driver != null) {
+                        driver.quit();
+                    }
+                }));
 
         } catch (
 
@@ -649,13 +673,13 @@ public class BasketDistributionUI implements Runnable {
             System.out.println("Erro ao filtrar o grafo");
             return;
         }
-        
+
         if (Utils.confirm("Deseja ver o grafo?:")) {
             graphController.generateDataCSV(hubGraph);
-            String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
+            String filePath = graphController.getLatestFileFromDirectory("./output/");
             openGraphViewer(filePath);
         }
-        
+
         String idOrigem;
         String idDestino;
         do {
@@ -665,7 +689,8 @@ public class BasketDistributionUI implements Runnable {
             idDestino = Utils.readLineFromConsole("Escreva o ID do HUB de destino: (CT**)").toUpperCase();
         } while ((!idDestino.contains("CT")) || (!hubGraph.validVertex(new Location(idDestino))));
 
-        Pair<Integer, MapGraph<Location, Integer>> result = graphController.maximumCapacity(hubGraph, new Location(idOrigem), new Location(idDestino));
+        Pair<Integer, MapGraph<Location, Integer>> result = graphController.maximumCapacity(hubGraph,
+                new Location(idOrigem), new Location(idDestino));
         System.out.println("Hub de Origem: " + idOrigem);
         System.out.println("Hub de Destino: " + idDestino);
         if (result == null || result.getFirst() == 0) {
@@ -677,7 +702,7 @@ public class BasketDistributionUI implements Runnable {
         System.out.println("Capacidade Máxima: " + result.getFirst());
         if (Utils.confirm("Deseja ver o grafo?:")) {
             graphController.generateDataCSV(result.getSecond());
-            String filePath = "output/" + graphController.getLatestFileFromDirectory("esinf/output/");
+            String filePath = graphController.getLatestFileFromDirectory("./output/");
             openGraphViewer(filePath);
         }
     }

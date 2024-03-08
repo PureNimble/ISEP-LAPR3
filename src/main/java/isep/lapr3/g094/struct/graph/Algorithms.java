@@ -250,8 +250,9 @@ public class Algorithms {
         LocalTime[] departTime = new LocalTime[vertices];
         LocalTime[] afterChargeTime = new LocalTime[vertices];
         LocalTime[] descargaTime = new LocalTime[vertices];
+        LocalTime[] pathTimes = new LocalTime[vertices];
         E[] autonomies = (E[]) new Object[g.numVertices()];
-        shortestPathDijkstraConstrained(g, vOrig, ce, sum, subtract, zero, visited, pathKeys, arriveTime, departTime, afterChargeTime, descargaTime, dist, autonomy, time, velocity, maxHour, autonomies);
+        shortestPathDijkstraConstrained(g, vOrig, ce, sum, subtract, zero, visited, pathKeys, arriveTime, departTime, afterChargeTime, descargaTime, dist, autonomy, time, velocity, maxHour, autonomies, pathTimes);
 
         dists.clear();
         paths.clear();
@@ -293,11 +294,12 @@ public class Algorithms {
 
     private static <V, E> void shortestPathDijkstraConstrained(Graph<V, E> g, V vOrig,
             Comparator<E> ce, BinaryOperator<E> sum, BinaryOperator<E> subtract, E zero,
-            boolean[] visited, V[] pathKeys, LocalTime[] arriveTimes, LocalTime[] departTimes, LocalTime[] afterChargeTimes, LocalTime[] descargaTimes, E[] dist, E autonomy, LocalTime time, double velocity, LocalTime maxHour, E[] autonomies) {
+            boolean[] visited, V[] pathKeys, LocalTime[] arriveTimes, LocalTime[] departTimes, LocalTime[] afterChargeTimes, LocalTime[] descargaTimes, E[] dist, E autonomy, LocalTime time, double velocity, LocalTime maxHour, E[] autonomies, LocalTime[] pathTimes) {
         
         E duringAutonomy = autonomy;
         double gainedAutonomyPerMinute = 1016.6666666667;
         int vertices = g.numVertices();
+        V vPrevious = null;
         for (int i = 0; i < vertices; i++) {
             dist[i] = null;
             pathKeys[i] = null;
@@ -307,18 +309,22 @@ public class Algorithms {
         arriveTimes[g.key(vOrig)] = time;
         departTimes[g.key(vOrig)] = time;
         descargaTimes[g.key(vOrig)] = null;
+        pathTimes[g.key(vOrig)] = LocalTime.of(0, 0);
+        LocalTime pathTime = LocalTime.of(0, 0);
+        LocalTime pathTimeMax = LocalTime.of(0, 0);
+        pathTimeMax = pathTimeMax.plus(Duration.ofMinutes(maxHour.getHour() * 60 + maxHour.getMinute() - time.getHour() * 60 - time.getMinute()));
 
         while (vOrig != null) {
             visited[g.key(vOrig)] = true;
             LocalTime currentTime = departTimes[g.key(vOrig)];
+            LocalTime currentPathTime = pathTimes[g.key(vOrig)];
             
             for (V vAdj : g.adjVertices(vOrig)) {
                 if (vAdj.equals(vOrig)) {
                     continue;
                 }
-                time = currentTime;                
-                LocalTime pathTime = LocalTime.of(0, 0);
-                LocalTime pathTimeMax = LocalTime.of(20, 0);
+                time = currentTime;
+                pathTime = currentPathTime;        
                 E edgeWeight = g.edge(vOrig, vAdj).getWeight();
                 if (ce.compare(edgeWeight, autonomy) > 0) {
                     continue;
@@ -336,10 +342,11 @@ public class Algorithms {
                 if ((endHour != null && time.isAfter(endHour)) || time.isAfter(maxHour) || pathTime.isAfter(pathTimeMax)) {
                     duringAutonomy = resetAutonomy;
                     time = currentTime;
+                    pathTime = currentPathTime;
                     continue;
                 }
                 LocalTime arrivedTime = time;
-                if (((Location) vAdj).isHub() && ((Location) vAdj).getEndHour().isAfter(time)) {
+                if (((Location) vAdj).isHub() && ((Location) vAdj).getEndHour().isAfter(time) && ((Location) vAdj).getStartHour().isBefore(time)) {
                     time = time.plus(Duration.ofMinutes(new Random().nextInt(10) + 1));
                     pathTime = pathTime.plus(Duration.ofMinutes(new Random().nextInt(10) + 1));
                 }
@@ -357,13 +364,15 @@ public class Algorithms {
 
                     duringAutonomy = subtract.apply(duringAutonomy, edgeWeight);
                     autonomies[g.key(vAdj)] = duringAutonomy;
+                    pathTimes[g.key(vAdj)] = pathTime;
                 }
             }
 
+            vPrevious = vOrig;
             vOrig = null;
             LocalTime minArriveTime = null;
 
-            for (V v : g.vertices()) {
+            for (V v : g.adjVertices(vPrevious)) {
                 if (visited[g.key(v)] == false && arriveTimes[g.key(v)] != null) {
                     if (vOrig == null || arriveTimes[g.key(v)].isBefore(minArriveTime) && arriveTimes[g.key(v)].isAfter(arriveTimes[g.key(vOrig)])) {
                         minArriveTime = arriveTimes[g.key(v)];
@@ -375,6 +384,7 @@ public class Algorithms {
             if (vOrig != null) {
                 duringAutonomy = autonomies[g.key(vOrig)];
                 time = departTimes[g.key(vOrig)];
+                pathTime = pathTimes[g.key(vOrig)];
             }
         }
     }

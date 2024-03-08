@@ -3,6 +3,7 @@ package isep.lapr3.g094.services;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.time.LocalTime;
@@ -324,13 +325,14 @@ public class Service {
         return Algorithms.getSC(clusters, Integer::compare, Integer::sum, 0, shortPath, minDistGraph);
     }
 
-    public Map<Location, LinkedList<Location>> getClusters(boolean bigGraph, int numClusters, Set<Location> hubList){
+    public Map<Location, LinkedList<Location>> getClusters(boolean bigGraph, int numClusters, Set<Location> hubList) {
         MapGraph<Location, Integer> graph = getGraph(bigGraph).clone();
-        if(hubList.size() < numClusters){
+        if (hubList.size() < numClusters) {
             System.out.println("O número de clusters não pode ser maior que o número de hubs do grafo!");
             return null;
         }
-        Map<Location, LinkedList<Location>> clusters = Algorithms.divideGraphN(graph, hubList, Integer::compare, Integer::sum, 0, numClusters);
+        Map<Location, LinkedList<Location>> clusters = Algorithms.divideGraphN(graph, hubList, Integer::compare,
+                Integer::sum, 0, numClusters);
 
         return clusters;
     }
@@ -386,7 +388,9 @@ public class Service {
 
     public boolean generateDataCSV(MapGraph<Location, Integer> graph) {
         List<String> data = transformData(graph);
-        int numFiles = new java.io.File("src/main/resources/esinf/output/").listFiles().length;
+        //File resourceFile = new File(getClass().getClassLoader().getResource("esinf/output/").getFile());
+        File resourceFile = new File("./output/");
+        int numFiles = resourceFile.listFiles().length;
         String fileName = "Graph" + numFiles + ".csv";
         return makeCsvFile(fileName, data);
     }
@@ -416,9 +420,10 @@ public class Service {
         return data;
     }
 
-    private static boolean makeCsvFile(String fileName, List<String> data) {
+    private boolean makeCsvFile(String fileName, List<String> data) {
+        //String resourcePath = getClass().getClassLoader().getResource("esinf/output/").getPath();
         try (BufferedWriter writer = new BufferedWriter(
-                new FileWriter("src/main/resources/esinf/output/" + fileName, false))) {
+                new FileWriter("./output/" + fileName, false))) {
             // Write the header line
             writer.write("source,target,value");
             writer.newLine();
@@ -462,7 +467,12 @@ public class Service {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        URL url = getClass().getClassLoader().getResource(dir);
+        URL url = null;
+        try {
+            url = new File(dir).toURI().toURL();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
         if (url == null) {
             System.out.println("Directory not found: " + dir);
             return "";
@@ -485,7 +495,9 @@ public class Service {
         return latestFile;
     }
 
-    public int maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph, LinkedList<Location> topPath, LinkedList<LocalTime> topArriveTimes, LinkedList<LocalTime> topDepartTimes, LinkedList<LocalTime> topAfterChargeTimes, LinkedList<LocalTime> topDescargaTimes) {
+    public int maximizedPath(String idOrigem, LocalTime time, int autonomy, int velocity, Boolean bigGraph,
+            LinkedList<Location> topPath, LinkedList<LocalTime> topArriveTimes, LinkedList<LocalTime> topDepartTimes,
+            LinkedList<LocalTime> topAfterChargeTimes, LinkedList<LocalTime> topDescargaTimes) {
         Location curLocation = graphRepository.locationById(idOrigem, bigGraph);
         int topDistance = 0;
         Graph<Location, Integer> graph = getGraph(bigGraph);
@@ -497,16 +509,18 @@ public class Service {
         ArrayList<LinkedList<LocalTime>> descargaTimes = new ArrayList<>();
         BinaryOperator<Integer> subtract = (a, b) -> a - b;
         LocalTime maxHour = getMaxHourToSearch(bigGraph);
-        Algorithms.shortestPathsConstrained(graph, curLocation, Integer::compare, Integer::sum, subtract, 0, locationPaths, locationDistance, arriveTimes, departTimes, afterChargeTimes, descargaTimes, autonomy, time, velocity, maxHour);
+        Algorithms.shortestPathsConstrained(graph, curLocation, Integer::compare, Integer::sum, subtract, 0,
+                locationPaths, locationDistance, arriveTimes, departTimes, afterChargeTimes, descargaTimes, autonomy,
+                time, velocity, maxHour);
         int maxHubs = -1;
         for (int i = 0; i < locationPaths.size(); i++) {
             int totalHubs = 0;
-            for(int j = 0; j < locationPaths.get(i).size(); j++){
-                if(locationPaths.get(i).get(j).isHub()){
+            for (int j = 0; j < locationPaths.get(i).size(); j++) {
+                if (locationPaths.get(i).get(j).isHub()) {
                     totalHubs++;
                 }
             }
-            if(totalHubs > maxHubs){
+            if (totalHubs > maxHubs) {
                 maxHubs = totalHubs;
                 topPath.clear();
                 topArriveTimes.clear();
@@ -514,7 +528,7 @@ public class Service {
                 topAfterChargeTimes.clear();
                 topDescargaTimes.clear();
                 topDistance = 0;
-                for(int j = 0; j < locationPaths.get(i).size(); j++){
+                for (int j = 0; j < locationPaths.get(i).size(); j++) {
                     topPath.add(locationPaths.get(i).get(j));
                     topArriveTimes.add(arriveTimes.get(i).get(j));
                     topDepartTimes.add(departTimes.get(i).get(j));
@@ -558,7 +572,7 @@ public class Service {
         for (Location location : filteredGraph.vertices()) {
             for (Location adjLocation : originalGraph.adjVertices(location)) {
                 if (filteredGraph.validVertex(adjLocation)) {
-                    Integer weight = (originalGraph.edge(location, adjLocation).getWeight()/10000);
+                    Integer weight = (originalGraph.edge(location, adjLocation).getWeight() / 10000);
                     filteredGraph.addEdge(location, adjLocation, weight);
                 }
             }
@@ -569,7 +583,7 @@ public class Service {
 
     public Pair<Integer, MapGraph<Location, Integer>> maximumCapacity(MapGraph<Location, Integer> graph,
             Location origin, Location destination) {
-        
+
         Pair<Integer, Map<Location, Map<Location, Integer>>> result = Algorithms.fordFulkerson(graph, origin,
                 destination);
 
@@ -585,7 +599,7 @@ public class Service {
                     Integer residualCapacity = residualGraph.get(vertex).get(adjVertex);
                     if (originalCapacity != null && residualCapacity != null) {
                         Integer flowOnEdge = originalCapacity - residualCapacity;
-                        if(flowOnEdge > 0) {
+                        if (flowOnEdge > 0) {
                             maxFlowGraph.addVertex(vertex);
                             maxFlowGraph.addVertex(adjVertex);
                             maxFlowGraph.addEdge(vertex, adjVertex, flowOnEdge);
@@ -621,19 +635,19 @@ public class Service {
     public boolean checkHours(LocalTime time, boolean bigGraph) {
         LocalTime minHour = LocalTime.of(23, 59);
         LocalTime maxHour = LocalTime.of(0, 0);
-        for(Location location : graphRepository.getGraph(bigGraph).vertices()){
+        for (Location location : graphRepository.getGraph(bigGraph).vertices()) {
             LocalTime startHour = location.getStartHour();
             LocalTime endHour = location.getEndHour();
-            if(startHour != null && endHour != null){
-                if(startHour.isBefore(minHour)){
+            if (startHour != null && endHour != null) {
+                if (startHour.isBefore(minHour)) {
                     minHour = startHour;
                 }
-                if(endHour.isAfter(maxHour)){
+                if (endHour.isAfter(maxHour)) {
                     maxHour = endHour;
                 }
             }
         }
-        if(time.isAfter(minHour) && time.isBefore(maxHour)){
+        if (time.isAfter(minHour) && time.isBefore(maxHour)) {
             return false;
         }
         System.out.println("O serviço ainda não começou! Insira uma hora entre " + minHour + " e " + maxHour + "");
@@ -641,18 +655,19 @@ public class Service {
     }
 
     public List<Location> deliveryCircuitPath(String idOrigem, int nHubs, Boolean bigGraph) {
-        if(!idExists(idOrigem, bigGraph)){
+        if (!idExists(idOrigem, bigGraph)) {
             System.out.println("A localização de origem não existe!");
             return null;
         }
-        if(nHubs < 0 || nHubs > 7 || nHubs < 5){
+        if (nHubs < 0 || nHubs > 7 || nHubs < 5) {
             System.out.println("O número de hubs tem de ser entre 5 e 7!");
             return null;
         }
 
         try {
             List<List<Location>> paths = Algorithms.allPathsN(graphRepository.getGraph(bigGraph),
-                    graphRepository.locationById(idOrigem, bigGraph), graphRepository.locationById(idOrigem, bigGraph), nHubs);
+                    graphRepository.locationById(idOrigem, bigGraph), graphRepository.locationById(idOrigem, bigGraph),
+                    nHubs);
             int maxCollaborations = 0;
             int minDistance = Integer.MAX_VALUE;
             List<Location> bestPath = new ArrayList<>();
@@ -664,7 +679,7 @@ public class Service {
                         Location location1 = path.get(i);
                         Location location2 = path.get(i + 1);
                         totalCollaborations += location1.getNumEmployees();
-                        totalDistance += graphRepository.distanceLocations(location1,location2,bigGraph);
+                        totalDistance += graphRepository.distanceLocations(location1, location2, bigGraph);
                     }
                 }
                 if (totalCollaborations > maxCollaborations) {
@@ -677,7 +692,7 @@ public class Service {
                 }
             }
             return bestPath;
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Não foi possível encontrar um caminho :" + e.getMessage());
             return null;
         }
@@ -691,7 +706,7 @@ public class Service {
         int duringAutonomy = autonomy;
         Duration chargeDuration = Duration.ofMinutes(0);
         int numCharges = 0;
-        for(int i = 0; i < bestPath.size() - 1; i++){
+        for (int i = 0; i < bestPath.size() - 1; i++) {
             Location location1 = bestPath.get(i);
             Location location2 = bestPath.get(i + 1);
             int distance = graphRepository.distanceLocations(location1, location2, bigGraph);
@@ -708,11 +723,11 @@ public class Service {
     public Duration getTravDuration(List<Location> bestPath, Boolean bigGraph, int velocity) {
         Duration travelDuration = Duration.ofMinutes(0);
         int distance = 0;
-        for(int i = 0; i < bestPath.size() - 1; i++){
+        for (int i = 0; i < bestPath.size() - 1; i++) {
             Location location1 = bestPath.get(i);
             Location location2 = bestPath.get(i + 1);
             distance = graphRepository.distanceLocations(location1, location2, bigGraph);
-            travelDuration = travelDuration.plus(travelTime(distance/1000, velocity));
+            travelDuration = travelDuration.plus(travelTime(distance / 1000, velocity));
         }
         return travelDuration;
     }
