@@ -1,0 +1,127 @@
+-----------------------
+|CHECK(CAPACIDADE > 0)|
+-----------------------
+->  Tabela: ARMAZEM
+->  A função "CHECK(CAPACIDADE > 0)"
+    garante que os valores na coluna "CAPACIDADE" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+---------------------------------------------
+|CHECK(QUANTIDADE > 0 AND QUANTIDADE <= 100)|
+---------------------------------------------
+->  Tabela: ELEMENTOFICHA
+->  A função "CHECK(QUANTIDADE > 0 AND QUANTIDADE <= 100)"
+    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero e inferiores ou iguais a 100.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+-----------------
+|CHECK(AREA > 0)|
+-----------------
+->  Tabela: ESPACO
+->  A função "CHECK(AREA > 0)"
+    garante que os valores na coluna "AREA" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+--------------------------------------------------------
+|CHECK(MATERIAORGANICA >= 0 AND MATERIAORGANICA <= 100)|
+--------------------------------------------------------
+->  Tabela: FATORPRODUCAO
+->  A função "CHECK(MATERIAORGANICA >= 0 AND MATERIAORGANICA <= 100)"
+    garante que os valores na coluna "MATERIAORGANICA" só podem ser iguais ou superiores a 0 e inferiores ou iguais a 100.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+-----------------------------
+|CHECK(PH >= 0 AND PH <= 14)|
+-----------------------------
+->  Tabela: FATORPRODUCAO
+->  A função "CHECK(PH >= 0 AND PH <= 14)"
+    garante que os valores na coluna "PH" só podem ser iguais ou superiores a 0 e inferiores ou iguais a 14.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+-----------------------
+|CHECK(QUANTIDADE > 0)|
+-----------------------
+->  Tabela: OPERACAO
+->  A função "CHECK(QUANTIDADE > 0)"
+    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+----------------------------------
+|CHECK (DATAINICIAL <= DATAFINAL)|
+----------------------------------
+->  Tabela: PLANOPLANTACAO
+->  A função "CHECK (DATAINICIAL <= DATAFINAL)"
+    garante que os valores da coluna "DATAFINAL" sejam sempre superiores ou iguais aos valores de coluna "DATAINICIAL".
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+--------------------
+|CHECK(CAUDAL > 0)|
+--------------------
+->  Tabela: PLANOSETOR
+->  A função "CHECK(CAUDAL > 0)"
+    garante que os valores na coluna "CAUDAL" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+--------------------
+|CHECK(DURACAO > 0)|
+--------------------
+->  Tabela: PLANOSETOR
+->  A função "CHECK(DURACAO > 0)"
+    garante que os valores na coluna "DURACAO" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+----------------------------------------
+|CHECK(PERIODICIDADE IN ('P', 'I', 'T'))|
+----------------------------------------
+->  Tabela: PLANOSETOR
+->  A função "CHECK(PERIODICIDADE IN ('P', 'I', 'T'))"
+    garante que os valores na coluna "PERIODICIDADE" só possam ser 'P', 'I' ou 'T'.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+----------------------------------
+|CHECK (DATAINICIAL <= DATAFINAL)|
+----------------------------------
+->  Tabela: PLANOSETOR
+->  A função "CHECK (DATAINICIAL <= DATAFINAL)"
+    garante que os valores da coluna "DATAFINAL" sejam sempre superiores ou iguais aos valores de coluna "DATAINICIAL".
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+-----------------------
+|CHECK(QUANTIDADE > 0)|
+-----------------------
+->  Tabela: PLANTACAO
+->  A função "CHECK(QUANTIDADE > 0)"
+    garante que os valores na coluna "QUANTIDADE" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+----------------------------------
+|CHECK (DATAINICIAL <= DATAFINAL)|
+----------------------------------
+->  Tabela: PLANTACAO
+->  A função "CHECK (DATAINICIAL <= DATAFINAL)"
+    garante que os valores da coluna "DATAFINAL" sejam sempre superiores ou iguais aos valores de coluna "DATAINICIAL".
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+-----------------------
+|CHECK(QUANTIDADE >= 0)|
+-----------------------
+->  Tabela: PRODUTOARMAZEM
+->  A função "CHECK(QUANTIDADE >= 0)"
+    garante que os valores na coluna "QUANTIDADE" só podem ser superiores ou iguais a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+-------------------------
+|CHECK(DEBITOMAXIMO > 0)|
+-------------------------
+->  Tabela: SISTEMAREGA
+->  A função "CHECK(DEBITOMAXIMO > 0)"
+    garante que os valores na coluna "DEBITOMAXIMO" só podem ser superiores a zero.
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.
+
+---------------------------------------------------
+|CHECK(DESIGNACAO IN ('Permanente', 'Temporária'))|
+---------------------------------------------------
+->  Tabela: TIPOCULTURA
+->  A função "CHECK(DESIGNACAO IN ('Permanente', 'Temporária'))"
+    garante que os valores na coluna "DESIGNACAO" só podem ser "Permanente" ou "Temporária".
+    Isso impede a inserção de outros valores, garantindo a consistência dos dados na base de dados.

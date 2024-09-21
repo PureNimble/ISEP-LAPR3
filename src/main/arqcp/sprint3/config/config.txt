@@ -1,0 +1,10 @@
+1#soil_humidity#percentage#50#5#400000
+2#soil_humidity#percentage#60#10#500000
+3#atmospheric_humidity#percentage#70#10#2000000
+4#atmospheric_humidity#percentage#80#9#2000000
+5#atmospheric_humidity#percentage#50#9#200000
+6#atmospheric_humidity#percentage#50#10#5000000
+7#atmospheric_temperature#celsius#40#10#800000
+8#atmospheric_temperature#celsius#50#8#40000
+9#atmospheric_temperature#celsius#50#7#2000000
+10#atmospheric_temperature#celsius#50#12#200000

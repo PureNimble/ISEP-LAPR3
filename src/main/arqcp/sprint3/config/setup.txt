@@ -1,0 +1,11 @@
+Processador de dados:
+
+-> a=ficheiro do Coletor de Dados:/dev/ttyS3
+-> b=ficheiro de configuração:config/config.txt
+-> c=diretório onde colocar os resultados:Resultados
+-> d=número de leituras por ciclo:100
+
+Saida de dados:
+
+-> a=diretório para o Farm Coordinator:FarmCoordinator
+-> c=frequencia da execução do componente(milisegundos):70000

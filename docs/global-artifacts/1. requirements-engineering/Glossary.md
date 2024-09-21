@@ -1,0 +1,49 @@
+# Glossário
+
+**Termos, Expressões e Acrónimos (TEA) estão ordenados alfabeticamente**
+
+| **_TEA(PT)_** | **_Descrição(PT)_** |
+| --------------------------- | -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Aplicação do Produto**    |  Modos de aplicação que um fator de produção pode ser aplicado:                                                                                    |
+| **Aplicação Fitofármaco**   |  Tipo de Operação Agrícola que contém um fator de produção.                                                                                        |
+| **Armazém**                 | Espaço ou edifício destinado ao armazenamento de mercadorias/produtos.                                                                             |
+| **Caderno de Campo**        |  Documento formal que permite registar todas as operações agrículas relevantes ocorridas na quinta registos meteorológicos.                        |
+| **Cliente**                 |  Pessoa que encomenda e consume os produtos agrícolas, distribuídos sob a forma de cabazes.                                                        |
+| **Colheita**                |  O processo de recolher os produtos cultivados, como frutas, vegetais, grãos ou outras plantas, quando atingem a maturidade ou estão prontos para serem utilizados.                                                                                                                                                                  |
+| **Condutor**                |  Pessoa que recolhe os cabazes na exploração agrícola e os deposita nos Hubs de distribuição.                                                      |
+| **Cultura**                 |  Espécie vegetal cultivada na agricultura com o objetivo de produzir produtos agrícolas para consumo ou para produzir adubação verde.              |
+| **Elemento**                |  Substância existente na ficha técnica, um conjunto de elementos representa uma ficha técnica.                                                     |
+| **Espaço**                  |  Construção que pode ser: estábulos para animais; garagens para máquinas e alfaias; sistemas de rega incluindo tanques agrícola; e armazéns para 
+colheitas.                                                                                                                                                                         |
+| **Especie**                 |  Grupo de organismos com características semelhantes que podem se reproduzir entre si.                                                             |
+| **Estábulo**                |  Espaço destinado ao alojamento de animais, especialmente cavalos.                                                                                 |
+| **Estado Fenológico**       |  Etapas de desenvolvimento da cultura/planta que podem ser identificáveis por alterações da morfologia externa da mesma, ao nível dos ramos, folhas, flores ou frutos.                                                                                                                                                          |
+| **Estação meteorológica**   |  Conjunto de sensores que permitem medir grandezas atmosféricas como o vento, temperatura, humidade, radiação e pressão.                           |
+| **Fator de Produção**       |  Produtos que são aplicados no solo ou nas plantas, podem ser classificados por fertilizantes, adubos, corretivos ou produtos fitofármacos.        |
+| **Fertilização**            |  Tipo de Operação Agrícola que contém um fator de produção e um modo de aplicação. De forma a fornecer nutrientes essenciais às plantas para promover o crescimento saudável, desenvolvimento e produção.                                                                                                                       |
+| **Ficha Técnica**           |  Documento onde está presente todos os elementos de um dado produto e suas respetivas quantidades.                                                 |
+| **Floração**                |  Designação dada ao período do ano, ou à estação do ano, em que desabrocham as flores de determinada espécie ou grupo de espécies de plantas.      |
+| **Formato do Produto**      |  Apresentação física ou formulação específica do produto.                                                                                          |
+| **Garagem**                 |  Espaço designado para o estacionamento e armazenamento de veículos, incluindo máquinas e alfaias agrícolas.                                       |
+| **Gestor Agrícola**         |  Pessoa que gere culturas nas parcelas, realiza as diferentes ações culturais e as regista no Caderno de Campo.                                    |
+| **Gestor Distribuição**     |  Pessoa que gere processo de recolha e transporte dos produtos agrículas entre explorações, Hubs e posterior recolha pelos clientes.               |
+| **Matéria Orgânica**        |  Conjunto de compostos químicos provenientes de moléculas orgânicas, resultantes da decomposição de resíduos de organismos vivos. Esses compostos englobam substâncias de origem vegetal e animal em diversos estágios de decomposição.                                                                                              |
+| **Modo de Fertilização**    |  Modo de aplicar o produto, pode ser um dos seguintes tipos: foliar, fertirrega, aplicação direta no solo.                                         |
+| **Monda**                   |  Ação de limpar ou retirar ervas daninhas manualmente ou com o auxílio de ferramentas agrícolas.                                                   |
+| **Nome Comum**              |  Designação não científica de uma espécie, usada na linguagem cotidiana e muitas vezes específica a uma região ou cultura.                         |
+| **Operação**                |  Ações que o gestor agrícola executa nas plantações, podendo ser estas: Colheita, Rega, Fertilização, Plantar                                      |
+| **Parcela**                 |  Terreno que contém uma ou mais Plantações e uma dada área.<br><br>**Sinónimos**: Campo,Parcela Agrícola                                           |
+| **PH**                      |  O pH é uma escala que varia de 0 a 14, sendo 7 considerado neutro. Valores abaixo de 7 indicam acidez, enquanto valores acima de 7 indicam alcalinidade.                                                                                                                                                                      |
+| **Plano de Rega**           | Plano das necessidades de rega, correções minerais e fertilizações a serem realizadas ao longo da época agrícola, podendo ser específico para cada plantação ou cultura.                                                                                                                                                              |
+| **Plantação**               |  Área designada para uma cultura, contendo a sua quantidade e a respetiva unidade.                                                                 |
+| **Poda**                    |  A prática de retirar seletivamente partes de plantas, arbustos e árvores, como ramos inúteis, com o objetivo de promover um crescimento saudável, controlar a forma da planta e melhorar sua estrutura geral.                                                                                                                        |
+| **Produto**                 |  Um produto que é cultivado ou criado na agricultura, como grãos, frutas, vegetais ou animais.                                                     |
+| **Quinta**                  |  Conjunto de edifícios e Parcelas.<br><br>**Sinónimos**: instalação agrícola, exploração                                                           |
+| **Rega**                    |  Processo de aplicação controlada de água para fornecer um suprimento adequado às plantas em setores específicos de uma plantação.                 |
+| **Semeadura**               |  O ato de plantar sementes no solo para iniciar o crescimento de uma cultura vegetal, prática comum em plantações temporárias.                     |
+| **Sensor**                  |  Dispositivo que tem como objetivo devolver valores e ,consoante a sua funcionalidade, uma unidade.                                                |
+| **Setor**                   | Uma subdivisão de uma área agrícola, geralmente designada para a prática de técnicas específicas, como a rega. Cada setor pode abranger diferentes parcelas de terra e é organizado com base em fatores como tipo de cultura, métodos de irrigação e capacidade do sistema.                                                           |
+| **Sistema de rega**         |  Conjunto de equipamentos capaz de fazer chegar às culturas água ou soluções aquosas contendo fatores de produção.                                 |
+| **Tipo de Cultura**         |  Uma cultura pode ser do tipo permanente (e.g., frutícolas como pereiras ou macieiras) ou temporária (e.g., hortícolas ou forragem).               |
+| **Tipo de Sensor**             |  Os principais sensores instalados numa estação meteorológica para agricultura são: sensor de pluviosidade, sensor de temperatura do solo, sensor de humidade do solo, sensor de velocidade do vento e sensor de temperatura, de humidade do ar e pressão atmosférica.                                                        |
+| **Variedade**               |  Uma subdivisão dentro de uma espécie que exibe características distintas.                                                                         |

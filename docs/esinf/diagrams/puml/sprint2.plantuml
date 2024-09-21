@@ -1,0 +1,298 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class Algorithms {
+  + Algorithms(): 
+  + DepthFirstSearch(Graph<V, E>, V): LinkedList<V>?
+  - calculateSillouette(float, float): float
+  + shortestPaths(Graph<V, E>, V, Comparator<E>, BinaryOperator<E>, E, ArrayList<LinkedList<V>>, ArrayList<E>): boolean
+  + minSpanningTree(Graph<V, E>): Graph<V, E>
+  - fillEdges(List<Graph<V, E>>, Graph<V, E>): void
+  + shortestPath(Graph<V, E>, V, V, Comparator<E>, BinaryOperator<E>, E, LinkedList<V>): E?
+  + allPaths(Graph<V, E>, V, V): ArrayList<LinkedList<V>>
+  - shortestPathDijkstra(Graph<V, E>, V, Comparator<E>, BinaryOperator<E>, E, boolean[], V[], E[]): void
+  - DepthFirstSearch(Graph<V, E>, V, boolean[], LinkedList<V>): void
+  + divideGraph(Graph<V, E>, Set<V>, Comparator<E>, BinaryOperator<E>, E, LinkedList<V>): List<Graph<V, E>>
+  + minDistGraph(Graph<V, E>, Comparator<E>, BinaryOperator<E>): MatrixGraph<V, E>
+  - allPaths(Graph<V, E>, V, V, boolean[], LinkedList<V>, ArrayList<LinkedList<V>>): void
+  + getSC(List<Graph<V, E>>, Comparator<E>, BinaryOperator<E>, E, LinkedList<V>, Graph<V, E>): float
+  - getDistanceTwoVsMST(Graph<V, E>, V, V, Comparator<E>, BinaryOperator<E>, E, LinkedList<V>): int
+  + BreadthFirstSearch(Graph<V, E>, V): LinkedList<V>?
+  - countCommonNeighbors(V, Graph<V, E>, Graph<V, E>): int
+  - getPath(Graph<V, E>, V, V, V[], LinkedList<V>): void
+}
+class BasketDistributionUI {
+  + BasketDistributionUI(): 
+  - printBasketDistribution(): void
+  - printPaths(String, ArrayList<LinkedList<Location>>, ArrayList<Integer>, int): void
+  - getMinimalPaths(): void
+  - printClusters(List<String>): void
+  - buildBasketDistribution(): void
+  - divideDistribution(): void
+  - getIdealVertices(): void
+  - getMinimal(): void
+  + run(): void
+}
+class CommonGraph<V, E> {
+  + CommonGraph(boolean): 
+  # isDirected: boolean
+  + vertices(): ArrayList<V>
+  # copy(Graph<V, E>, Graph<V, E>): void
+  + equals(Object): boolean
+  + validVertex(V): boolean
+  + clone(): Graph<V, E>
+  + key(V): int
+  + vertex(int): V
+  + numEdges(): int
+  + hashCode(): int
+  + numVertices(): int
+  + vertex(Predicate<V>): V
+   isDirected: boolean
+}
+class Criteria {
+  + Criteria(int, ArrayList<LinkedList<Location>>, int, ArrayList<Integer>): 
+  - degree: int
+  - numberMinimumPaths: int
+  - distances: ArrayList<Integer>
+  - paths: ArrayList<LinkedList<Location>>
+   paths: ArrayList<LinkedList<Location>>
+   degree: int
+   numberMinimumPaths: int
+   distances: ArrayList<Integer>
+}
+class Edge<V, E> {
+  + Edge(V, V, E): 
+  - weight: E
+  + equals(Object): boolean
+  + hashCode(): int
+  + toString(): String
+   VDest: V
+   VOrig: V
+   weight: E
+}
+class FurthestPoints {
+  + FurthestPoints(Pair<Location, Location>, List<Location>, List<Integer>): 
+  - pair: Pair<Location, Location>
+  - distances: List<Integer>
+  - locations: List<Location>
+  + toString(): String
+  + hashCode(): int
+  + equals(Object): boolean
+   pair: Pair<Location, Location>
+   distances: List<Integer>
+   locations: List<Location>
+}
+interface Graph<V, E> << interface >> {
+  + edge(int, int): Edge<V, E>
+  + addVertex(V): boolean
+  + numVertices(): int
+  + removeEdge(V, V): boolean
+  + validVertex(V): boolean
+  + outgoingEdges(V): Collection<Edge<V, E>>
+  + numEdges(): int
+  + edge(V, V): Edge<V, E>
+  + adjVertices(V): Collection<V>
+  + inDegree(V): int
+  + edges(): Collection<Edge<V, E>>
+  + incomingEdges(V): Collection<Edge<V, E>>
+  + addEdge(V, V, E): boolean
+  + clone(): Graph<V, E>
+  + vertex(Predicate<V>): V
+  + removeVertex(V): boolean
+  + vertices(): ArrayList<V>
+  + vertex(int): V
+  + key(V): int
+  + outDegree(V): int
+   directed: boolean
+}
+class GraphController {
+  + GraphController(): 
+  - service: Service
+  + locationById(String): Location
+  + getMinimal(int): Pair<FurthestPoints, Pair<List<Location>, Integer>>
+  + getCoefSil(List<Graph<Location, Integer>>): float
+  + distanceLocations(String, String): Integer
+  + divideIntoClusters(List<String>): List<Graph<Location, Integer>>
+   service: Service
+   verticesIdeais: Map<Location, Criteria>
+   basketDistribution: MapGraph<Location, Integer>
+   minimalPaths: Map<Location, Map<Location, Integer>>
+   numDistances: int
+   numLocations: int
+}
+class GraphRepository {
+  + GraphRepository(): 
+  - smallGraph: MapGraph<Location, Integer>
+  - basketDistribution: MapGraph<Location, Integer>
+  + distanceLocations(Location, Location): Integer
+  + addLocation(Location, boolean): boolean
+  + addDistance(Location, Location, Integer, boolean): boolean
+  + toString(): String
+  + locationByKey(int): Location
+  + locationById(String): Location
+  + keyLocation(Location): int
+   basketDistribution: MapGraph<Location, Integer>
+   smallGraph: MapGraph<Location, Integer>
+   numDistances: int
+   numLocations: int
+}
+class Location {
+  + Location(String, double, double, int): 
+  + Location(String): 
+  - latitude: double
+  - longitude: double
+  - id: String
+  - numEmployees: int
+  + equals(Object): boolean
+  + toString(): String
+  + hashCode(): int
+   latitude: double
+   numEmployees: int
+   longitude: double
+   id: String
+}
+class MainTest {
+  + MainTest(): 
+  ~ testBasketDistributionLocationsNum(): void
+  ~ testBasketDistributionNullLocation(): void
+  ~ testGetMinimalPathsDistanceBetweenLocalizations(): void
+  ~ testGetMinimalPathsMinimalDistanceBetweenLocalizations(): void
+  ~ setUp(): void
+  ~ testGetClustersWith2Hubs(): void
+  ~ testMinimalNoFuel(): void
+  ~ testShortestPath(): void
+  ~ testVerticesIdeais(): void
+  ~ testBasketDistributionDistancesNum(): void
+  ~ testGetClustersWith0Hubs(): void
+  ~ testBasketDistributionLocationByKey(): void
+  ~ testGetMinimalPathsPrint(): void
+  ~ testMinimalOptimalCase(): void
+  ~ testShortestPaths(): void
+  ~ testBasketDistributionLocationByID(): void
+  ~ testGetMinimalPathsPathExistsBetweenLocalizations(): void
+  ~ testBasketDistributionDepthFirstSearch(): void
+  ~ testBasketDistributionLocationById(): void
+  ~ testBasketDistributionBreadthFirstSearch(): void
+  ~ testGetMinimalPathsDistanceBetweenLocalizationsNotNegative(): void
+  ~ testLocationDegree(): void
+  ~ testBasketDistributionKeyLocation(): void
+  ~ testBasketDistributionAllPaths(): void
+}
+class MapGraph<V, E> {
+  + MapGraph(Graph<V, E>): 
+  + MapGraph(boolean): 
+  + edge(V, V): Edge<V, E>
+  + addEdge(V, V, E): boolean
+  + edges(): Collection<Edge<V, E>>
+  + addVertex(V): boolean
+  + incomingEdges(V): Collection<Edge<V, E>>
+  + toString(): String
+  + removeEdge(V, V): boolean
+  + validVertex(V): boolean
+  + adjVertices(V): Collection<V>
+  + outDegree(V): int
+  + edge(int, int): Edge<V, E>
+  + outgoingEdges(V): Collection<Edge<V, E>>
+  + removeVertex(V): boolean
+  + inDegree(V): int
+  + clone(): MapGraph<V, E>
+}
+class MapVertex<V, E> {
+  + MapVertex(V): 
+  - element: V
+  + remAdjVert(V): void
+  + numAdjVerts(): int
+  + addAdjVert(V, Edge<V, E>): void
+  + getEdge(V): Edge<V, E>
+  + toString(): String
+   allAdjVerts: Collection<V>
+   allOutEdges: Collection<Edge<V, E>>
+   element: V
+}
+class MatrixGraph<V, E> {
+  + MatrixGraph(boolean, int): 
+  + MatrixGraph(Graph<V, E>): 
+  + MatrixGraph(boolean, ArrayList<V>, E[][]): 
+  + MatrixGraph(boolean): 
+  + removeEdge(V, V): boolean
+  + outDegree(V): int
+  + incomingEdges(V): Collection<Edge<V, E>>
+  + addVertex(V): boolean
+  + clone(): MatrixGraph<V, E>
+  + removeVertex(V): boolean
+  + edges(): Collection<Edge<V, E>>
+  + edge(int, int): Edge<V, E>
+  - resizeMatrix(): void
+  + addEdge(V, V, E): boolean
+  - removeEdge(int, int): void
+  + outgoingEdges(V): Collection<Edge<V, E>>
+  + edge(V, V): Edge<V, E>
+  + adjVertices(V): Collection<V>
+  + inDegree(V): int
+  + toString(): String
+}
+class Pair<T, U> {
+  + Pair(T, U): 
+  - second: U
+  - first: T
+  + hashCode(): int
+  + toString(): String
+  + equals(Object): boolean
+   second: U
+   first: T
+}
+class Service {
+  + Service(): 
+  - graphRepository: GraphRepository
+  + keyLocation(Location): int
+  + addDistance(List<String>, boolean): boolean
+  + locationByKey(int): Location
+  + getCoefSil(List<Graph<Location, Integer>>): float
+  + getMinimal(int): Pair<FurthestPoints, Pair<List<Location>, Integer>>
+  + divideIntoClusters(List<String>): List<Graph<Location, Integer>>
+  + locationById(String): Location
+  + distanceLocations(String, String): Integer
+  + createLocation(List<String>, boolean): boolean
+  - furthestPoints(Graph<Location, Integer>): Pair<Integer, LinkedList<Location>>
+  - sortByValue(Map<Location, Criteria>): Map<Location, Criteria>
+   graphRepository: GraphRepository
+   verticesIdeais: Map<Location, Criteria>
+   basketDistribution: MapGraph<Location, Integer>
+   minimalPaths: Map<Location, Map<Location, Integer>>
+   numDistances: int
+   numLocations: int
+}
+
+Algorithms            -[#595959,dashed]->  MatrixGraph          : "«create»"
+BasketDistributionUI  -[#595959,dashed]->  GraphController      : "«create»"
+BasketDistributionUI "1" *-[#595959,plain]-> "graphController\n1" GraphController      
+CommonGraph           -[#008200,dashed]-^  Graph                
+FurthestPoints       "1" *-[#595959,plain]-> "locations\n*" Location             
+FurthestPoints       "1" *-[#595959,plain]-> "pair\n1" Pair                 
+GraphController      "1" *-[#595959,plain]-> "service\n1" Service              
+GraphRepository       -[#595959,dashed]->  MapGraph             : "«create»"
+GraphRepository      "1" *-[#595959,plain]-> "basketDistribution\n1" MapGraph             
+MainTest             "1" *-[#595959,plain]-> "graphController\n1" GraphController      
+MainTest              -[#595959,dashed]->  GraphController      : "«create»"
+MainTest             "1" *-[#595959,plain]-> "graphRepository\n1" GraphRepository      
+MainTest              -[#595959,dashed]->  Location             : "«create»"
+MainTest              -[#595959,dashed]->  MapGraph             : "«create»"
+MainTest             "1" *-[#595959,plain]-> "BASKET_DISTRIBUTION\n1" MapGraph             
+MainTest             "1" *-[#595959,plain]-> "service\n1" Service              
+MapGraph              -[#000082,plain]-^  CommonGraph          
+MapGraph              -[#595959,dashed]->  Edge                 : "«create»"
+MapGraph             "1" *-[#595959,plain]-> "mapVertices\n*" MapVertex            
+MapGraph              -[#595959,dashed]->  MapVertex            : "«create»"
+MapVertex            "1" *-[#595959,plain]-> "outVerts\n*" Edge                 
+MatrixGraph           -[#000082,plain]-^  CommonGraph          
+MatrixGraph           -[#595959,dashed]->  Edge                 : "«create»"
+MatrixGraph          "1" *-[#595959,plain]-> "edgeMatrix\n*" Edge                 
+Service               -[#595959,dashed]->  Criteria             : "«create»"
+Service               -[#595959,dashed]->  FurthestPoints       : "«create»"
+Service              "1" *-[#595959,plain]-> "graphRepository\n1" GraphRepository      
+Service               -[#595959,dashed]->  Location             : "«create»"
+Service               -[#595959,dashed]->  Pair                 : "«create»"
+@enduml

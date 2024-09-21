@@ -1,0 +1,38 @@
+CREATE OR REPLACE FUNCTION getConsumoRega(year Number) RETURN SYS_REFCURSOR AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT CULTURA, SUM(Minutos) AS CONSUMO_MINUTOS
+        FROM(
+            SELECT NE.NOMECOMUM || ' ' || CU.VARIEDADE AS CULTURA, O.QUANTIDADE AS Minutos, O.UNIDADE AS UNIDADE
+            FROM OPERACAOSETOR OS, PLANTACAOSETOR PS, PLANTACAO P, CULTURA CU, NOMEESPECIE NE, OPERACAO O, OPERACAOTIPOOPERACAO OT, TIPOOPERACAO TOO
+            WHERE OS.SETORID = PS.SETORID 
+            AND PS.PLANTACAOID = P.ID
+            AND P.CULTURAID = CU.ID
+            AND CU.NOMEESPECIEID = NE.ID
+            AND OS.OPERACAOID = O.ID
+            AND O.ID = OT.OPERACAOID
+            AND OT.TIPOOPERACAOID = TOO.ID
+            AND TOO.ID = 2
+            AND EXTRACT(YEAR FROM O.DATAOPERACAO) = year
+        )
+        GROUP BY CULTURA, UNIDADE
+        ORDER BY CONSUMO_MINUTOS DESC;
+    RETURN result_cursor;
+END;
+/
+
+DECLARE
+    result_cursor SYS_REFCURSOR;
+    CULTURA VARCHAR2(100);
+    CONSUMO_MINUTOS NUMBER;
+BEGIN
+    result_cursor := getConsumoRega(2023);
+    LOOP
+        FETCH result_cursor INTO CULTURA, CONSUMO_MINUTOS;
+        EXIT WHEN result_cursor%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Cultura: ' || CULTURA || ' | Consumo: ' || CONSUMO_MINUTOS || ' minutos');
+    END LOOP;
+    CLOSE result_cursor;
+END;
+/
