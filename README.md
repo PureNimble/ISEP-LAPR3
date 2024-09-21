@@ -30,9 +30,20 @@ mvn exec:java
 ```
 mvn clean verify
 ```
-### Executar o programa final
+### Executar o programa final (.JAR)
 ```
-java -jar sem3pi2023_24_g094.jar
+cd target
+```
+```
+java -jar lapr3-project-1.0.0-jar-with-dependecies.jar
+```
+
+## Executar o programa de arqcp (C)
+```
+cd src/main/arqcp/sprint3/main
+```
+```
+make run
 ```
 
 ## Lista de conteúdos 

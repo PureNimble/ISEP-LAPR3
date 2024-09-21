@@ -21,6 +21,7 @@ output
 *.o
 
 # Maven
+build/
 target/
 dist/
 

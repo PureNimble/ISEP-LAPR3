@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 import isep.lapr3.g094.application.controller.IrrigationPlanController;
 import isep.lapr3.g094.application.controller.ImportController;
 import isep.lapr3.g094.domain.Pair;
@@ -18,7 +16,6 @@ import isep.lapr3.g094.domain.irrigation.IrrigationHour;
 import isep.lapr3.g094.domain.irrigation.IrrigationSector;
 import isep.lapr3.g094.ui.menu.MenuItem;
 import isep.lapr3.g094.ui.utils.Utils;
-import net.bytebuddy.asm.Advice.Local;
 
 public class IrrigationUI implements Runnable {
 
