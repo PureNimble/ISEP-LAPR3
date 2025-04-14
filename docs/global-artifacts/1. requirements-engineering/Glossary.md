@@ -13,8 +13,7 @@
 | **Condutor**                |  Pessoa que recolhe os cabazes na exploração agrícola e os deposita nos Hubs de distribuição.                                                      |
 | **Cultura**                 |  Espécie vegetal cultivada na agricultura com o objetivo de produzir produtos agrícolas para consumo ou para produzir adubação verde.              |
 | **Elemento**                |  Substância existente na ficha técnica, um conjunto de elementos representa uma ficha técnica.                                                     |
-| **Espaço**                  |  Construção que pode ser: estábulos para animais; garagens para máquinas e alfaias; sistemas de rega incluindo tanques agrícola; e armazéns para 
-colheitas.                                                                                                                                                                         |
+| **Espaço**                  |  Construção que pode ser: estábulos para animais; garagens para máquinas e alfaias; sistemas de rega incluindo tanques agrícola; e armazéns para colheitas. |
 | **Especie**                 |  Grupo de organismos com características semelhantes que podem se reproduzir entre si.                                                             |
 | **Estábulo**                |  Espaço destinado ao alojamento de animais, especialmente cavalos.                                                                                 |
 | **Estado Fenológico**       |  Etapas de desenvolvimento da cultura/planta que podem ser identificáveis por alterações da morfologia externa da mesma, ao nível dos ramos, folhas, flores ou frutos.                                                                                                                                                          |
